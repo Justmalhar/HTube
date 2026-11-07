@@ -21,7 +21,16 @@ export async function generateMetadata({ params }: PageProps<"/watch/[vid]">): P
   const { vid } = await params;
   const card = getEngine().byId.get(vid);
   if (!card) return { title: "Not found" };
-  return { title: card.title, description: card.whyHn || card.summary || undefined };
+  const description = card.whyHn || card.summary || undefined;
+  // Share card is the video's own YouTube thumbnail.
+  const images = [{ url: `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`, width: 480, height: 360, alt: card.title }];
+  return {
+    title: card.title,
+    description,
+    alternates: { canonical: `/watch/${vid}` },
+    openGraph: { type: "video.other", siteName: "HTube", title: card.title, description, images, videos: [{ url: `https://www.youtube.com/watch?v=${vid}` }] },
+    twitter: { card: "summary_large_image", title: card.title, description, images },
+  };
 }
 
 export default async function WatchPage({ params, searchParams }: PageProps<"/watch/[vid]">) {
