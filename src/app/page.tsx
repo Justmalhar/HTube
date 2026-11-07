@@ -1,0 +1,56 @@
+import { browse, buildFeed } from "@/lib/engine";
+import { getEngine } from "@/lib/server-catalog";
+import { VideoGrid } from "@/components/video-card";
+import { PlaylistTile, Shelf, TopicTile } from "@/components/shelf";
+import { ChipBar } from "@/components/filters";
+
+export const dynamic = "force-dynamic";
+
+const CHIPS = [
+  { href: "/", label: "All", on: true },
+  { href: "/browse?type=talk", label: "Talks" },
+  { href: "/browse?type=lecture", label: "Lectures" },
+  { href: "/browse?type=explainer", label: "Explainers" },
+  { href: "/browse?type=documentary", label: "Documentaries" },
+  { href: "/browse?type=interview", label: "Interviews" },
+  { href: "/browse?type=tutorial", label: "Tutorials" },
+  { href: "/browse?type=demo", label: "Demos" },
+  { href: "/browse?dur=xlong", label: "Longs" },
+  { href: "/browse?gems=insistent", label: "Hidden gems" },
+  { href: "/browse?sort=recent", label: "Recently shared" },
+];
+
+export default function Home() {
+  const engine = getEngine();
+  const feed = buildFeed(engine, { likes: [], dislikes: [], seen: [], offset: 0, limit: 24 });
+  const topics = engine.areas.map((area) => ({
+    area,
+    vid: browse(engine, { area: area.id, offset: 0, limit: 1 }).items[0]?.vid,
+  }));
+  const playlists = engine.playlists.filter((playlist) => (playlist.tier || "deep") === "start").concat(
+    engine.playlists.filter((playlist) => (playlist.tier || "deep") !== "start"),
+  );
+  return (
+    <div>
+      <ChipBar label="Formats" chips={CHIPS} sticky />
+      <VideoGrid items={feed.items.slice(0, 6)} />
+      <Shelf title="Explore topics" href="/categories">
+        {topics.map(({ area, vid }) => (
+          <TopicTile key={area.id} href={`/a/${area.id}`} name={area.name} count={area.video_count} vid={vid} />
+        ))}
+      </Shelf>
+      <VideoGrid items={feed.items.slice(6, 15)} />
+      <Shelf title="Playlists" href="/playlists">
+        {playlists.slice(0, 12).map((playlist) => (
+          <PlaylistTile key={playlist.slug} playlist={playlist} />
+        ))}
+      </Shelf>
+      <VideoGrid items={feed.items.slice(15)} />
+      <div className="mt-10 flex justify-center">
+        <a href="/browse" className="inline-flex h-10 items-center rounded-full bg-surface px-5 text-sm font-medium hover:bg-surface-hover">
+          Browse the full catalogue
+        </a>
+      </div>
+    </div>
+  );
+}

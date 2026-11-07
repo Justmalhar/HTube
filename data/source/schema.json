@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenHackerTube import snapshot",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "provenance",
+    "videos",
+    "categories",
+    "areas",
+    "playlists",
+    "playlist_details",
+    "mentions",
+    "related",
+    "pages",
+    "coverage"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "videos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "vid",
+          "title",
+          "channel",
+          "summary",
+          "categories",
+          "tags",
+          "source_url",
+          "provider",
+          "embed_url",
+          "provenance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "vid": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "tags": {
+            "type": "array"
+          },
+          "provider": {
+            "const": "youtube"
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "embed_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "duration_s": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "published": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provenance": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "categories": {
+      "type": "array"
+    },
+    "areas": {
+      "type": "array"
+    },
+    "playlists": {
+      "type": "array"
+    },
+    "playlist_details": {
+      "type": "array"
+    },
+    "mentions": {
+      "type": "array"
+    },
+    "related": {
+      "type": "array"
+    },
+    "pages": {
+      "type": "array"
+    },
+    "coverage": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

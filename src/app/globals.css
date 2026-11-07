@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0f0f0f;
+  --surface: #272727;
+  --surface-hover: #3f3f3f;
+  --text: #ffffff;
+  --text-muted: #aaaaaa;
+  --line: #303030;
+  --primary: #ff6600;
+  --on-primary: #ffffff;
+  --chip: #272727;
+  --chip-on: #f1f1f1;
+  --chip-on-text: #0f0f0f;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --background: #ffffff;
+  --surface: #f2f2f2;
+  --surface-hover: #e5e5e5;
+  --text: #0f0f0f;
+  --text-muted: #606060;
+  --line: #e5e5e5;
+  --chip: #f2f2f2;
+  --chip-on: #0f0f0f;
+  --chip-on-text: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--text);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-chip-on: var(--chip-on);
+  --color-chip-on-text: var(--chip-on-text);
+  --color-on-primary: var(--on-primary);
+  --color-muted: var(--text-muted);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --font-sans: var(--font-roboto), Roboto, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-roboto), Roboto, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+@layer base {
+  a { color: inherit; text-decoration: none; }
+}
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-hover) transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-hover) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--surface-hover);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}

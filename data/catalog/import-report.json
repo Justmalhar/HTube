@@ -1,0 +1,39 @@
+{
+  "videos": 6454,
+  "categories": 150,
+  "areas": 16,
+  "playlists": 27,
+  "mentions": 39834,
+  "related": 3778,
+  "channels": 3315,
+  "restricted_fields_committed": [],
+  "distributed_systems_categories": [
+    "distributed-systems"
+  ],
+  "source_provenance": {
+    "source": "https://hackertube.org",
+    "license": "ODC-By-1.0 for official dataset; credit HackerTube",
+    "scraped_at": "2026-11-07T05:56:43.755699+05:30"
+  },
+  "source_coverage_counts": {
+    "videos": 6454,
+    "live_metadata_videos": 6454,
+    "categories": 150,
+    "areas": 16,
+    "mentions": 39834,
+    "related_records": 3778,
+    "playlists": 27,
+    "playlist_details": 27,
+    "html_pages_fetched": 16,
+    "discovered_urls": 6760
+  },
+  "failed_source_requests": [
+    {
+      "url": "https://hackertube.org/sitemap.xml",
+      "kind": "initial_request",
+      "fetched": true,
+      "status": 404,
+      "local_file": "sitemap.xml"
+    }
+  ]
+}
