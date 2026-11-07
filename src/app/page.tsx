@@ -1,5 +1,5 @@
 import { PAGE, browse, buildFeed } from "@/lib/engine";
-import { freshSeed } from "@/lib/pages";
+import { freshSeed, exploreTopics } from "@/lib/pages";
 import { getEngine } from "@/lib/server-catalog";
 import { HomeFeed } from "@/components/home/home-feed";
 import { PlaylistTile, Shelf, TopicTile } from "@/components/shelf";
@@ -36,6 +36,7 @@ export default function Home() {
       <ChipBar label="Formats" chips={CHIPS} sticky />
       <HomeFeed
         items={feed.items}
+        explore={exploreTopics(freshSeed())}
         total={feed.total}
         topics={
           <Shelf title="Explore topics" href="/categories">

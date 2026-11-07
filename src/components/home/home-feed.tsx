@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 
 import { InfiniteFeed } from "@/components/infinite-feed";
 import { useHydrated, useLibrary } from "@/components/library";
-import { Shelf } from "@/components/shelf";
+import { Shelf, TopicTile } from "@/components/shelf";
 import { VideoCard, VideoGrid } from "@/components/video-card";
+import type { ExploreTopic } from "@/lib/explore";
 import type { FeedCard } from "@/lib/types";
 
 type Personal = {
@@ -13,6 +14,7 @@ type Personal = {
   total: number;
   because: { title: string; items: FeedCard[] } | null;
   later: FeedCard[];
+  explore?: ExploreTopic[];
 };
 
 // A fresh seed on every page load (refresh reshuffles, like YouTube). Infinite scroll reuses this
@@ -44,11 +46,13 @@ function Row({ items }: { items: FeedCard[] }) {
 export function HomeFeed({
   items,
   total,
+  explore,
   topics,
   playlists,
 }: {
   items: FeedCard[];
   total: number;
+  explore: ExploreTopic[];
   topics: React.ReactNode;
   playlists: React.ReactNode;
 }) {
@@ -92,6 +96,7 @@ export function HomeFeed({
   const shown = (personal?.items ?? items).filter(
     (item) => !(personal ? hidden : library.dislikes).includes(item.vid) && !onShelves.has(item.vid),
   );
+  const exploring = personal?.explore ?? explore;
   const grid = (list: FeedCard[]) => (list.length ? <VideoGrid items={list} /> : null);
   const fade = `transition-opacity duration-150 ease-out-quart motion-reduce:transition-none ${fading ? "opacity-0" : "opacity-100"}`;
 
@@ -110,6 +115,13 @@ export function HomeFeed({
       <div className={fade}>
         {grid(shown.slice(0, 6))}
         {topics}
+        {exploring.length ? (
+          <Shelf title="Explore new topics" href="/categories">
+            {exploring.map((topic) => (
+              <TopicTile key={topic.id} href={`/c/${topic.id}`} name={topic.name} count={topic.count} vid={topic.vid} />
+            ))}
+          </Shelf>
+        ) : null}
         {grid(shown.slice(6, 15))}
         {playlists}
         {grid(shown.slice(15))}

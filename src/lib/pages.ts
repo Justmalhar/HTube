@@ -1,4 +1,5 @@
 import { PAGE, browse, buildFeed, relatedTo, search as searchCatalog } from "@/lib/engine";
+import { pickExplore, type ExploreTopic } from "@/lib/explore";
 import { browseFromParams, feedBase, first } from "@/lib/query";
 import { getEngine } from "@/lib/server-catalog";
 
@@ -30,6 +31,19 @@ export function parseFeedBody(body: unknown) {
   return { library, seed: Number(raw.seed) || 0, offset: Number(raw.offset) || 0 };
 }
 
+/** Explore picks for the home shelf: categories outside the viewer's likes and watch history. */
+export function exploreTopics(seed: number, library?: Library): ExploreTopic[] {
+  const engine = getEngine();
+  const watched = new Set<string>();
+  for (const id of [...(library?.likes ?? []), ...(library?.seen ?? [])]) for (const c of engine.byId.get(id)?.categories ?? []) watched.add(c);
+  return pickExplore([...engine.categories.values()], watched, seed).map((c) => ({
+    id: c.id,
+    name: c.name,
+    count: c.video_count,
+    vid: browse(engine, { category: c.id, offset: 0, limit: 1 }).items[0]?.vid,
+  }));
+}
+
 export function personalFeed(library: Library, seed: number, offset: number) {
   const engine = getEngine();
   const page = buildFeed(engine, { ...library, seed, offset, limit: PAGE });
@@ -48,6 +62,7 @@ export function personalFeed(library: Library, seed: number, offset: number) {
     total: page.total,
     because: because?.items.length ? because : null,
     later,
+    explore: exploreTopics(seed, library),
   };
 }
 
