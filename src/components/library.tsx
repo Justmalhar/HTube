@@ -13,9 +13,13 @@ type Library = {
   /** Subscribed channel slugs, oldest first. */
   subs: string[];
   frames: boolean;
+  /** Watch time (epoch ms) per seen id. Ids from before this existed have none. */
+  seenAt: Record<string, number>;
+  /** When true, watching does not record history. */
+  paused: boolean;
 };
 
-const EMPTY: Library = { likes: [], dislikes: [], seen: [], later: [], subs: [], frames: true };
+const EMPTY: Library = { likes: [], dislikes: [], seen: [], later: [], subs: [], frames: true, seenAt: {}, paused: false };
 const KEY = "oht.library.v1";
 
 export type ListKind = "likes" | "dislikes" | "later" | "seen";
@@ -44,6 +48,8 @@ function current(): Library {
       seen: parsed.seen ?? [],
       subs: parsed.subs ?? [],
       frames: parsed.frames !== false,
+      seenAt: parsed.seenAt && typeof parsed.seenAt === "object" ? parsed.seenAt : {},
+      paused: parsed.paused === true,
     };
   } catch {
     state = EMPTY;
@@ -100,15 +106,21 @@ const actions = {
   },
   markSeen(vid: string) {
     const value = current();
-    if (value.seen.at(-1) === vid) return;
+    if (value.paused) return;
+    const now = Date.now();
+    // Skip a repeat of the newest id within a minute (effect re-runs).
+    if (value.seen.at(-1) === vid && now - (value.seenAt[vid] ?? 0) < 60_000) return;
     // Re-watching moves the id to the end, so History lists it first again.
-    commit({ ...value, seen: without(value.seen, vid).concat(vid).slice(-500) });
+    const seen = without(value.seen, vid).concat(vid).slice(-500);
+    const seenAt = Object.fromEntries(seen.flatMap((id) => (id === vid ? [[id, now]] : id in value.seenAt ? [[id, value.seenAt[id]]] : [])));
+    commit({ ...value, seen, seenAt });
   },
-  clearHistory() {
-    commit({ ...current(), seen: [] });
+  setPaused(paused: boolean) {
+    commit({ ...current(), paused });
   },
   /** Replace one list wholesale. Used by remove, clear all, and their Undo. */
   setList(kind: ListKind, ids: string[]) {
+    // seenAt is left alone so Undo restores times; markSeen prunes it to the seen list.
     commit({ ...current(), [kind]: ids });
   },
   setFrames(frames: boolean) {

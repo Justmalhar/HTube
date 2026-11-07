@@ -6,15 +6,17 @@ import { CloseIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, VideoRow } from "@/components/video-card";
 import { useHydrated, useLibrary } from "@/components/library";
-import { countChipClass, videos } from "@/components/shelf";
+import { HistoryPanel, PausedBanner } from "@/components/history/history-panel";
+import { PlaylistHeader } from "@/components/history/playlist-header";
 import { headerActionClass } from "@/components/ui";
+import { groupHistory } from "@/lib/history";
 import type { FeedCard } from "@/lib/types";
 
 type Kind = "likes" | "later" | "seen";
 
 const COPY: Record<Kind, { title: string; empty: [string, string]; cleared: string }> = {
   seen: {
-    title: "History",
+    title: "Watch history",
     empty: ["No watch history", "Videos you watch appear here"],
     cleared: "History cleared",
   },
@@ -81,6 +83,8 @@ export function LibraryPage({ kind }: { kind: Kind }) {
       });
   }, [idKey, attempt]);
 
+  const [query, setQuery] = useState("");
+  const [now] = useState(Date.now);
   const [undo, setUndo] = useState<{ message: string; previous: string[] } | null>(null);
   useEffect(() => {
     if (!undo) return;
@@ -93,14 +97,22 @@ export function LibraryPage({ kind }: { kind: Kind }) {
     library.setList(kind, next);
   };
 
-  const items = ids.flatMap((id) => cards[id] ?? []);
+  const needle = query.trim().toLowerCase();
+  const items = ids
+    .flatMap((id) => cards[id] ?? [])
+    .filter((item) => !needle || `${item.title} ${item.channel}`.toLowerCase().includes(needle));
   const loading = ids.some((id) => !(id in cards)) && !failed;
 
   let body: React.ReactNode;
   if (!ready) body = null;
   else if (!ids.length) {
     const [title, text] = copy.empty;
-    body = <EmptyState title={title} body={text} href="/" action="Go to Home" />;
+    body = (
+      <>
+        {kind === "seen" && library.paused ? <PausedBanner onTurnOn={() => library.setPaused(false)} /> : null}
+        <EmptyState title={title} body={text} href="/" action="Go to Home" />
+      </>
+    );
   } else if (failed && !items.length) {
     body = (
       <div className="grid place-items-center rounded-2xl bg-surface px-6 py-16 text-center">
@@ -112,28 +124,65 @@ export function LibraryPage({ kind }: { kind: Kind }) {
       </div>
     );
   } else {
+    const row = (item: FeedCard) => (
+      <li key={item.vid}>
+        <VideoRow
+          item={item}
+          action={
+            <button
+              type="button"
+              className="grid size-9 place-items-center rounded-full hover:bg-surface press"
+              aria-label={`Remove ${item.title} from ${copy.title}`}
+              title={`Remove from ${copy.title}`}
+              onClick={() => change(`Removed from ${copy.title}`, stored.filter((id) => id !== item.vid))}
+            >
+              <CloseIcon />
+            </button>
+          }
+        />
+      </li>
+    );
+    const skeleton = loading ? <div className="h-24 rounded-xl bg-surface motion-safe:animate-pulse" aria-hidden /> : null;
+    const list =
+      kind === "seen" ? (
+        <div className="flex min-w-0 flex-1 flex-col gap-6" aria-busy={loading}>
+          {library.paused ? <PausedBanner onTurnOn={() => library.setPaused(false)} /> : null}
+          {needle && !items.length && !loading ? (
+            <EmptyState title="No results found" body="Try different keywords" />
+          ) : (
+            groupHistory(items.map((item) => item.vid), library.seenAt, now).map(({ group, ids: groupIds }) => (
+              <section key={group} aria-label={group}>
+                <h2 className="mb-4 text-lg font-bold leading-7">{group}</h2>
+                <ul className="flex flex-col gap-4">{groupIds.map((id) => row(cards[id]!))}</ul>
+              </section>
+            ))
+          )}
+          {skeleton}
+        </div>
+      ) : (
+        <ul className="flex min-w-0 max-w-[1100px] flex-1 flex-col gap-4" aria-busy={loading}>
+          {items.map(row)}
+          {skeleton ? <li>{skeleton}</li> : null}
+        </ul>
+      );
+    const side =
+      kind === "seen" ? (
+        <HistoryPanel
+          query={query}
+          onQuery={setQuery}
+          paused={library.paused}
+          onPaused={library.setPaused}
+          onClear={() => change(copy.cleared, [])}
+          canClear
+        />
+      ) : (
+        <PlaylistHeader title={copy.title} ids={ids} />
+      );
     body = (
-      <ul className="flex max-w-[1100px] flex-col gap-4" aria-busy={loading}>
-        {items.map((item) => (
-          <li key={item.vid}>
-            <VideoRow
-              item={item}
-              action={
-                <button
-                  type="button"
-                  className="grid size-9 place-items-center rounded-full hover:bg-surface press"
-                  aria-label={`Remove ${item.title} from ${copy.title}`}
-                  title={`Remove from ${copy.title}`}
-                  onClick={() => change(`Removed from ${copy.title}`, stored.filter((id) => id !== item.vid))}
-                >
-                  <CloseIcon />
-                </button>
-              }
-            />
-          </li>
-        ))}
-        {loading ? <li className="h-24 rounded-xl bg-surface motion-safe:animate-pulse" aria-hidden /> : null}
-      </ul>
+      <div className={`flex flex-col gap-6 min-[801px]:flex-row ${kind === "seen" ? "min-[801px]:flex-row-reverse" : ""}`}>
+        {side}
+        {list}
+      </div>
     );
   }
 
@@ -142,13 +191,10 @@ export function LibraryPage({ kind }: { kind: Kind }) {
       <PageHeader
         title={copy.title}
         actions={
-          ready && ids.length ? (
-            <>
-              {kind === "seen" ? null : <span className={countChipClass}>{videos(ids.length)}</span>}
-              <button type="button" className={headerActionClass} onClick={() => change(copy.cleared, [])}>
-                Clear all
-              </button>
-            </>
+          ready && ids.length && kind !== "seen" ? (
+            <button type="button" className={headerActionClass} onClick={() => change(copy.cleared, [])}>
+              Clear all
+            </button>
           ) : null
         }
       />
