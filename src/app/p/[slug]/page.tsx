@@ -5,7 +5,6 @@ import { PlayIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
 import { countChipClass, videos } from "@/components/shelf";
 import { headerActionClass } from "@/components/ui";
-import { VideoRow } from "@/components/video-card";
 import { getEngine } from "@/lib/server-catalog";
 
 export const dynamic = "force-dynamic";
@@ -27,8 +26,7 @@ export default async function PlaylistPage({ params }: PageProps<"/p/[slug]">) {
     const card = engine.byId.get(item.vid);
     return card ? [{ card, note: item.note }] : [];
   });
-  // YouTube's anonymous playlist URL accepts up to 50 ids.
-  const ids = entries.slice(0, 50).map(({ card }) => card.vid).join(",");
+  const watch = (vid: string) => `/watch/${vid}?list=${slug}`;
   return (
     <div>
       <PageHeader
@@ -36,8 +34,8 @@ export default async function PlaylistPage({ params }: PageProps<"/p/[slug]">) {
         actions={
           <>
             <span className={countChipClass}>{videos(entries.length)}</span>
-            {ids ? (
-              <a className={headerActionClass} href={`https://www.youtube.com/watch_videos?video_ids=${ids}`} target="_blank" rel="noreferrer">
+            {entries.length ? (
+              <a className={headerActionClass} href={watch(entries[0].card.vid)}>
                 <PlayIcon />
                 Play all
               </a>
@@ -50,9 +48,21 @@ export default async function PlaylistPage({ params }: PageProps<"/p/[slug]">) {
         {entries.map(({ card, note }, index) => (
           <li key={card.vid} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-2 min-[801px]:grid-cols-[2rem_minmax(0,1fr)] min-[801px]:gap-3">
             <span className="pt-1 text-sm tabular-nums text-muted">{index + 1}</span>
-            <VideoRow item={card}>
-              {note ? <p className="mt-2 line-clamp-3 text-sm">{note}</p> : null}
-            </VideoRow>
+            <article className="flex min-w-0 gap-3 min-[801px]:gap-4">
+              <a href={watch(card.vid)} tabIndex={-1} aria-hidden className="block aspect-video w-[40%] max-w-[360px] shrink-0 overflow-hidden rounded-xl bg-surface">
+                {/* eslint-disable-next-line @next/next/no-img-element -- remote ytimg thumbnails */}
+                <img src={`https://i.ytimg.com/vi/${card.vid}/hqdefault.jpg`} alt="" width={480} height={360} loading="lazy" decoding="async" className="size-full object-cover" />
+              </a>
+              <div className="min-w-0 flex-1">
+                <a href={watch(card.vid)} className="block rounded-md">
+                  <h2 className="line-clamp-2 wrap-anywhere text-sm font-medium leading-5 min-[801px]:text-lg min-[801px]:font-normal min-[801px]:leading-[26px]">{card.title}</h2>
+                </a>
+                <a href={`/channel/${card.channelSlug}`} className="mt-1 block truncate text-xs text-muted hover:text-foreground min-[801px]:mt-2">
+                  {card.channel}
+                </a>
+                {note ? <p className="mt-2 line-clamp-3 text-sm">{note}</p> : null}
+              </div>
+            </article>
           </li>
         ))}
       </ol>

@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { ClockIcon, ExternalIcon, HideIcon, ShareIcon, ThumbDownIcon, ThumbUpIcon } from "@/components/icons";
 import { useLibrary } from "@/components/library";
+import { UpNextCard, useAutoplay } from "@/components/up-next";
 import { ActionMenu, menuItemClass } from "@/components/video-card";
+import { isPlayerEnded, PLAYER_ORIGIN } from "@/lib/player-message";
 
-export function Player({ vid, title }: { vid: string; title: string }) {
+const noop = () => () => undefined;
+
+/** `next` is the video autoplay moves to (next playlist item or top related). Key the Player by vid so state resets. */
+export function Player({ vid, title, next }: { vid: string; title: string; next?: { href: string; title: string } }) {
   const library = useLibrary();
   const { markSeen } = library;
   useEffect(() => {
@@ -14,6 +19,23 @@ export function Player({ vid, title }: { vid: string; title: string }) {
     markSeen(vid);
   }, [markSeen, vid]);
   const [glow, setGlow] = useState(false);
+  const [autoplay] = useAutoplay();
+  const [ended, setEnded] = useState(false);
+  const frame = useRef<HTMLIFrameElement>(null);
+  // The embed needs our origin for the postMessage API; render it only once known (client).
+  const origin = useSyncExternalStore(noop, () => window.location.origin, () => "");
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.source === frame.current?.contentWindow && isPlayerEnded(event.origin, event.data)) setEnded(true);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+  const listen = () => {
+    const target = frame.current?.contentWindow;
+    target?.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), PLAYER_ORIGIN);
+    target?.postMessage(JSON.stringify({ event: "command", func: "addEventListener", args: ["onStateChange"] }), PLAYER_ORIGIN);
+  };
   return (
     // isolate keeps the glow's -z-10 inside this box, under the player but above the page background.
     <div className="relative isolate -mx-4 min-[801px]:mx-0">
@@ -31,14 +53,19 @@ export function Player({ vid, title }: { vid: string; title: string }) {
         className={`pointer-events-none absolute inset-0 -z-10 size-full object-cover blur-[80px] saturate-[1.4] transition-opacity duration-700 ease-out-quart motion-reduce:transition-none [@media(prefers-reduced-transparency:reduce)]:hidden ${glow ? "opacity-45 in-data-[theme=light]:opacity-25" : "opacity-0"}`}
       />
       <div className="relative aspect-video overflow-hidden bg-black min-[801px]:rounded-xl">
-      <iframe
-        className="absolute inset-0 size-full"
-        src={`https://www.youtube-nocookie.com/embed/${vid}?rel=0`}
-        title={title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        referrerPolicy="strict-origin-when-cross-origin"
-        allowFullScreen
-      />
+      {origin ? (
+        <iframe
+          ref={frame}
+          className="absolute inset-0 size-full"
+          src={`https://www.youtube-nocookie.com/embed/${vid}?rel=0&enablejsapi=1&origin=${encodeURIComponent(origin)}`}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
+          onLoad={listen}
+        />
+      ) : null}
+      {ended && autoplay && next ? <UpNextCard href={next.href} title={next.title} onCancel={() => setEnded(false)} /> : null}
       </div>
     </div>
   );
