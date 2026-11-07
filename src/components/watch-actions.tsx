@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import { ClockIcon, ExternalIcon, ThumbDownIcon, ThumbUpIcon, pillClass } from "@/components/icons";
+import { ClockIcon, ExternalIcon, ThumbDownIcon, ThumbUpIcon } from "@/components/icons";
 import { useLibrary } from "@/components/library";
 
-export function WatchActions({ vid, title }: { vid: string; title: string }) {
+export function Player({ vid, title }: { vid: string; title: string }) {
   const library = useLibrary();
   useEffect(() => {
     library.markSeen(vid);
@@ -13,38 +13,68 @@ export function WatchActions({ vid, title }: { vid: string; title: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vid]);
   return (
-    <div className="flex flex-col gap-3">
-      <div className="relative aspect-video overflow-hidden rounded-[16px] bg-black">
-        <iframe
-          className="absolute inset-0 size-full"
-          src={`https://www.youtube-nocookie.com/embed/${vid}?rel=0`}
-          title={title}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-        />
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex overflow-hidden rounded-full bg-surface">
-          <button type="button" className={`grid size-9 place-items-center ${library.likes.includes(vid) ? "text-primary" : ""}`} aria-label="Like" aria-pressed={library.likes.includes(vid)} onClick={() => library.toggleLike(vid)}>
-            <ThumbUpIcon filled={library.likes.includes(vid)} />
-          </button>
-          <button type="button" className={`grid size-9 place-items-center border-l border-line ${library.dislikes.includes(vid) ? "text-primary" : ""}`} aria-label="Not for me" aria-pressed={library.dislikes.includes(vid)} onClick={() => library.toggleDislike(vid)}>
-            <ThumbDownIcon filled={library.dislikes.includes(vid)} />
-          </button>
-        </div>
-        <button type="button" className={`${pillClass} ${library.later.includes(vid) ? "text-primary" : ""}`} aria-label={library.later.includes(vid) ? "Remove from watch later" : "Watch later"} aria-pressed={library.later.includes(vid)} onClick={() => library.toggleLater(vid)}>
-          <ClockIcon filled={library.later.includes(vid)} />
-          <span className="pr-1">{library.later.includes(vid) ? "Saved" : "Watch later"}</span>
-        </button>
-        <a className={pillClass} href={`https://www.youtube.com/watch?v=${vid}`} target="_blank" rel="noreferrer" aria-label="Open on YouTube">
-          <ExternalIcon />
-          <span className="pr-1">YouTube</span>
-        </a>
-        <a className="grid size-9 place-items-center rounded-full bg-surface hover:bg-[var(--surface-hover)]" href={`https://hackertube.org/watch/${vid}`} target="_blank" rel="noreferrer" aria-label="Open on HackerTube">
-          <ExternalIcon />
-        </a>
-      </div>
+    <div className="relative -mx-4 aspect-video overflow-hidden bg-black min-[801px]:mx-0 min-[801px]:rounded-xl">
+      <iframe
+        className="absolute inset-0 size-full"
+        src={`https://www.youtube-nocookie.com/embed/${vid}?rel=0`}
+        title={title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+      />
     </div>
+  );
+}
+
+export function ActionBar({ vid, title }: { vid: string; title: string }) {
+  const library = useLibrary();
+  const [copied, setCopied] = useState(false);
+  const liked = library.likes.includes(vid);
+  const disliked = library.dislikes.includes(vid);
+  const saved = library.later.includes(vid);
+  const share = async () => {
+    const url = `${window.location.origin}/watch/${vid}`;
+    if (navigator.share) {
+      await navigator.share({ title, url }).catch(() => undefined);
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
+  };
+  const round = "grid size-9 shrink-0 place-items-center rounded-full bg-surface transition-colors hover:bg-surface-hover";
+  return (
+    <div className="flex items-center gap-2">
+      <div className="inline-flex h-9 shrink-0 items-center overflow-hidden rounded-full bg-surface">
+        <button type="button" className="grid h-full w-12 place-items-center hover:bg-surface-hover" aria-label={liked ? "Unlike" : "Like"} title="Like" aria-pressed={liked} onClick={() => library.toggleLike(vid)}>
+          <ThumbUpIcon filled={liked} />
+        </button>
+        <span className="h-6 w-px bg-line" aria-hidden />
+        <button type="button" className="grid h-full w-12 place-items-center hover:bg-surface-hover" aria-label="Not for me" title="Not for me" aria-pressed={disliked} onClick={() => library.toggleDislike(vid)}>
+          <ThumbDownIcon filled={disliked} />
+        </button>
+      </div>
+      <button type="button" className={round} aria-label={copied ? "Link copied" : "Share"} title={copied ? "Link copied" : "Share"} onClick={share}>
+        <ShareIcon />
+      </button>
+      <button type="button" className={round} aria-label={saved ? "Remove from Watch later" : "Save to Watch later"} title={saved ? "Saved" : "Save"} aria-pressed={saved} onClick={() => library.toggleLater(vid)}>
+        <ClockIcon filled={saved} />
+      </button>
+      <a className={round} href={`https://www.youtube.com/watch?v=${vid}`} target="_blank" rel="noreferrer" aria-label="Open on YouTube" title="Open on YouTube">
+        <ExternalIcon />
+      </a>
+      <a className={round} href={`https://hackertube.org/watch/${vid}`} target="_blank" rel="noreferrer" aria-label="Open on HackerTube" title="Open on HackerTube">
+        <span aria-hidden className="grid size-5 place-items-center rounded-[5px] bg-primary text-[11px] font-bold text-white">Y</span>
+      </a>
+      {copied ? <span role="status" className="text-xs text-muted">Link copied</span> : null}
+    </div>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
+      <path d="M14 5l7 7-7 7v-4c-5 0-8 1.5-11 5 1-5 4-10 11-11z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
   );
 }
