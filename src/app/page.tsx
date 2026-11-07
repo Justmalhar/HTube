@@ -1,8 +1,8 @@
-import { browse, buildFeed } from "@/lib/engine";
+import { PAGE, browse, buildFeed } from "@/lib/engine";
 import { getEngine } from "@/lib/server-catalog";
 import { VideoGrid } from "@/components/video-card";
 import { PlaylistTile, Shelf, TopicTile } from "@/components/shelf";
-import { ChipBar } from "@/components/filters";
+import { ChipBar, Pager } from "@/components/filters";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ const CHIPS = [
 
 export default function Home() {
   const engine = getEngine();
-  const feed = buildFeed(engine, { likes: [], dislikes: [], seen: [], offset: 0, limit: 24 });
+  const feed = buildFeed(engine, { likes: [], dislikes: [], seen: [], offset: 0, limit: PAGE });
   const topics = engine.areas.map((area) => ({
     area,
     vid: browse(engine, { area: area.id, offset: 0, limit: 1 }).items[0]?.vid,
@@ -46,11 +46,7 @@ export default function Home() {
         ))}
       </Shelf>
       <VideoGrid items={feed.items.slice(15)} />
-      <div className="mt-10 flex justify-center">
-        <a href="/browse" className="press inline-flex h-10 items-center rounded-full bg-surface px-5 text-sm font-medium hover:bg-surface-hover">
-          Browse the full catalogue
-        </a>
-      </div>
+      <Pager path="/" query={{}} offset={0} total={feed.total} />
     </div>
   );
 }
