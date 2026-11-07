@@ -7,7 +7,6 @@ import { chipClass, chipOnClass, pillClass } from "@/components/ui";
 
 const TYPES = ["talk", "lecture", "explainer", "documentary", "interview", "tutorial", "demo", "commentary", "comedy", "music"];
 
-const SORTS = new Set(["hn", "recent", "title"]);
 
 type Chip = { href: string; label: string; on?: boolean };
 
@@ -34,26 +33,24 @@ function toParams(query: Record<string, string | undefined>) {
   return params;
 }
 
+// Every chip in the row is one choice, like YouTube: picking a chip replaces the previous one.
+const FILTER_KEYS = ["sort", "evergreen", "gems", "news", "shelf", "type"] as const;
+
 export function FilterBar({ path, query }: { path: string; query: Record<string, string | undefined> }) {
   const params = toParams(query);
-  const chip = (key: string, value: string, label: string): Chip => {
-    const on = params.get(key) === value;
-    return { href: withQuery(path, params, { [key]: on ? "" : value }), label, on };
-  };
-  // Sort is single-select with "Best" as the default: always one chip on, never toggled off.
-  const sort = params.get("sort") ?? "hn";
-  const sortChip = (value: string, label: string): Chip => ({
-    href: withQuery(path, params, { sort: value === "hn" ? "" : value }),
+  const clear = Object.fromEntries(FILTER_KEYS.map((key) => [key, ""])) as Record<string, string>;
+  const active = FILTER_KEYS.filter((key) => params.get(key)).map((key) => `${key}=${params.get(key)}`);
+  const chip = (key: string, value: string, label: string): Chip => ({
+    href: withQuery(path, params, { ...clear, [key]: value }),
     label,
-    on: (SORTS.has(sort) ? sort : "hn") === value,
+    on: active.length === 1 && active[0] === `${key}=${value}`,
   });
-  const chips = [
-    sortChip("hn", "Best"),
-    sortChip("recent", "Recent"),
-    sortChip("title", "Title"),
+  const chips: Chip[] = [
+    { href: withQuery(path, params, clear), label: "All", on: active.length === 0 },
+    chip("sort", "recent", "Recent"),
     chip("evergreen", "1", "Evergreen"),
     chip("gems", "insistent", "Hidden gems"),
-    chip("news", "show", "Include news"),
+    chip("shelf", "news", "News"),
     ...TYPES.map((type) => chip("type", type, type.charAt(0).toUpperCase() + type.slice(1))),
   ];
   return <ChipBar label="Filters" chips={chips} sticky />;
