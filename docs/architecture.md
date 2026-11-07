@@ -52,20 +52,19 @@ Search text and filters are query parameters. See `docs/api.md` for the keys. Li
 
 The committed catalogue is the HackerTube official export generated 2026-10-31, under the Open Data Commons Attribution License (ODC-By) 1.0. Credit HackerTube (https://hackertube.org) and the [open-index/hacker-news](https://huggingface.co/datasets/open-index/hacker-news) dataset. Hacker News comments remain the work of their authors. Titles and channel names belong to their creators.
 
-`bun run import` runs `scripts/import_licensed.py`. The script reads the delivered combined snapshot at `/tmp/oht-extract/hackertube-complete.json` and writes:
+`bun run import` runs `scripts/import_licensed.py`. The script reads the delivered combined snapshot at `/tmp/oht-extract/hackertube-complete.json` and writes a small database, not one combined dump:
 
-- `data/catalog/videos.jsonl`
-- `data/catalog/mentions.jsonl`
-- `data/catalog/related.jsonl`
-- `data/catalog/categories.json`
-- `data/catalog/areas.json`
-- `data/catalog/playlists.json`
-- `data/catalog/channels.json`
-- `data/catalog/import-report.json`
+- `data/catalog/index.json`: slim row for all 6454 videos (title, channel, scores, category ids, shard id). No comment text and no summary.
+- `data/catalog/shards/00.json` through `15.json`: 16 shards. Each holds the licensed video records, HN comments, and co-recommendation edges for that slice (about 3 MB).
+- `data/catalog/taxonomy.json`: 16 areas and 150 categories.
+- `data/catalog/playlists.json`: 27 playlists, in order, with notes.
+- `data/catalog/channels.json`: channel slug and video count.
+- `data/catalog/manifest.json`: version, shard sizes, and counts.
+- `data/catalog/import-report.json`: the last import check.
 
 The importer refuses to finish unless the snapshot contains 6454 videos, 150 categories, 16 areas, 27 playlists, 39834 HN mentions, and 3778 related records.
 
-These YouTube fields are removed from the committed videos: `published`, `duration_s`, `views`, `likes`, `thumbnail`, and `minutes`. Duration, view count, like count, and publish time are written only to gitignored `data/private/youtube-meta.jsonl`. The UI may show duration on a thumbnail when that local file is present. View counts, like counts, and upload dates are never shown.
+These YouTube fields are removed from the committed videos: `published`, `duration_s`, `views`, `likes`, `thumbnail`, and `minutes`. The same fields are written only to gitignored `data/private/youtube-meta.jsonl`. The app does not read that file into pages or into IndexedDB. View counts, like counts, upload dates, and durations are not shown.
 
 Thumbnails are not stored. The default image is the derived middle frame `https://i.ytimg.com/vi/<vid>/hq2.jpg`. The frame toggle switches to the derived uploader image `https://i.ytimg.com/vi/<vid>/hqdefault.jpg`. The player uses the privacy-enhanced embed `https://www.youtube-nocookie.com/embed/<vid>` (also stored as `embed_url`). No video files are hosted.
 
@@ -73,7 +72,7 @@ Thumbnails are not stored. The default image is the derived middle frame `https:
 
 The official zip manifest listed `embeddings.npy` and `embedding_ids.json`. Those arrays were not in the delivered combined JSON. The importer does not write them, and the app does not ship semantic search.
 
-Server code reads `data/catalog`. A page receives one page of cards, the open video, or one playlist. The combined JSON and the jsonl files stay on the server and are not imported into a client component.
+The server reads `data/catalog` and renders one page of cards. After the first visit the browser saves `index.json`, the taxonomy, and the playlists in IndexedDB, then downloads shards one at a time. A watch page needs only the shard named on that video. Comment text is not in the index. YouTube image and embed hosts are the only ongoing media requests once the shards are stored. The combined snapshot is not imported into a client component.
 
 This project does not recrawl hackertube.org. The captured `data/source/robots.txt` disallows `/api/` and `/download/`. The source sitemap request returned 404, which `data/source/coverage.json` records. Personal likes, history, and watch later were never public records on the source.
 
@@ -83,7 +82,7 @@ The home feed is rebuilt in this app from the public HackerTube client contract 
 
 Query inputs are `likes`, `dislikes`, `seen`, and `seed`. Each of `likes`, `dislikes`, and `seen` is a comma-separated list of 11-character video ids. `seed` is an opaque string stored in the browser so a reload keeps the same anonymous order.
 
-With an empty library the sections are, in order: classics, recent favorites, hidden gems, unexplored topics. After the viewer likes at least one video, the feed adds similar videos and co-recommendations. Similar videos share categories, tags, or topic text with the liked videos. Co-recommendations come from `related.jsonl` (`shared_recommenders`), most overlap first. Disliked ids and seen ids drop out of the shelves. The seed only shuffles within a section. It does not change which section a video belongs to.
+With an empty library the lanes are, in order: classics, recent favorites, hidden gems (few mentions, mostly strong recommendations), then topics outside that first classic set. After a like, similar videos (shared categories) and co-recommendations come first. Co-recommendations are the `related` edges stored in the same shard as the video (`shared_recommenders`). Disliked ids are dropped. Seen ids move to the end. The public mix uses a fixed order so the server page and the on-device copy match. Hidden gems here are not the source's "under 100k views" cut, because view counts are not in the catalogue.
 
 ## Search
 

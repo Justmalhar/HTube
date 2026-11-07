@@ -39,7 +39,7 @@ That command runs `scripts/import_licensed.py`. It writes the committed files un
 
 The official zip listed semantic embedding files. They were not in the delivered combined JSON, so the import does not create them.
 
-Keep `data/private` gitignored. Do not commit `youtube-meta.jsonl` or any export zip stored beside it. The committed catalogue is enough to run the app. Duration badges appear only on a machine that has the private file. View counts, like counts, and upload dates stay hidden even then.
+Keep `data/private` gitignored. Do not commit `youtube-meta.jsonl` or any export zip stored beside it. The committed catalogue is enough to run the app. The running app does not show durations, view counts, like counts, or upload dates.
 
 ## Everyday commands
 

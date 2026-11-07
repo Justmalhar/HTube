@@ -29,22 +29,19 @@ The importer expects `/tmp/oht-extract/hackertube-complete.json` on that machine
 
 Ship the Next.js build and the committed `data/catalog` files:
 
-- 6454 videos in `videos.jsonl`
-- 150 categories
-- 16 areas
-- 27 playlists
-- 39834 mentions
-- 3778 related records
+- `index.json` plus `shards/00.json` through `shards/15.json`
+- `taxonomy.json`, `playlists.json`, `channels.json`, and `manifest.json`
+- 6454 videos, 150 categories, 16 areas, 27 playlists, 39834 mentions, 3778 related records, split across those shards
 
 Do not ship `data/private`. That directory is gitignored. It holds `youtube-meta.jsonl` (duration, view count, like count, publish time) and any local export zip. Those YouTube fields are not part of the ODC-By catalogue and must not be baked into the deployment artefact or into a public cache.
 
-If the private file is absent, watch pages simply omit the duration badge. They still must not show view counts, like counts, or upload dates.
+Do not show durations, view counts, like counts, or upload dates, whether or not the private file is on disk.
 
 Do not ship `embeddings.npy`. Those vectors were listed on the official zip manifest and were not in the delivered combined JSON.
 
 ## Runtime
 
-Give the Node process enough memory to read the catalogue on the server. Mention text is the bulky part (the upstream mentions file is about 35 MB). Keep that parse on the server. Do not upload the jsonl files into a client bundle or an edge function that would send them to the browser.
+Give the Node process enough memory to read the 16 shards on the server. Comment text is still about 35 MB in total, just split. Do not import those shard files into a client bundle. The browser fetches them through `/api/sync/shard/:id` and stores them in IndexedDB.
 
 Search and filters are query parameters, so a CDN can cache public HTML for a given URL. Vary that cache on the feed query (`likes`, `dislikes`, `seen`, `seed`) if the home page is rendered on the server from those parameters. Library pages can be cached as shells because the ids are filled in from `localStorage`.
 

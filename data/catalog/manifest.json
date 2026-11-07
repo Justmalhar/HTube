@@ -1,0 +1,95 @@
+{
+  "version": "2026-10-31+2026-11-07",
+  "shardCount": 16,
+  "shards": [
+    {
+      "id": "00",
+      "bytes": 3102832,
+      "videos": 400
+    },
+    {
+      "id": "01",
+      "bytes": 3360295,
+      "videos": 426
+    },
+    {
+      "id": "02",
+      "bytes": 2852981,
+      "videos": 376
+    },
+    {
+      "id": "03",
+      "bytes": 3048657,
+      "videos": 406
+    },
+    {
+      "id": "04",
+      "bytes": 3115188,
+      "videos": 400
+    },
+    {
+      "id": "05",
+      "bytes": 2992128,
+      "videos": 419
+    },
+    {
+      "id": "06",
+      "bytes": 2958474,
+      "videos": 392
+    },
+    {
+      "id": "07",
+      "bytes": 2882481,
+      "videos": 383
+    },
+    {
+      "id": "08",
+      "bytes": 3135901,
+      "videos": 407
+    },
+    {
+      "id": "09",
+      "bytes": 3062986,
+      "videos": 417
+    },
+    {
+      "id": "10",
+      "bytes": 3025653,
+      "videos": 416
+    },
+    {
+      "id": "11",
+      "bytes": 3121483,
+      "videos": 421
+    },
+    {
+      "id": "12",
+      "bytes": 2991250,
+      "videos": 395
+    },
+    {
+      "id": "13",
+      "bytes": 2909167,
+      "videos": 381
+    },
+    {
+      "id": "14",
+      "bytes": 2980684,
+      "videos": 406
+    },
+    {
+      "id": "15",
+      "bytes": 3102047,
+      "videos": 409
+    }
+  ],
+  "counts": {
+    "videos": 6454,
+    "mentions": 39834,
+    "related": 3778,
+    "categories": 150,
+    "areas": 16,
+    "playlists": 27,
+    "channels": 3315
+  }
+}

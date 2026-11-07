@@ -90,7 +90,7 @@ The home feed follows the public client inputs `likes`, `dislikes`, `seen`, and 
 - Uploader image, used when the viewer turns frames off: `https://i.ytimg.com/vi/<vid>/hqdefault.jpg`
 - Embed: `https://www.youtube-nocookie.com/embed/<vid>`
 
-The same file says YouTube view counts, durations, like counts, and publish dates are not in the redistributable export. This repo follows that split. `scripts/import_licensed.py` parks duration, views, likes, and publish time in gitignored `data/private/youtube-meta.jsonl` and drops them from `data/catalog`. The UI still hides view counts, like counts, and upload dates. Duration may render only when the private file is on that machine.
+The same file says YouTube view counts, durations, like counts, and publish dates are not in the redistributable export. This repo follows that split. `scripts/import_licensed.py` parks duration, views, likes, and publish time in gitignored `data/private/youtube-meta.jsonl` and drops them from `data/catalog`. The UI hides view counts, like counts, upload dates, and durations. The private metadata file is not read by the app.
 
 `DATA.md` also describes `embeddings.npy`. The export manifest in `data/source/export.json` lists that file. It was not in the delivered combined JSON, so there is no semantic-search UI.
 

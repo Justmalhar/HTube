@@ -1,0 +1,10 @@
+{
+  "json_parse": "pass",
+  "schema_core_types_required_const_additional_properties": "pass",
+  "schema_format_uri": "not evaluated",
+  "unique_videos": "pass",
+  "category_foreign_keys": "pass",
+  "mention_video_foreign_keys": "pass",
+  "playlist_video_foreign_keys": "pass",
+  "live_and_export_id_sets": "equal"
+}

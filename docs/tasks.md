@@ -9,7 +9,7 @@ Work is done when `bun test`, `bun run typecheck`, `bun run lint`, and `bun run 
 - [x] Committed video rows drop `published`, `duration_s`, `views`, `likes`, `thumbnail`, and `minutes`.
 - [ ] `bun run import` is the command contributors run for that script.
 - [ ] `data/private` stays gitignored, including `youtube-meta.jsonl` and any export zip.
-- [ ] Server loaders read `data/catalog` only. Client components do not import the jsonl files or the combined snapshot.
+- [x] Server loaders read `data/catalog` shards and `index.json`. Client components do not import those files. They use `/api/sync/*`.
 - [ ] Do not add `embeddings.npy`. It was on the official zip manifest and was not in the delivered combined JSON.
 
 ## Shell

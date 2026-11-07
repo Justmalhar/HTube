@@ -1,6 +1,6 @@
 # API
 
-OpenHackerTube has no accounts, no write API, and no proxy to hackertube.org. Pages are server-rendered from `data/catalog`. The browser receives HTML for one view, plus the small library record it already stores. Large JSON stays on the server.
+OpenHackerTube has no accounts, no write API, and no proxy to hackertube.org. The first page is server-rendered from `data/catalog`. The browser may then copy the index and the shards into IndexedDB. It does not receive the private YouTube metadata file.
 
 The closed HackerTube `/api/feed` route is not implemented and is not called. The source `robots.txt` disallowed `/api/` and `/download/`. This app does not fetch either prefix. The source sitemap returned 404 and is not republished here.
 
@@ -19,7 +19,7 @@ The feed is reconstructed in this process from the public client contract and th
 
 Empty parameters mean an empty list or the default seed. Ids that are not in the catalogue are ignored. Disliked and seen ids are omitted from every section.
 
-Section order with no likes: classics, recent favorites, hidden gems, unexplored topics. When `likes` is non-empty, the response adds similar videos (shared categories, tags, or topic text) and co-recommendations from `data/catalog/related.jsonl`.
+Section order with no likes: classics, recent favorites, hidden gems, unexplored topics. When `likes` is non-empty, similar videos and co-recommendations are mixed in first. Co-recommendations come from the `related` array inside that video's shard.
 
 The response is the home page, not the full catalogue.
 
@@ -30,7 +30,7 @@ The response is the home page, not the full catalogue.
 | Query | Meaning |
 | --- | --- |
 | `q` | Lexical query |
-| `dur` | Length filter. `xlong` is the Longs view and reads duration only from local private metadata |
+| `dur` | Length filter. Not applied. Durations are not in the catalogue, so the page explains that instead of inventing a list. |
 | `area` | Area id |
 | `category` | Category id |
 | `shelf` | `shelf_life` value: `evergreen`, `dated`, or `news` |
@@ -63,7 +63,7 @@ Category, area, and playlist pages:
 - the kept mentions for that video (at most 20)
 - related videos for that `vid`, ordered by `shared_recommenders`, at most 20
 
-The page omits view count, like count, and publish time. It includes duration only when `data/private/youtube-meta.jsonl` exists on that server. A public deployment must omit the private file, so public watch pages omit duration as well.
+The page omits view count, like count, publish time, and duration. Those fields are not read from `data/private`.
 
 The player is an embed. The response does not contain video bytes.
 
@@ -88,22 +88,31 @@ A card sent to the browser can include:
 
 A card must not include `views`, `likes`, `published`, or a stored thumbnail URL from the pre-import snapshot. Mention `text` belongs on the watch page for that video, not on every card in a grid.
 
+## Sync
+
+These reads copy the catalogue onto the device. They never return `data/private`.
+
+| Route | Body |
+| --- | --- |
+| `GET /api/sync/manifest` | Version, 16 shard ids, and counts |
+| `GET /api/sync/index` | Slim index for every video |
+| `GET /api/sync/taxonomy` | Areas and categories |
+| `GET /api/sync/playlists` | The 27 playlists |
+| `GET /api/sync/shard/:id` | One shard (`00` to `15`): videos, comments, related edges |
+
 ## Catalogue files
 
-These files are server inputs, not public downloads:
-
-| File | Row |
+| File | What it holds |
 | --- | --- |
-| `data/catalog/videos.jsonl` | One licensed video |
-| `data/catalog/mentions.jsonl` | One HN comment linked to a `vid` |
-| `data/catalog/related.jsonl` | One video's co-recommendations |
-| `data/catalog/categories.json` | One category, with `video_count` and description |
-| `data/catalog/areas.json` | One area and its categories |
-| `data/catalog/playlists.json` | One playlist: slug, title, pitch, intro, items |
-| `data/catalog/channels.json` | One channel slug and video count |
+| `data/catalog/index.json` | One slim row per video, including `shard` |
+| `data/catalog/shards/00.json` … `15.json` | Licensed videos, mentions, and related edges for that slice |
+| `data/catalog/taxonomy.json` | Areas and categories |
+| `data/catalog/playlists.json` | Playlist order and notes |
+| `data/catalog/channels.json` | Channel slug and video count |
+| `data/catalog/manifest.json` | Shard map |
 | `data/catalog/import-report.json` | Counts from the last import |
 
-`data/private/youtube-meta.jsonl` lines look like `{ "vid", "duration_s", "views", "likes", "published" }`. Treat that file as local hydration. Do not add a route that returns it.
+`data/private/youtube-meta.jsonl` lines look like `{ "vid", "duration_s", "views", "likes", "published" }`. Do not add a route that returns it.
 
 ## Credits on data responses
 

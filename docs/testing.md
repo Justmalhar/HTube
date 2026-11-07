@@ -24,7 +24,7 @@ Assert the imported report and the files under `data/catalog` match the official
 
 Assert a committed video row has no `published`, `duration_s`, `views`, `likes`, `thumbnail`, or `minutes` field. Assert `data/private/youtube-meta.jsonl` is the only output that carries duration, views, likes, and publish time, and that this file is gitignored.
 
-Assert every video id is unique, every mention and related id points at a video, and every playlist item points at a video. Assert category ids on videos exist in `categories.json`.
+Assert every video id is unique, every mention and related id points at a video, and every playlist item points at a video. Assert category ids on videos exist in `taxonomy.json`. Assert the 16 shard files together contain every video, and that `index.json` names the same ids.
 
 Assert thumbnail URLs are built as `https://i.ytimg.com/vi/<vid>/hq2.jpg` when frames are on, and `https://i.ytimg.com/vi/<vid>/hqdefault.jpg` when frames are off. Assert embed URLs use `https://www.youtube-nocookie.com/embed/<vid>`. Assert no test fixture or page response is a video file.
 
@@ -63,7 +63,7 @@ A reduced-motion preference disables non-essential transitions.
 
 ## Server boundary
 
-View the page source or the client bundle for a browse page and confirm the full `videos.jsonl`, `mentions.jsonl`, and `related.jsonl` payloads are absent. The HTML contains the current page of cards only.
+View the page source for the home page and confirm it contains one page of cards, not a shard file and not `index.json`. Sync responses are separate requests the browser stores in IndexedDB.
 
 ## What a green run does not prove
 

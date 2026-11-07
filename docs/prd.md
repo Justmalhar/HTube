@@ -18,7 +18,7 @@ The dataset is the HackerTube official export of 2026-10-31, licensed ODC-By 1.0
 
 Credit HackerTube (https://hackertube.org) and open-index/hacker-news on the about and data pages. Comments remain the work of their authors. Titles and channel names belong to the creators. The product is not affiliated with YouTube, Google, Hacker News, or Y Combinator.
 
-The committed dataset does not include YouTube view counts, durations, likes, or publish dates. Those values live only in gitignored `data/private`. The interface never shows view counts, like counts, or upload dates. A duration badge is allowed only when a local private hydration file is present.
+The committed dataset does not include YouTube view counts, durations, likes, or publish dates. Those values live only in gitignored `data/private`, and the interface does not read that file. The interface never shows view counts, like counts, upload dates, or durations.
 
 Thumbnails and embeds are derived YouTube URLs. The default thumbnail is the middle frame `hq2.jpg`. The embed host is `www.youtube-nocookie.com`. The app does not host video files.
 
