@@ -17,7 +17,7 @@ export default function Categories() {
       <div className="flex flex-col gap-6">
         {areas.map((area) => (
           <section key={area.id}>
-            <a href={`/a/${area.id}`} className="text-base font-medium">{area.name}</a>
+            <a href={`/a/${area.id}`} className="text-sm font-medium">{area.name}</a>
             <span className="ml-2 text-sm text-muted">{area.video_count}</span>
             <ul className="mt-2 divide-y divide-line rounded-[12px] bg-surface">
               {area.categories.map((category) => (

@@ -55,7 +55,7 @@ YouTube's density and chrome, with Hacker News orange instead of YouTube red. Da
 
 ## Logo
 
-The mark is inspired by the Hacker News tile: a rounded orange square and a white Y. It is not the Y Combinator logo and the product is not affiliated with Y Combinator, Hacker News, or YouTube. The wordmark is **Hacker** in the text color and **Tube** in `primary`. The accessible name is OpenHackerTube.
+The wordmark is text only: **Hacker** in the text color and **Tube** in `primary`, 18px, weight 500. It is not a Y Combinator mark and the product is not affiliated with Y Combinator, Hacker News, or YouTube. The accessible name is OpenHackerTube. Video titles are 14px, weight 500, two lines. Page titles stay at 16px. Scrollbars are thin and use the hover surface color.
 
 ## Chrome
 

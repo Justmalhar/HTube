@@ -37,7 +37,7 @@ export default async function WatchPage({ params }: { params: Promise<{ vid: str
     <div className="grid gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_380px]">
       <div className="min-w-0">
         <WatchActions vid={vid} title={card.title} />
-        <h1 className="mt-3 text-xl font-medium leading-7">{card.title}</h1>
+        <h1 className="mt-3 text-base font-medium leading-5">{card.title}</h1>
         <a href={`/channel/${card.channelSlug}`} className="mt-1 block text-sm text-muted">{card.channel}</a>
         <p className="mt-2 flex flex-wrap gap-x-3 text-sm text-muted">
           <span>{card.recommenders} HN recommendations</span>

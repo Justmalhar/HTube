@@ -28,7 +28,7 @@ export default function Playlists() {
                         <img key={vid} src={`https://i.ytimg.com/vi/${vid}/hq2.jpg`} alt="" className="aspect-video object-cover" />
                       ))}
                     </div>
-                    <h3 className="mt-3 line-clamp-2 text-base font-medium">{playlist.title}</h3>
+                    <h3 className="mt-2 line-clamp-2 text-sm font-medium leading-5">{playlist.title}</h3>
                     <p className="mt-1 text-sm text-muted">{playlist.items.length} videos</p>
                     <p className="mt-1 line-clamp-2 text-sm text-muted">{playlist.pitch}</p>
                   </a>

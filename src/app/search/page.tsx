@@ -1,6 +1,6 @@
 import { FilterBar, Pager } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
-import { VideoGrid } from "@/components/video-card";
+import { SearchList } from "@/components/video-card";
 import { searchPage } from "@/lib/pages";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       </form>
       {q ? <FilterBar path="/search" query={record} /> : null}
       {page.weak && page.items.length ? <p className="mb-3 text-sm text-muted">No strong title match. These are the closest talks.</p> : null}
-      {q ? <VideoGrid items={page.items} /> : <p className="text-sm text-muted">Type a topic, a title, or a channel.</p>}
+      {q ? <SearchList items={page.items} /> : <p className="text-sm text-muted">Type a topic, a title, or a channel.</p>}
       {q ? <Pager path="/search" query={record} offset={page.offset} total={page.total} /> : null}
     </div>
   );
