@@ -11,6 +11,7 @@ import {
   GridIcon,
   HistoryIcon,
   HomeIcon,
+  SubscriptionsIcon,
   KeyboardIcon,
   LaterIcon,
   LikeIcon,
@@ -35,6 +36,7 @@ const SECTIONS: readonly { title?: string; links: readonly NavLink[] }[] = [
     links: [
       { href: "/", label: "Home", Icon: HomeIcon },
       { href: "/browse?dur=xlong", label: "Longs", Icon: LongsIcon },
+      { href: "/subscriptions", label: "Subscriptions", Icon: SubscriptionsIcon },
       { href: "/categories", label: "Categories", Icon: GridIcon },
       { href: "/playlists", label: "Playlists", Icon: ListIcon },
       { href: "/browse", label: "Browse", Icon: CompassIcon },
@@ -62,7 +64,7 @@ const RAIL: readonly NavLink[] = [
 const MOBILE: readonly NavLink[] = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/browse?dur=xlong", label: "Longs", Icon: LongsIcon },
-  { href: "/categories", label: "Topics", Icon: GridIcon },
+  { href: "/subscriptions", label: "Subscriptions", Icon: SubscriptionsIcon },
   { href: "/search", label: "Search", Icon: SearchIcon },
   { href: "/later", label: "You", Icon: YouIcon, match: YOU_PATHS },
 ];

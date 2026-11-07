@@ -1,5 +1,6 @@
 import {
   Ban,
+  SquarePlay,
   Bell,
   BellRing,
   ChevronLeft,
@@ -92,6 +93,7 @@ export const MoonIcon = chrome(Moon);
 export const LongsIcon = chrome(TvMinimalPlay);
 export const YouIcon = chrome(CircleUserRound);
 export const HomeIcon = chrome(House);
+export const SubscriptionsIcon = chrome(SquarePlay);
 export const LaterIcon = chrome(Clock);
 export const GridIcon = chrome(LayoutGrid);
 export const ListIcon = chrome(ListVideo);
