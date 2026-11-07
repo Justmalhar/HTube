@@ -4,11 +4,11 @@ OpenHackerTube is a browser for the HackerTube catalogue: talks and videos that 
 
 ## Who it is for
 
-A viewer who wants the HackerTube catalogue without an account. They land on a feed, open a talk, and optionally like it, hide it, or save it for later. The same browser should remember that choice after a reload. A second browser starts fresh.
+A viewer who wants the catalogue without an account. They land on a feed, open a talk, and optionally like it, hide it, or save it for later. The same browser should remember that choice after a reload. A second browser starts fresh.
 
 ## Catalogue
 
-The dataset is the HackerTube official export of 2026-10-31, licensed ODC-By 1.0.
+The dataset is the official export of 2026-10-31.
 
 - 6454 videos
 - 150 categories in 16 areas
@@ -16,7 +16,7 @@ The dataset is the HackerTube official export of 2026-10-31, licensed ODC-By 1.0
 - 39834 HN mentions
 - 3778 related records
 
-Credit HackerTube (https://hackertube.org) and open-index/hacker-news on the about and data pages. Comments remain the work of their authors. Titles and channel names belong to the creators. The product is not affiliated with YouTube, Google, Hacker News, or Y Combinator.
+The product is not affiliated with YouTube, Google, Hacker News, or Y Combinator.
 
 The committed dataset does not include YouTube view counts, durations, likes, or publish dates. Those values live only in gitignored `data/private`, and the interface does not read that file. The interface never shows view counts, like counts, upload dates, or durations.
 
@@ -40,7 +40,7 @@ Category, area, and playlist indexes use list rows. Video results use cards. The
 
 ## Watch
 
-A watch page plays the youtube-nocookie embed, shows the HackerTube summary and why HN pointed at it, lists the kept mentions, and shows related videos in a 402px column that drops under the player on a narrow screen. The channel is its own link. Opening the page records history in `localStorage`.
+A watch page plays the youtube-nocookie embed, shows the catalogue summary and why HN pointed at it, lists the kept mentions, and shows related videos in a 402px column that drops under the player on a narrow screen. The channel is its own link. Opening the page records history in `localStorage`.
 
 ## Library and settings
 
@@ -67,9 +67,9 @@ Copy that does not belong: a Shorts shelf, subscriptions, a comment composer, or
 - Hosting video, audio, or thumbnail files
 - Showing or redistributing YouTube view counts, like counts, or publish dates
 - Semantic search
-- Recrawling hackertube.org, including paths disallowed by the source robots file
+- Recrawling the source site, including paths disallowed by the source robots file
 - Treating the source sitemap as available (the request returned 404)
 
 ## Acceptance
 
-A viewer can open the home feed, search, filter by a query parameter, open a video, like it, and reload. The like is still there, and the feed now includes similar videos and co-recommendations. A private window has an empty library. Public pages credit HackerTube and open-index/hacker-news and do not print YouTube view counts.
+A viewer can open the home feed, search, filter by a query parameter, open a video, like it, and reload. The like is still there, and the feed now includes similar videos and co-recommendations. A private window has an empty library. Public pages do not print YouTube view counts.

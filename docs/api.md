@@ -1,8 +1,8 @@
 # API
 
-OpenHackerTube has no accounts, no write API, and no proxy to hackertube.org. The first page is server-rendered from `data/catalog`. The browser may then copy the index and the shards into IndexedDB. It does not receive the private YouTube metadata file.
+OpenHackerTube has no accounts, no write API, and no proxy to the source site. The first page is server-rendered from `data/catalog`. The browser may then copy the index and the shards into IndexedDB. It does not receive the private YouTube metadata file.
 
-The closed HackerTube `/api/feed` route is not implemented and is not called. The source `robots.txt` disallowed `/api/` and `/download/`. This app does not fetch either prefix. The source sitemap returned 404 and is not republished here.
+The closed upstream `/api/feed` route is not implemented and is not called. The source `robots.txt` disallowed `/api/` and `/download/`. This app does not fetch either prefix. The source sitemap returned 404 and is not republished here.
 
 ## Feed
 
@@ -80,7 +80,7 @@ Frame toggle off means the derived thumbnail is `https://i.ytimg.com/vi/<vid>/hq
 A card sent to the browser can include:
 
 - `vid`, `title`, `channel`, `channel_slug`
-- `summary` (the HackerTube summary, not a YouTube description)
+- `summary` (the catalogue summary, not a YouTube description)
 - `why_hn`, `score`, `content_type`, `level`, `shelf_life`, `primary_topic`
 - `tags` and category ids and names
 - derived `thumbnail_url` and `embed_url`
@@ -113,7 +113,3 @@ These reads copy the catalogue onto the device. They never return `data/private`
 | `data/catalog/import-report.json` | Counts from the last import |
 
 `data/private/youtube-meta.jsonl` lines look like `{ "vid", "duration_s", "views", "likes", "published" }`. Do not add a route that returns it.
-
-## Credits on data responses
-
-Any about or data view should state that the catalogue is ODC-By 1.0 from HackerTube and that HN text is from open-index/hacker-news. Comments stay attributed to their authors. The UI is not affiliated with YouTube, Google, Hacker News, or Y Combinator.

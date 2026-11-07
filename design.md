@@ -95,7 +95,7 @@ Short and concrete. "Talks HN keeps recommending", not a paragraph under the log
 
 ## Motion
 
-Hover darkens a surface by one step (`surface-hover`), instantly. Pressed controls scale to 0.97 over 100ms (`press` utility). Animate only transform and opacity, with `ease-out-quart` for small things and `ease-out-expo` for the drawer. No blur bands or gradient fades under the sticky chip row or the top bar; they sit on a solid background. Nav links show a thin orange bar while a navigation is pending, and `app/loading.tsx` shows a card skeleton. Under `prefers-reduced-motion` every transition and animation is effectively instant and press scaling is off. Under `prefers-contrast: more` muted text and lines get stronger.
+Hover darkens a surface by one step (`surface-hover`), instantly. Pressed controls scale to 0.97 over 100ms (`press` utility). Animate only transform and opacity, with `ease-out-quart` for small things and `ease-out-expo` for the drawer. No blur bands or gradient fades under the sticky chip row or the top bar; they sit on a solid background. Nav links show a thin orange bar while a navigation is pending. Under `prefers-reduced-motion` every transition and animation is effectively instant and press scaling is off. Under `prefers-contrast: more` muted text and lines get stronger.
 
 ## What not to copy from YouTube
 

@@ -21,7 +21,7 @@ The first paint can use an empty `data/catalog`. Import the catalogue before exp
 
 ## Import the catalogue
 
-The importer reads a local combined snapshot. It does not download the snapshot and it does not recrawl hackertube.org.
+The importer reads a local combined snapshot. It does not download the snapshot and it does not recrawl the source site.
 
 Place the delivered combined JSON at:
 
@@ -60,6 +60,6 @@ Likes, dislikes, watch later, history, theme, and the frame toggle are stored in
 
 Theme defaults to dark. Frames default to on, which requests the YouTube middle frame `hq2.jpg`.
 
-## Credits
+## Source notes
 
-The catalogue is the HackerTube official export, ODC-By 1.0. Credit HackerTube (https://hackertube.org) and open-index/hacker-news. Field notes for the upstream files live in `data/source/DATA.md`.
+Field notes for the upstream files live in `data/source/DATA.md`.

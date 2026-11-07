@@ -1,6 +1,6 @@
 # Tasks
 
-Work is done when `bun test`, `bun run typecheck`, `bun run lint`, and `bun run build` pass, and the acceptance lines in `docs/prd.md` hold. Do not recrawl hackertube.org.
+Work is done when `bun test`, `bun run typecheck`, `bun run lint`, and `bun run build` pass, and the acceptance lines in `docs/prd.md` hold. Do not recrawl the source site.
 
 ## Catalogue
 
@@ -33,7 +33,6 @@ Work is done when `bun test`, `bun run typecheck`, `bun run lint`, and `bun run 
 - [ ] `/watch/[vid]` embeds `youtube-nocookie`, shows the summary, kept mentions, and related videos in a 402px column.
 - [ ] Default thumbnail `hq2.jpg`. Frame toggle off uses `hqdefault.jpg`. Never render view count, like count, or upload date. Duration only from local private metadata.
 - [ ] `/liked`, `/later`, `/history`, and `/settings` read and write the `openhackertube` localStorage record. No account UI.
-- [ ] `/about` and `/data` credit HackerTube and open-index/hacker-news, name ODC-By 1.0, and record that the source sitemap returned 404.
 
 ## Tests
 
@@ -47,4 +46,4 @@ Work is done when `bun test`, `bun run typecheck`, `bun run lint`, and `bun run 
 ## Deploy
 
 - [ ] `bun run build` and `bun run start` serve the app with `data/catalog` present and `data/private` absent.
-- [ ] Public pages still credit the sources and still omit YouTube statistics.
+- [ ] Public pages still omit YouTube statistics.

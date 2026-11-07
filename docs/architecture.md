@@ -44,13 +44,12 @@ Type is Roboto, with Arial and sans-serif as fallbacks, at a 14px base. Card tit
 | History | `/history` | Local watch history |
 | Settings | `/settings` | Theme and frame toggle |
 | About | `/about` | What the catalogue is |
-| Data | `/data` | License, counts, and credits |
 
 Search text and filters are query parameters. See `docs/api.md` for the keys. Library membership is not a query parameter. It lives in the browser.
 
 ## Catalogue
 
-The committed catalogue is the HackerTube official export generated 2026-10-31, under the Open Data Commons Attribution License (ODC-By) 1.0. Credit HackerTube (https://hackertube.org) and the [open-index/hacker-news](https://huggingface.co/datasets/open-index/hacker-news) dataset. Hacker News comments remain the work of their authors. Titles and channel names belong to their creators.
+The committed catalogue is the official export generated 2026-10-31.
 
 `bun run import` runs `scripts/import_licensed.py`. The script reads the delivered combined snapshot at `/tmp/oht-extract/hackertube-complete.json` and writes a small database, not one combined dump:
 
@@ -68,17 +67,17 @@ These YouTube fields are removed from the committed videos: `published`, `durati
 
 Thumbnails are not stored. The default image is the derived middle frame `https://i.ytimg.com/vi/<vid>/hq2.jpg`. The frame toggle switches to the derived uploader image `https://i.ytimg.com/vi/<vid>/hqdefault.jpg`. The player uses the privacy-enhanced embed `https://www.youtube-nocookie.com/embed/<vid>` (also stored as `embed_url`). No video files are hosted.
 
-`videos.score` is the HackerTube ranking signal: distinct months with a recommendation, plus half a point for each month that includes a strong recommendation. Only mention stances `rec` and `strong_rec` are recommendations. `shelf_life` of `news` marks a video that only matters around one event. The home feed prefers evergreen and dated talks. At most 20 mentions are kept per video, and mention text is cut at 1500 characters.
+`videos.score` is the source ranking signal: distinct months with a recommendation, plus half a point for each month that includes a strong recommendation. Only mention stances `rec` and `strong_rec` are recommendations. `shelf_life` of `news` marks a video that only matters around one event. The home feed prefers evergreen and dated talks. At most 20 mentions are kept per video, and mention text is cut at 1500 characters.
 
 The official zip manifest listed `embeddings.npy` and `embedding_ids.json`. Those arrays were not in the delivered combined JSON. The importer does not write them, and the app does not ship semantic search.
 
 The server reads `data/catalog` and renders one page of cards. After the first visit the browser saves `index.json`, the taxonomy, and the playlists in IndexedDB, then downloads shards one at a time. A watch page needs only the shard named on that video. Comment text is not in the index. YouTube image and embed hosts are the only ongoing media requests once the shards are stored. The combined snapshot is not imported into a client component.
 
-This project does not recrawl hackertube.org. The captured `data/source/robots.txt` disallows `/api/` and `/download/`. The source sitemap request returned 404, which `data/source/coverage.json` records. Personal likes, history, and watch later were never public records on the source.
+This project does not recrawl the source site. The captured `data/source/robots.txt` disallows `/api/` and `/download/`. The source sitemap request returned 404, which `data/source/coverage.json` records. Personal likes, history, and watch later were never public records on the source.
 
 ## Home feed
 
-The home feed is rebuilt in this app from the public HackerTube client contract and the about-page description. The closed `/api/feed` source is not called.
+The home feed is rebuilt in this app from the public source client contract and the about-page description. The closed `/api/feed` source is not called.
 
 Query inputs are `likes`, `dislikes`, `seen`, and `seed`. Each of `likes`, `dislikes`, and `seen` is a comma-separated list of 11-character video ids. `seed` is an opaque string stored in the browser so a reload keeps the same anonymous order.
 

@@ -1,6 +1,6 @@
 # UI sources
 
-The interface has three written sources: `design.md` in the repo, the polish-ui skill at `.cursor/skills/polish-ui/SKILL.md`, and the public HackerTube site as information architecture only. Upstream field notes in `data/source/DATA.md` decide thumbnail and embed URLs. Where those sources disagree, `design.md` wins on color, type, and chrome, and the polish skill wins on page headers, copy length, and list rows.
+The interface has three written sources: `design.md` in the repo, the polish-ui skill at `.cursor/skills/polish-ui/SKILL.md`, and the public source site as information architecture only. Upstream field notes in `data/source/DATA.md` decide thumbnail and embed URLs. Where those sources disagree, `design.md` wins on color, type, and chrome, and the polish skill wins on page headers, copy length, and list rows.
 
 ## design.md
 
@@ -62,9 +62,9 @@ The skill at `.cursor/skills/polish-ui/SKILL.md` supplies the consistency rules.
 
 The watch page is the detail view for a video. Do not put another detail modal in front of the player. `design.md` already specifies the player and the 402px related column.
 
-## Public HackerTube
+## Public source site
 
-The capture in `data/source` records the public site at https://hackertube.org on 7 November 2026. HTML routes were JS-rendered shells. The records that fill them are the dataset, not the HTML.
+The capture in `data/source` records the public site on 7 November 2026. HTML routes were JS-rendered shells. The records that fill them are the dataset, not the HTML.
 
 Routes observed, and used here as the information architecture:
 
@@ -74,7 +74,7 @@ Routes observed, and used here as the information architecture:
 - `/playlists`, `/p/<slug>`
 - `/watch/<vid>`
 - `/liked`, `/later`, `/history`, `/settings`
-- `/about`, `/data`
+- `/about`
 
 This app keeps search and filters in the query string (`q`, `dur`, `area`, `category`, `shelf`, `type`, `page`) so a reload restores the list. The sample search URL on the source was a path (`/search/test`). The query-string contract in `docs/api.md` is the one to implement.
 
@@ -86,7 +86,7 @@ The home feed follows the public client inputs `likes`, `dislikes`, `seen`, and 
 
 `data/source/DATA.md` documents the two thumbnail URLs and the embed:
 
-- Middle frame, the HackerTube default: `https://i.ytimg.com/vi/<vid>/hq2.jpg`
+- Middle frame, the source default: `https://i.ytimg.com/vi/<vid>/hq2.jpg`
 - Uploader image, used when the viewer turns frames off: `https://i.ytimg.com/vi/<vid>/hqdefault.jpg`
 - Embed: `https://www.youtube-nocookie.com/embed/<vid>`
 
