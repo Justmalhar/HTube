@@ -50,4 +50,31 @@ export function PlayIcon() {
   );
 }
 
-export const pillClass = "inline-flex h-9 items-center gap-2 rounded-full bg-surface px-3.5 text-sm font-medium hover:bg-[var(--surface-hover)]";
+export function MoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
+      <circle cx="12" cy="5" r="1.8" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.8" fill="currentColor" />
+      <circle cx="12" cy="19" r="1.8" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function HideIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
+      <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M6.5 6.5l11 11" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+export function ChevronIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
+      <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export { pillClass } from "@/components/ui";

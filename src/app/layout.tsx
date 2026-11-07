@@ -11,7 +11,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: { default: "OpenHackerTube", template: "%s · OpenHackerTube" },
+  title: { default: "OpenHackerTube", template: "%s | OpenHackerTube" },
   description: "The YouTube videos Hacker News keeps recommending.",
 };
 
