@@ -1,4 +1,4 @@
-import { feedPage } from "@/lib/pages";
+import { feedPage, parseFeedBody, personalFeed } from "@/lib/pages";
 
 export function GET(request: Request) {
   const params = new URL(request.url).searchParams;
@@ -7,4 +7,11 @@ export function GET(request: Request) {
   const page = feedPage(params.get("path") ?? "", search);
   if (!page) return Response.json({ error: "Unknown feed" }, { status: 404 });
   return Response.json({ items: page.items, offset: page.offset, total: page.total });
+}
+
+/** Personalized home feed: the body carries the viewer's local library, which never leaves the request. */
+export async function POST(request: Request) {
+  const body = await request.json().catch(() => null);
+  const { library, seed, offset } = parseFeedBody(body);
+  return Response.json(personalFeed(library, seed, offset));
 }

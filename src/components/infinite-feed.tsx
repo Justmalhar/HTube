@@ -43,7 +43,23 @@ function Skeletons({ kind }: { kind: Kind }) {
  * Appends batches from `src` (an /api/feed URL without offset) as the sentinel nears the viewport.
  * Render it with `key={src}` so new filters remount it with fresh state.
  */
-export function InfiniteFeed({ src, start, total, kind }: { src: string; start: number; total: number; kind: Kind }) {
+export function InfiniteFeed({
+  src,
+  start,
+  total,
+  kind,
+  body,
+  skip,
+}: {
+  src: string;
+  start: number;
+  total: number;
+  kind: Kind;
+  /** When set, pages are POSTed to `src` with this body plus the offset (personalized feeds). */
+  body?: Record<string, unknown>;
+  /** Ids already on the page elsewhere (shelves), dropped from fetched batches. */
+  skip?: string[];
+}) {
   const [current, setState] = useState<State>({ batches: [], next: start, error: false });
   const [loading, setLoading] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -61,11 +77,14 @@ export function InfiniteFeed({ src, start, total, kind }: { src: string; start: 
       if (started) return;
       started = true;
       setLoading(true);
-      fetch(`${src}&offset=${current.next}`, { signal: controller.signal })
+      const request = body
+        ? fetch(src, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...body, offset: current.next }), signal: controller.signal })
+        : fetch(`${src}&offset=${current.next}`, { signal: controller.signal });
+      request
         .then((res) => (res.ok ? (res.json() as Promise<{ items: FeedCard[]; offset: number }>) : Promise.reject(new Error(String(res.status)))))
         .then((data) =>
           setState((prev) => {
-            const seen = new Set(prev.batches.flat().map((item) => item.vid));
+            const seen = new Set([...prev.batches.flat().map((item) => item.vid), ...(skip ?? [])]);
             const fresh = data.items.filter((item) => !seen.has(item.vid));
             // An empty batch means the catalogue shrank under us; stop rather than loop.
             const next = data.items.length ? data.offset + data.items.length : total;
@@ -87,6 +106,8 @@ export function InfiniteFeed({ src, start, total, kind }: { src: string; start: 
       controller.abort();
       setLoading(false);
     };
+    // body is fixed per mount: callers remount with a new key when it changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src, current.next, idle, total]);
 
   const List = kind === "grid" ? VideoGrid : SearchList;

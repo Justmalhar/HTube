@@ -1,4 +1,4 @@
-import { PAGE, browse, buildFeed, search as searchCatalog } from "@/lib/engine";
+import { PAGE, browse, buildFeed, relatedTo, search as searchCatalog } from "@/lib/engine";
 import { browseFromParams, feedBase, first } from "@/lib/query";
 import { getEngine } from "@/lib/server-catalog";
 
@@ -14,8 +14,39 @@ export function browsePage(search: Record<string, string | string[] | undefined>
   return { record, query, page: browse(getEngine(), query) };
 }
 
-export function homeFeed() {
-  return buildFeed(getEngine(), { likes: [], dislikes: [], seen: [], offset: 0, limit: 24 });
+/** Anonymous and server-rendered order: one shuffle per day. */
+export const dailySeed = () => Math.floor(Date.now() / 86_400_000);
+
+export type Library = { likes: string[]; dislikes: string[]; seen: string[]; later: string[] };
+
+const ids = (value: unknown) => (Array.isArray(value) ? value.filter((id): id is string => typeof id === "string").slice(0, 2000) : []);
+
+/** Validates a client-sent library and seed; the body is untrusted. */
+export function parseFeedBody(body: unknown) {
+  const raw = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
+  const library: Library = { likes: ids(raw.likes), dislikes: ids(raw.dislikes), seen: ids(raw.seen), later: ids(raw.later) };
+  return { library, seed: Number(raw.seed) || 0, offset: Number(raw.offset) || 0 };
+}
+
+export function personalFeed(library: Library, seed: number, offset: number) {
+  const engine = getEngine();
+  const page = buildFeed(engine, { ...library, seed, offset, limit: PAGE });
+  if (offset > 0) return { items: page.items, offset: page.offset, total: page.total };
+  const liked = library.likes.findLast((id) => engine.byId.has(id));
+  const because = liked ? { title: engine.byId.get(liked)!.title, items: relatedTo(engine, liked, library.dislikes, 12) } : null;
+  const hidden = new Set(library.dislikes);
+  const later = library.later
+    .toReversed()
+    .map((id) => engine.byId.get(id))
+    .filter((card): card is NonNullable<typeof card> => Boolean(card) && !hidden.has(card!.vid))
+    .slice(0, 12);
+  return {
+    items: page.items,
+    offset: page.offset,
+    total: page.total,
+    because: because?.items.length ? because : null,
+    later,
+  };
 }
 
 export function searchPage(search: Record<string, string | string[] | undefined>) {
@@ -30,7 +61,8 @@ export function feedPage(path: string, search: Record<string, string | string[] 
   // Home continues its own feed order (classics, recent, gems, then everything else) as you scroll.
   if (path === "/") {
     const offset = Number(first(search.offset)) || 0;
-    return buildFeed(getEngine(), { likes: [], dislikes: [], seen: [], offset, limit: PAGE });
+    const seed = Number(first(search.seed)) || dailySeed();
+    return buildFeed(getEngine(), { likes: [], dislikes: [], seen: [], seed, offset, limit: PAGE });
   }
   const base = feedBase(path);
   if (!base) return null;

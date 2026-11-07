@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { browse, buildEngine, buildFeed, search } from "@/lib/engine";
+import { browse, buildEngine, buildFeed, relatedTo, search } from "@/lib/engine";
 import type { Card } from "@/lib/types";
 
 function card(partial: Partial<Card> & Pick<Card, "vid" | "title">): Card {
@@ -110,5 +110,73 @@ describe("search and browse", () => {
     expect(browse(engine, { offset: 1.5, limit: 2 }).offset).toBe(1);
     expect(browse(engine, { offset: Number.POSITIVE_INFINITY, limit: 2 }).offset).toBe(0);
     expect(browse(engine, { offset: Number.NaN, limit: 2 }).items.length).toBe(2);
+  });
+});
+
+describe("ranker", () => {
+  const cats = ["c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7"];
+  const big = buildEngine({
+    areas: [{ id: "all", name: "All", video_count: 240, categories: cats.map((id) => ({ id, name: id, description: "", video_count: 30 })) }],
+    categories: cats.map((id) => ({ id, name: id, description: "", area_id: "all", area_name: "All", video_count: 30 })),
+    playlists: [],
+    related: [{ vid: "v0", related: [{ vid: "v8", shared_recommenders: 5 }, { vid: "v16", shared_recommenders: 2 }] }],
+    cards: Array.from({ length: 240 }, (_, i) =>
+      card({
+        vid: `v${i}`,
+        title: `Video ${i}`,
+        channel: `Ch${i % 20}`,
+        channelSlug: `ch${i % 20}`,
+        categories: [cats[i % 8]!],
+        score: 10 + ((i * 7) % 23),
+        recommenders: 5,
+      }),
+    ),
+  });
+  const ids = (query: Partial<Parameters<typeof buildFeed>[1]>, limit = 48) =>
+    buildFeed(big, { likes: [], dislikes: [], seen: [], offset: 0, limit, ...query }).items;
+
+  test("same seed repeats, different seed reshuffles, pages never overlap", () => {
+    const a = ids({ seed: 1 }).map((c) => c.vid);
+    expect(ids({ seed: 1 }).map((c) => c.vid)).toEqual(a);
+    expect(ids({ seed: 2 }).map((c) => c.vid)).not.toEqual(a);
+    const p1 = buildFeed(big, { likes: [], dislikes: [], seen: [], seed: 3, offset: 0, limit: 24 }).items;
+    const p2 = buildFeed(big, { likes: [], dislikes: [], seen: [], seed: 3, offset: 24, limit: 24 }).items;
+    expect(new Set([...p1, ...p2].map((c) => c.vid)).size).toBe(48);
+  });
+
+  test("diversity windows hold over the first 48", () => {
+    for (const library of [{}, { likes: ["v0", "v1"], seen: ["v2", "v3", "v4"] }]) {
+      const items = ids({ seed: 5, ...library });
+      for (let i = 0; i + 12 <= items.length; i += 1) {
+        const win = items.slice(i, i + 12);
+        for (const ch of new Set(win.map((c) => c.channelSlug))) expect(win.filter((c) => c.channelSlug === ch).length).toBeLessThanOrEqual(2);
+        for (const cat of cats) expect(win.filter((c) => c.categories.includes(cat)).length).toBeLessThanOrEqual(4);
+      }
+    }
+  });
+
+  test("dislikes never appear and seen sink", () => {
+    const all = buildFeed(big, { likes: [], dislikes: ["v1", "v2"], seen: ["v3"], seed: 9, offset: 0, limit: 60 });
+    expect(all.items.map((c) => c.vid)).not.toContain("v1");
+    expect(all.total).toBe(238);
+    const tail = buildFeed(big, { likes: [], dislikes: [], seen: ["v3"], seed: 9, offset: 230, limit: 10 });
+    expect(tail.items.at(-1)?.vid).toBe("v3");
+  });
+
+  test("liked categories are over-represented versus cold start", () => {
+    const count = (items: { categories: string[] }[]) => items.filter((c) => c.categories.includes("c3")).length;
+    const likes = ["v3", "v11", "v19", "v27"];
+    let warm = 0;
+    let cold = 0;
+    for (const seed of [1, 2, 3, 4, 5]) {
+      warm += count(ids({ seed, likes }, 24));
+      cold += count(ids({ seed }, 24));
+    }
+    expect(warm).toBeGreaterThan(cold);
+  });
+
+  test("relatedTo returns strongest co-recommendations first", () => {
+    expect(relatedTo(big, "v0", [], 5).map((c) => c.vid)).toEqual(["v8", "v16"]);
+    expect(relatedTo(big, "v0", ["v8"], 5).map((c) => c.vid)).toEqual(["v16"]);
   });
 });

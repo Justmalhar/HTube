@@ -1,8 +1,9 @@
 import { PAGE, browse, buildFeed } from "@/lib/engine";
+import { dailySeed } from "@/lib/pages";
 import { getEngine } from "@/lib/server-catalog";
-import { VideoGrid } from "@/components/video-card";
+import { HomeFeed } from "@/components/home/home-feed";
 import { PlaylistTile, Shelf, TopicTile } from "@/components/shelf";
-import { ChipBar, Pager } from "@/components/filters";
+import { ChipBar } from "@/components/filters";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ const CHIPS = [
 
 export default function Home() {
   const engine = getEngine();
-  const feed = buildFeed(engine, { likes: [], dislikes: [], seen: [], offset: 0, limit: PAGE });
+  const feed = buildFeed(engine, { likes: [], dislikes: [], seen: [], seed: dailySeed(), offset: 0, limit: PAGE });
   const topics = engine.areas.map((area) => ({
     area,
     vid: browse(engine, { area: area.id, offset: 0, limit: 1 }).items[0]?.vid,
@@ -33,20 +34,24 @@ export default function Home() {
   return (
     <div>
       <ChipBar label="Formats" chips={CHIPS} sticky />
-      <VideoGrid items={feed.items.slice(0, 6)} />
-      <Shelf title="Explore topics" href="/categories">
-        {topics.map(({ area, vid }) => (
-          <TopicTile key={area.id} href={`/a/${area.id}`} name={area.name} count={area.video_count} vid={vid} />
-        ))}
-      </Shelf>
-      <VideoGrid items={feed.items.slice(6, 15)} />
-      <Shelf title="Playlists" href="/playlists">
-        {playlists.slice(0, 12).map((playlist) => (
-          <PlaylistTile key={playlist.slug} playlist={playlist} />
-        ))}
-      </Shelf>
-      <VideoGrid items={feed.items.slice(15)} />
-      <Pager path="/" query={{}} offset={0} total={feed.total} />
+      <HomeFeed
+        items={feed.items}
+        total={feed.total}
+        topics={
+          <Shelf title="Explore topics" href="/categories">
+            {topics.map(({ area, vid }) => (
+              <TopicTile key={area.id} href={`/a/${area.id}`} name={area.name} count={area.video_count} vid={vid} />
+            ))}
+          </Shelf>
+        }
+        playlists={
+          <Shelf title="Playlists" href="/playlists">
+            {playlists.slice(0, 12).map((playlist) => (
+              <PlaylistTile key={playlist.slug} playlist={playlist} />
+            ))}
+          </Shelf>
+        }
+      />
     </div>
   );
 }

@@ -67,117 +67,166 @@ function eligible(card: Card, dislikes: Set<string>): boolean {
   return true;
 }
 
+const WEIGHT = { quality: 1, affinity: 1.6, neighbour: 0.8, fresh: 0.3, noise: 0.3 };
+const WINDOW = 12;
+const MAX_CHANNEL = 2;
+const MAX_CATEGORY = 4;
+const EXPLORE_RATE = 0.2;
+const HALF_LIFE = 20;
+const SEEN_PENALTY = 5;
+
+function mulberry32(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function hash(text: string) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i += 1) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+/** Affinity features of a card: channel, format, level, categories and their areas. */
+function features(engine: Engine, card: Card): [string, number][] {
+  const out: [string, number][] = [
+    [`ch:${card.channelSlug}`, 1],
+    [`t:${card.contentType}`, 0.3],
+    [`l:${card.level}`, 0.2],
+  ];
+  for (const id of card.categories) {
+    out.push([`c:${id}`, 1]);
+    const area = engine.categories.get(id)?.area_id;
+    if (area) out.push([`a:${area}`, 0.5]);
+  }
+  return out;
+}
+
+type Ranked = { card: Card; rank: number; aff: number; nb: number; outside: boolean };
+
+/**
+ * Rule-based ranker. Quality + interest affinity (likes, decayed watch history, dislikes) +
+ * co-recommendation neighbours + freshness + seeded Gumbel noise, then a greedy pass that enforces
+ * channel/category diversity and mixes in exploration picks. Deterministic for a given seed and library.
+ */
 export function buildFeed(engine: Engine, query: FeedQuery): PageResult<FeedCard> {
   const dislikes = new Set(query.dislikes);
   const seen = new Set(query.seen);
   const likes = query.likes.filter((id) => engine.byId.has(id));
+  const likeSet = new Set(likes);
+  const seed = query.seed ?? 0;
   const pool = engine.cards.filter((card) => eligible(card, dislikes));
-  const used = new Set<string>();
-  const explored = new Set<string>();
 
-  for (const id of likes) {
+  const profile = new Map<string, number>();
+  const neighbours = new Map<string, number>();
+  const signal = (id: string, weight: number) => {
     const card = engine.byId.get(id);
-    card?.categories.forEach((category) => explored.add(category));
-  }
-
-  const classics = pool
-    .filter(
-      (card) =>
-        card.shelfLife === "evergreen" &&
-        card.recMonths >= 10 &&
-        card.lastYear - card.firstYear >= 4 &&
-        card.recommenders >= 8,
-    )
-    .sort(byScore);
-
-  if (!likes.length) {
-    for (const card of classics.slice(0, 15)) {
-      const primary = card.categories[0];
-      if (primary) explored.add(primary);
-    }
-  }
-
-  const similar = likes.length
-    ? pool
-        .filter((card) => !likes.includes(card.vid) && card.categories.some((id) => explored.has(id)))
-        .sort(byScore)
-    : [];
-
-  const alsoIds = new Map<string, number>();
-  for (const id of likes) {
+    if (!card) return;
+    for (const [key, share] of features(engine, card)) profile.set(key, (profile.get(key) ?? 0) + weight * share);
+    if (weight <= 0) return;
     for (const edge of engine.related.get(id) ?? []) {
-      alsoIds.set(edge.vid, Math.max(alsoIds.get(edge.vid) ?? 0, edge.shared_recommenders));
+      neighbours.set(edge.vid, (neighbours.get(edge.vid) ?? 0) + weight * edge.shared_recommenders);
     }
-  }
-  const also = [...alsoIds.entries()]
-    .filter(([vid]) => engine.byId.has(vid) && eligible(engine.byId.get(vid) as Card, dislikes))
-    .sort((a, b) => b[1] - a[1] || byScore(engine.byId.get(a[0]) as Card, engine.byId.get(b[0]) as Card))
-    .map(([vid]) => engine.byId.get(vid) as Card);
+  };
+  for (const id of likes) signal(id, 3);
+  const watched = query.seen.filter((id) => !dislikes.has(id)).slice(-60);
+  watched.forEach((id, index) => signal(id, 0.5 ** ((watched.length - 1 - index) / HALF_LIFE)));
+  for (const id of dislikes) signal(id, -2);
 
-  const recent = pool
-    .filter((card) => card.firstYear >= 2024 && card.recommenders >= 2)
-    .sort(byScore);
-  const gems = pool
-    .filter(
-      (card) =>
-        card.shelfLife === "evergreen" &&
-        card.recommenders >= 3 &&
-        card.recommenders <= 8 &&
-        card.strongRecs >= Math.ceil(card.recommenders * 0.5),
-    )
-    .sort(byScore);
-  const fresh = pool
-    .filter((card) => card.categories.every((id) => !explored.has(id)))
-    .sort(byScore);
+  const personal = profile.size > 0;
+  let maxQuality = 1;
+  for (const card of pool) maxQuality = Math.max(maxQuality, card.score);
+  let maxAff = 0;
+  let maxNb = 0;
+  const raw = pool.map((card) => {
+    let aff = 0;
+    if (personal) for (const [key, share] of features(engine, card)) aff += (profile.get(key) ?? 0) * share;
+    const nb = neighbours.get(card.vid) ?? 0;
+    maxAff = Math.max(maxAff, Math.abs(aff));
+    maxNb = Math.max(maxNb, nb);
+    return { card, aff, nb };
+  });
 
-  const lanes: { reason: Reason; cards: Card[] }[] = likes.length
-    ? [
-        { reason: REASONS.similar, cards: similar },
-        { reason: REASONS.also, cards: also },
-        { reason: REASONS.classic, cards: classics },
-        { reason: REASONS.recent, cards: recent },
-        { reason: REASONS.gem, cards: gems },
-        { reason: REASONS.fresh, cards: fresh },
-      ]
-    : [
-        { reason: REASONS.classic, cards: classics },
-        { reason: REASONS.recent, cards: recent },
-        { reason: REASONS.gem, cards: gems },
-        { reason: REASONS.fresh, cards: fresh },
-      ];
+  const ranked: Ranked[] = raw.map(({ card, aff, nb }) => {
+    const u = Math.min(Math.max(mulberry32(seed ^ hash(card.vid))(), 1e-9), 1 - 1e-9);
+    const gumbel = -Math.log(-Math.log(u));
+    const fresh = (card.shelfLife === "evergreen" ? 0.5 : 0) + (card.firstYear >= 2024 ? 0.5 : 0);
+    const affN = maxAff ? aff / maxAff : 0;
+    const nbN = maxNb ? nb / maxNb : 0;
+    let rank =
+      WEIGHT.quality * (card.score / maxQuality) +
+      WEIGHT.affinity * affN +
+      WEIGHT.neighbour * nbN +
+      WEIGHT.fresh * fresh +
+      WEIGHT.noise * gumbel;
+    if (seen.has(card.vid)) rank -= SEEN_PENALTY;
+    const outside = personal && card.categories.every((id) => (profile.get(`c:${id}`) ?? 0) <= 0);
+    return { card, rank, aff: affN, nb: nbN, outside };
+  });
+  ranked.sort((a, b) => b.rank - a.rank || a.card.vid.localeCompare(b.card.vid));
 
-  const ordered: FeedCard[] = [];
-  const pointers = lanes.map(() => 0);
-  let progressed = true;
-  while (progressed) {
-    progressed = false;
-    for (let index = 0; index < lanes.length; index += 1) {
-      const lane = lanes[index];
-      if (!lane) continue;
-      while (pointers[index]! < lane.cards.length && used.has(lane.cards[pointers[index]!]?.vid ?? "")) {
-        pointers[index] = (pointers[index] ?? 0) + 1;
-      }
-      const pointer = pointers[index] ?? 0;
-      const next = lane.cards[pointer];
-      if (!next) continue;
-      pointers[index] = pointer + 1;
-      if (used.has(next.vid)) continue;
-      used.add(next.vid);
-      ordered.push({ ...next, reason: lane.reason });
-      progressed = true;
+  const lists = {
+    exploit: { items: ranked, at: 0 },
+    explore: { items: ranked.filter((row) => row.outside && !seen.has(row.card.vid)), at: 0 },
+  };
+  const used = new Set<string>();
+  const out: Ranked[] = [];
+  const fits = (card: Card) => {
+    const tail = out.slice(-(WINDOW - 1));
+    if (tail.filter((row) => row.card.channelSlug === card.channelSlug).length >= MAX_CHANNEL) return false;
+    return card.categories.every((id) => tail.filter((row) => row.card.categories.includes(id)).length < MAX_CATEGORY);
+  };
+  const take = (list: { items: Ranked[]; at: number }) => {
+    while (list.at < list.items.length && used.has(list.items[list.at]!.card.vid)) list.at += 1;
+    const first = list.items[list.at];
+    if (!first) return undefined;
+    for (let i = list.at; i < Math.min(list.items.length, list.at + 400); i += 1) {
+      const row = list.items[i]!;
+      if (!used.has(row.card.vid) && fits(row.card)) return row;
     }
+    return first;
+  };
+
+  const rng = mulberry32(seed ^ 0x9e3779b9);
+  const need = Math.min(pool.length, Math.max(0, Math.floor(query.offset) || 0) + Math.max(1, Math.min(query.limit, 60)));
+  while (out.length < need) {
+    const wantExplore = personal && rng() < EXPLORE_RATE;
+    const row = (wantExplore ? take(lists.explore) : undefined) ?? take(lists.exploit);
+    if (!row) break;
+    used.add(row.card.vid);
+    out.push(row);
   }
 
-  for (const card of pool) {
-    if (used.has(card.vid)) continue;
-    used.add(card.vid);
-    ordered.push({ ...card, reason: REASONS.more });
-  }
+  const cards = out.map((row): FeedCard => ({ ...row.card, reason: reasonFor(row, likeSet) }));
+  // Totals and offsets mirror slice(); only the prefix up to this page was ranked.
+  const page = slice(cards, query.offset, query.limit);
+  return { ...page, total: pool.length };
+}
 
-  const unseen = ordered.filter((card) => !seen.has(card.vid));
-  const watched = ordered.filter((card) => seen.has(card.vid));
-  const final = unseen.concat(watched);
-  return slice(final, query.offset, query.limit);
+function reasonFor(row: Ranked, likeSet: Set<string>): Reason {
+  const card = row.card;
+  if (row.nb > 0 && !likeSet.has(card.vid)) return REASONS.also;
+  if (row.aff > 0.3) return REASONS.similar;
+  if (row.outside) return REASONS.fresh;
+  if (card.shelfLife === "evergreen" && card.recMonths >= 10 && card.recommenders >= 8) return REASONS.classic;
+  if (card.firstYear >= 2024 && card.recommenders >= 2) return REASONS.recent;
+  return REASONS.more;
+}
+
+/** Videos co-recommended with `vid`, strongest overlap first. */
+export function relatedTo(engine: Engine, vid: string, dislikes: string[], limit: number): FeedCard[] {
+  const hidden = new Set(dislikes);
+  return (engine.related.get(vid) ?? [])
+    .map((edge) => ({ edge, card: engine.byId.get(edge.vid) }))
+    .filter((row): row is { edge: RelatedEdge; card: Card } => Boolean(row.card) && row.card!.vid !== vid && eligible(row.card!, hidden))
+    .sort((a, b) => b.edge.shared_recommenders - a.edge.shared_recommenders || byScore(a.card, b.card))
+    .slice(0, limit)
+    .map((row) => row.card);
 }
 
 function byScore(a: Card, b: Card): number {

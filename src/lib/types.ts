@@ -99,6 +99,7 @@ export type FeedQuery = {
   likes: string[];
   dislikes: string[];
   seen: string[];
+  seed?: number;
   offset: number;
   limit: number;
 };
