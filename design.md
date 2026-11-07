@@ -55,21 +55,23 @@ YouTube's density and chrome, with Hacker News orange instead of YouTube red. Da
 
 ## Logo
 
-The wordmark is text only: **Hacker** in the text color and **Tube** in `primary`, 18px, weight 500. It is not a Y Combinator mark and the product is not affiliated with Y Combinator, Hacker News, or YouTube. The accessible name is OpenHackerTube. Video titles are 14px, weight 500, two lines. Page titles stay at 16px. Scrollbars are thin and use the hover surface color.
+The wordmark is an orange rounded "Y" badge followed by **HackerTube** in bold, 19px. It nods to the Hacker News Y without copying the Y Combinator mark, and the product is not affiliated with Y Combinator, Hacker News, or YouTube. The accessible name is OpenHackerTube. Scrollbars are thin and use the hover surface color; horizontal rows (chips, shelves) hide theirs.
 
 ## Chrome
 
-- Top bar is 56px, fixed. Leading edge: menu, logo. Center: one search field, 40px tall, pill shaped, max 640px. Trailing edge: theme toggle.
-- Sidebar is 240px and collapses to a 72px rail of 24px icons. Labels hide on the rail. The same destinations stay in the same order on every page.
-- Mobile (under 800px): sidebar becomes a dialog drawer. A bottom bar holds Home, Longs, Categories, Library, and Search. No horizontal page overflow at 375px.
-- Main content clears the top bar. The related column on a watch page is 402px and drops below the player on narrow screens.
+- Top bar is 56px, fixed, no bottom border. Leading edge: menu, wordmark. Center: one pill search field with a `/` hint, 40px tall, max 640px. Trailing edge: shortcuts and theme icon buttons.
+- Sidebar is 240px with three groups split by thin lines: browse destinations, "You" (History, Watch later, Liked videos), and Settings. Items are 40px with a 10px radius.
+- At 801 to 1311px the sidebar becomes a 72px mini rail (icon over a 10px label) and the menu opens the full sidebar as a drawer. At 1312px and up the full sidebar is docked and the menu toggles the rail.
+- Under 801px the drawer is the only sidebar and a bottom bar holds Home, Longs, Topics, Search, and You as icon over label. No horizontal page overflow at any width.
+- The chip row under the top bar is sticky. The related column on a watch page is 402px and drops below the player under 1280px.
 
 ## Video cards
 
-- Thumbnail radius 12px, 16:9, middle-frame image (`hq2.jpg`) unless the viewer turns frames off.
-- Title is 16px, weight 500, two lines, then clamp.
-- Channel is a separate link. Recommendation facts are separate text nodes with a gap. Do not join them with a middle dot, bullet, or em dash.
-- Duration, when a local hydration file exists, sits on the thumbnail. View counts, like counts, and upload dates are never shown.
+- Thumbnail radius 12px, 16:9, middle-frame image (`hq2.jpg`) unless the viewer turns frames off. The thumbnail zooms slightly on hover and the whole card gets a 16px radius hover surface.
+- Title is 15px, weight 500, two lines. Channel is a separate muted link. No avatars: the catalogue has no channel ids or avatar URLs, and fetching them needs a YouTube Data API key.
+- A clock button on the thumbnail saves to Watch later. A three-dot menu holds Save to Watch later, Not interested, and Open on YouTube. Not interested swaps the card for a "Video hidden" panel with Undo.
+- Shelves (topics, playlists, channel rows) scroll sideways with round arrow buttons that only appear when there is more to see.
+- View counts, like counts, durations, and upload dates are never shown.
 
 ## Page headers
 
@@ -77,7 +79,7 @@ One `PageHeader` for every page that has a title. On desktop, actions sit on the
 
 ## Controls
 
-- Buttons and chips are 36px tall with an 18px radius. One trailing action width where a page header has an action, so sibling pages do not jump.
+- Chips are 32px tall with an 8px radius; the selected chip inverts (`chip-on`). Pills and icon buttons are 36px and fully round. One trailing action width where a page header has an action, so sibling pages do not jump.
 - Icon buttons are circular.
 - Focus is a 2px `primary` outline, offset 2px. Every clickable card is a real link or button.
 - Filters are links. The URL is the state.
