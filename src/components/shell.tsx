@@ -83,11 +83,11 @@ function subscribeRail(listener: () => void) {
 }
 
 const drawerItemClass =
-  "press relative flex h-10 items-center gap-6 rounded-[10px] px-3 text-sm hover:bg-surface aria-[current=page]:bg-surface aria-[current=page]:font-medium aria-[current=page]:hover:bg-surface-hover";
+  "press relative isolate flex h-10 items-center gap-6 rounded-[10px] px-3 text-sm hover:bg-surface aria-[current=page]:bg-surface aria-[current=page]:font-medium aria-[current=page]:hover:bg-surface-hover";
 const railItemClass =
-  "press relative flex h-[74px] flex-col items-center justify-center gap-1.5 rounded-[10px] text-[10px] hover:bg-surface aria-[current=page]:font-medium";
+  "press relative isolate flex h-[74px] flex-col items-center justify-center gap-1.5 rounded-[10px] text-[10px] hover:bg-surface aria-[current=page]:font-medium";
 const mobileItemClass =
-  "press relative flex h-14 flex-col items-center justify-center gap-0.5 text-[10px] text-muted aria-[current=page]:font-medium aria-[current=page]:text-foreground";
+  "press relative isolate flex h-14 flex-col items-center justify-center gap-0.5 text-[10px] text-muted aria-[current=page]:font-medium aria-[current=page]:text-foreground";
 const dockedAsideClass =
   "min-[1312px]:visible min-[1312px]:top-14 min-[1312px]:z-(--z-rail) min-[1312px]:translate-x-0 min-[1312px]:shadow-none min-[1312px]:transition-none rail:min-[1312px]:hidden";
 
@@ -253,6 +253,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 SECTIONS.map((section, index) => (
                   <div key={section.title ?? index} className={index ? "mt-3 border-t border-line pt-3" : ""}>
                     {section.title ? <h2 className="flex h-10 items-center px-3 text-base font-medium">{section.title}</h2> : null}
+                    <div className="flex flex-col gap-1">
                     {section.links.map(({ href, label, Icon }) => (
                       <Link key={href} href={href} aria-current={href === current ? "page" : undefined} className={drawerItemClass} onClick={closeDrawer}>
                         <Icon active={href === current} />
@@ -260,6 +261,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                         <Pending />
                       </Link>
                     ))}
+                    </div>
                   </div>
                 ))
               }
@@ -384,16 +386,14 @@ function LiveCurrent({ links, children }: { links: readonly NavLink[]; children:
   return children(activeHref(links, pathname, params));
 }
 
-/** Thin bar inside a nav link while its navigation is pending (only shows when not prefetched). */
+/** Tints the nav item while its navigation is pending (only shows when not prefetched). */
 function Pending() {
   const { pending } = useLinkStatus();
   return (
     <span
       aria-hidden
-      className={`pointer-events-none absolute inset-x-3 bottom-1 h-0.5 overflow-hidden rounded-full transition-opacity duration-150 ${pending ? "opacity-100" : "opacity-0"}`}
-    >
-      {pending ? <span className="pending-bar block h-full w-2/5 rounded-full bg-primary" /> : null}
-    </span>
+      className={`pointer-events-none absolute inset-0 -z-10 rounded-[inherit] bg-surface-hover transition-opacity duration-150 ${pending ? "opacity-100" : "opacity-0"}`}
+    />
   );
 }
 

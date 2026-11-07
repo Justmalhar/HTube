@@ -158,15 +158,6 @@ body {
   .modal[open]::backdrop { background: rgb(0 0 0 / 0); }
 }
 
-/* Thin indeterminate bar for a pending navigation. */
-@keyframes pending-slide {
-  from { translate: -100% 0; }
-  to { translate: 250% 0; }
-}
-.pending-bar {
-  animation: pending-slide 900ms var(--ease-out-quart) infinite;
-}
-
 /* Theme swap crossfade when the toggle runs inside document.startViewTransition. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
@@ -182,7 +173,6 @@ body {
     scroll-behavior: auto !important;
   }
   .press:active { scale: none; }
-  .pending-bar { animation: none; translate: none; width: 100%; opacity: 0.6; }
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) { animation: none !important; }
