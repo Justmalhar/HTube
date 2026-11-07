@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "oht-app",
+      "name": "htube",
       "dependencies": {
         "lucide-react": "1.61.0",
         "next": "16.4.5",

@@ -1,5 +1,7 @@
 # HTube
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FJustmalhar%2FHTube&project-name=htube&repository-name=htube)
+
 A self-hosted version of [HackerTube](https://hackertube.org): the YouTube videos Hacker News keeps telling each other to watch, in a YouTube-style app you can run on your own box.
 
 6,454 videos, 150 categories, 27 playlists, drawn from 20 years of HN comments. No accounts, no tracking, no server-side profile. Everything personal stays in your browser.
@@ -36,8 +38,8 @@ Playback uses YouTube's privacy-enhanced embed (`youtube-nocookie.com`). The app
 You need [Bun](https://bun.sh). The catalogue is committed in `data/catalog`, so there is nothing to download, no database and no API key.
 
 ```bash
-git clone https://github.com/Justmalhar/OpenHackerTube.git
-cd OpenHackerTube
+git clone https://github.com/Justmalhar/HTube.git
+cd HTube
 bun install
 bun dev            # http://localhost:3000
 ```
@@ -51,7 +53,7 @@ bun run start      # binds 3000, or $PORT
 
 Hosting options:
 
-- **Vercel**: import the repo. The defaults work and no environment variables are needed.
+- **Vercel**: click **Deploy with Vercel** at the top of this page. It clones the repo into your GitHub account and deploys it. The defaults work and no environment variables are needed.
 - **Any VPS or Node host**: run the two commands above behind a reverse proxy. Give the process enough memory to read the 16 catalogue shards (about 35 MB of comment text).
 
 If you add a Content-Security-Policy, allow images from `i.ytimg.com` and frames from `www.youtube-nocookie.com`. See [docs/deployment.md](docs/deployment.md) for caching notes and post-deploy checks.
