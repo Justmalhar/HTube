@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 
+import { ClockIcon, ExternalIcon, ThumbDownIcon, ThumbUpIcon, pillClass } from "@/components/icons";
 import { useLibrary } from "@/components/library";
 
 export function WatchActions({ vid, title }: { vid: string; title: string }) {
@@ -11,37 +12,37 @@ export function WatchActions({ vid, title }: { vid: string; title: string }) {
     // Record the open once. markSeen no-ops if this id is already stored.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vid]);
-  const frame = library.frames
-    ? `https://i.ytimg.com/vi/${vid}/hq2.jpg`
-    : `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
   return (
     <div className="flex flex-col gap-3">
       <div className="relative aspect-video overflow-hidden rounded-[12px] bg-black">
         <iframe
-          className="size-full"
+          className="absolute inset-0 size-full"
           src={`https://www.youtube-nocookie.com/embed/${vid}?rel=0`}
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           referrerPolicy="strict-origin-when-cross-origin"
           allowFullScreen
         />
-        <img src={frame} alt="" className="pointer-events-none absolute inset-0 size-full object-cover opacity-0" />
       </div>
-      <div className="flex flex-wrap gap-2">
-        <button type="button" className={`h-9 rounded-[18px] px-4 ${library.likes.includes(vid) ? "bg-primary text-[var(--on-primary)]" : "bg-surface"}`} onClick={() => library.toggleLike(vid)}>
-          {library.likes.includes(vid) ? "Liked" : "Like"}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex overflow-hidden rounded-full bg-surface">
+          <button type="button" className={`grid size-9 place-items-center ${library.likes.includes(vid) ? "text-primary" : ""}`} aria-label="Like" aria-pressed={library.likes.includes(vid)} onClick={() => library.toggleLike(vid)}>
+            <ThumbUpIcon filled={library.likes.includes(vid)} />
+          </button>
+          <button type="button" className={`grid size-9 place-items-center border-l border-line ${library.dislikes.includes(vid) ? "text-primary" : ""}`} aria-label="Not for me" aria-pressed={library.dislikes.includes(vid)} onClick={() => library.toggleDislike(vid)}>
+            <ThumbDownIcon filled={library.dislikes.includes(vid)} />
+          </button>
+        </div>
+        <button type="button" className={`${pillClass} ${library.later.includes(vid) ? "text-primary" : ""}`} aria-label={library.later.includes(vid) ? "Remove from watch later" : "Watch later"} aria-pressed={library.later.includes(vid)} onClick={() => library.toggleLater(vid)}>
+          <ClockIcon filled={library.later.includes(vid)} />
+          <span className="pr-1">{library.later.includes(vid) ? "Saved" : "Watch later"}</span>
         </button>
-        <button type="button" className={`h-9 rounded-[18px] px-4 ${library.dislikes.includes(vid) ? "bg-surface-hover" : "bg-surface"}`} onClick={() => library.toggleDislike(vid)}>
-          {library.dislikes.includes(vid) ? "Hidden" : "Not for me"}
-        </button>
-        <button type="button" className="h-9 rounded-[18px] bg-surface px-4" onClick={() => library.toggleLater(vid)}>
-          {library.later.includes(vid) ? "Saved" : "Watch later"}
-        </button>
-        <a className="inline-flex h-9 items-center rounded-[18px] bg-surface px-4" href={`https://www.youtube.com/watch?v=${vid}`} target="_blank" rel="noreferrer">
-          YouTube
+        <a className={pillClass} href={`https://www.youtube.com/watch?v=${vid}`} target="_blank" rel="noreferrer" aria-label="Open on YouTube">
+          <ExternalIcon />
+          <span className="pr-1">YouTube</span>
         </a>
-        <a className="inline-flex h-9 items-center rounded-[18px] bg-surface px-4" href={`https://hackertube.org/watch/${vid}`} target="_blank" rel="noreferrer">
-          Source
+        <a className="grid size-9 place-items-center rounded-full bg-surface hover:bg-[var(--surface-hover)]" href={`https://hackertube.org/watch/${vid}`} target="_blank" rel="noreferrer" aria-label="Open on HackerTube">
+          <ExternalIcon />
         </a>
       </div>
     </div>

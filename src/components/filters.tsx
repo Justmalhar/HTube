@@ -12,7 +12,7 @@ export function FilterBar({ path, query }: { path: string; query: Record<string,
     const on = params.get(key) === value;
     const href = withQuery(path, params, { [key]: on ? "" : value });
     return (
-      <a key={`${key}-${value}`} href={href} className={`inline-flex h-8 items-center rounded-[8px] px-3 text-sm ${on ? "bg-[var(--chip-on)] text-[var(--chip-on-text)]" : "bg-surface"}`}>
+      <a key={`${key}-${value}`} href={href} className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-sm ${on ? "bg-[var(--chip-on)] text-[var(--chip-on-text)]" : "bg-surface"}`}>
         {label}
       </a>
     );

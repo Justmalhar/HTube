@@ -72,7 +72,7 @@ function LaterButton({ saved, onToggle }: { saved: boolean; onToggle: () => void
   return (
     <button
       type="button"
-      className={`absolute right-2 top-2 grid size-9 place-items-center rounded-full bg-black/80 text-white ${saved ? "opacity-100" : "opacity-0 group-hover/thumb:opacity-100 focus-visible:opacity-100 max-[800px]:opacity-100"}`}
+      className="absolute right-2 top-2 grid size-9 place-items-center rounded-full bg-black/80 text-white"
       aria-label={saved ? "Remove from watch later" : "Save to watch later"}
       aria-pressed={saved}
       onClick={(event) => {
@@ -91,7 +91,7 @@ export function VideoGrid({ items }: { items: FeedCard[] }) {
     return <p className="py-10 text-sm text-muted">Nothing matches these filters.</p>;
   }
   return (
-    <ul className="grid grid-cols-1 gap-x-4 gap-y-8 min-[520px]:grid-cols-2 min-[1100px]:grid-cols-3 min-[1500px]:grid-cols-4">
+    <ul className="grid grid-cols-1 gap-x-4 gap-y-8 min-[720px]:grid-cols-2 min-[1180px]:grid-cols-3">
       {items.map((item) => (
         <li key={item.vid}>
           <VideoCard item={item} />

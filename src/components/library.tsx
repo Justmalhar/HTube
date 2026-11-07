@@ -103,8 +103,13 @@ const ThemeContext = createContext<{ theme: "dark" | "light"; toggle: () => void
 export function ThemeButton() {
   const { theme, toggle } = useContext(ThemeContext);
   return (
-    <button type="button" className="h-9 rounded-[18px] bg-surface px-3 text-sm" onClick={toggle}>
-      {theme === "dark" ? "Light" : "Dark"}
+    <button
+      type="button"
+      className="grid size-10 place-items-center rounded-full hover:bg-surface"
+      aria-label={theme === "dark" ? "Switch to light" : "Switch to dark"}
+      onClick={toggle}
+    >
+      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
     </button>
   );
 }
@@ -132,5 +137,22 @@ export function ThemeState({ children }: { children: React.ReactNode }) {
     >
       {children}
     </ThemeContext.Provider>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
+      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
+      <path d="M15 3a8 8 0 1 0 6 13 7 7 0 0 1-6-13z" fill="currentColor" />
+    </svg>
   );
 }

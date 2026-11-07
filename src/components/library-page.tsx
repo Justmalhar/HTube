@@ -13,7 +13,7 @@ export function LibraryPage({ kind }: { kind: "likes" | "later" | "seen" }) {
   const idKey = ids.join(",");
   const [items, setItems] = useState<FeedCard[]>([]);
   const title = kind === "likes" ? "Liked" : kind === "later" ? "Watch later" : "History";
-  const description = "Only on this device. No account.";
+  const description = "Saved on this device";
 
   useEffect(() => {
     if (!idKey) return;
@@ -37,10 +37,10 @@ export function LibraryPage({ kind }: { kind: "likes" | "later" | "seen" }) {
         title={title}
         description={description}
         actions={kind === "seen" && library.seen.length ? (
-          <button type="button" className="h-9 rounded-[18px] bg-surface px-4" onClick={() => library.clearHistory()}>Clear history</button>
+          <button type="button" className="h-9 w-32 rounded-[18px] bg-surface" onClick={() => library.clearHistory()}>Clear history</button>
         ) : null}
       />
-      {idKey ? <VideoGrid items={items} /> : <p className="text-sm text-muted">Nothing here yet. Likes and watch later stay in this browser.</p>}
+      {idKey ? <VideoGrid items={items} /> : <p className="text-sm text-muted">Nothing saved yet</p>}
     </div>
   );
 }

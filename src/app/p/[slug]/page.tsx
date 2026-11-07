@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { PlayIcon, pillClass } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
 import { VideoCard } from "@/components/video-card";
 import { getEngine } from "@/lib/server-catalog";
@@ -16,10 +17,11 @@ export default async function PlaylistPage({ params }: { params: Promise<{ slug:
     <div>
       <PageHeader
         title={playlist.title}
-        description={`${playlist.items.length} videos, in order`}
+        description="In this order"
         actions={
-          <a className="inline-flex h-9 items-center rounded-[18px] bg-surface px-4" href={`https://www.youtube.com/watch_videos?video_ids=${ids}`} target="_blank" rel="noreferrer">
-            Play on YouTube
+          <a className={pillClass} href={`https://www.youtube.com/watch_videos?video_ids=${ids}`} target="_blank" rel="noreferrer">
+            <PlayIcon />
+            <span className="pr-1">Play</span>
           </a>
         }
       />

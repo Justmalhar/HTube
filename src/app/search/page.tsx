@@ -10,7 +10,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const { record, q, page } = searchPage(search);
   return (
     <div>
-      <PageHeader title={q ? q : "Search"} description="Titles, topics, and category words" />
+      <PageHeader title="Search" description="Find a talk" />
       <form action="/search" className="mb-4 flex sm:hidden">
         <input name="q" defaultValue={q} aria-label="Search" className="h-10 min-w-0 flex-1 rounded-l-[20px] border border-line bg-background px-3" />
         <button className="h-10 rounded-r-[20px] bg-surface px-3" type="submit">Search</button>

@@ -34,8 +34,8 @@ export default async function WatchPage({ params }: { params: Promise<{ vid: str
     .filter((item) => item != null)
     .slice(0, 12);
   return (
-    <div className="grid gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_380px]">
-      <div className="min-w-0">
+    <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
+      <div className="min-w-0 flex-1">
         <WatchActions vid={vid} title={card.title} />
         <h1 className="mt-3 text-base font-medium leading-5">{card.title}</h1>
         <a href={`/channel/${card.channelSlug}`} className="mt-1 block text-sm text-muted">{card.channel}</a>
@@ -45,7 +45,7 @@ export default async function WatchPage({ params }: { params: Promise<{ vid: str
           {card.quote ? <p className="mt-2 text-sm">{card.quote}</p> : null}
           <div className="mt-3 flex flex-wrap gap-2">
             {card.categories.map((id) => (
-              <a key={id} href={`/c/${id}`} className="rounded-[8px] bg-background px-2 py-1 text-sm">{categoryName(engine, id)}</a>
+              <a key={id} href={`/c/${id}`} className="rounded-full bg-background px-3 py-1 text-sm">{categoryName(engine, id)}</a>
             ))}
           </div>
         </div>
@@ -65,7 +65,7 @@ export default async function WatchPage({ params }: { params: Promise<{ vid: str
           </ul>
         </section>
       </div>
-      <aside>
+      <aside className="w-full shrink-0 xl:w-[360px]">
         <h2 className="mb-3 text-base font-medium">Related</h2>
         <div className="flex flex-col gap-4">
           {related.map((item) => (

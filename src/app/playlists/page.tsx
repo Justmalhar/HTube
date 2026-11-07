@@ -11,7 +11,7 @@ export default function Playlists() {
   ] as const;
   return (
     <div>
-      <PageHeader title="Playlists" description="Ordered lists from HN recommendations" />
+      <PageHeader title="Playlists" description="Watch them in order" />
       {groups.map(([tier, title, detail]) => {
         const items = playlists.filter((playlist) => (playlist.tier || "deep") === tier);
         if (!items.length) return null;

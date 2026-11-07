@@ -7,12 +7,12 @@ export default function Categories() {
   const areas = getEngine().areas;
   return (
     <div>
-      <PageHeader title="Categories" description="16 areas, 150 topics" />
+      <PageHeader title="Categories" description="Browse by topic" />
       <div className="mb-4 flex flex-wrap gap-2">
-        <a className="h-8 rounded-[8px] bg-surface px-3 leading-8" href="/browse?sort=recent">Recently recommended</a>
-        <a className="h-8 rounded-[8px] bg-surface px-3 leading-8" href="/browse?dur=xlong">Longs</a>
-        <a className="h-8 rounded-[8px] bg-surface px-3 leading-8" href="/browse?gems=insistent">Hidden gems</a>
-        <a className="h-8 rounded-[8px] bg-surface px-3 leading-8" href="/browse">All videos</a>
+        <a className="inline-flex h-8 items-center rounded-full bg-surface px-3 text-sm" href="/browse?sort=recent">Recent</a>
+        <a className="inline-flex h-8 items-center rounded-full bg-surface px-3 text-sm" href="/browse?dur=xlong">Longs</a>
+        <a className="inline-flex h-8 items-center rounded-full bg-surface px-3 text-sm" href="/browse?gems=insistent">Gems</a>
+        <a className="inline-flex h-8 items-center rounded-full bg-surface px-3 text-sm" href="/browse">All</a>
       </div>
       <div className="flex flex-col gap-6">
         {areas.map((area) => (

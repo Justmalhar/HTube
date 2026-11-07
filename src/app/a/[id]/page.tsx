@@ -22,10 +22,10 @@ export default async function AreaPage({
   const { record, page } = browsePage({ ...search, area: id });
   return (
     <div>
-      <PageHeader title={area.name} description={`${area.categories.length} topics`} />
+      <PageHeader title={area.name} description="In this area" />
       <div className="mb-4 flex flex-wrap gap-2">
         {area.categories.map((category) => (
-          <a key={category.id} href={`/c/${category.id}`} className="h-8 rounded-[8px] bg-surface px-3 leading-8">{category.name}</a>
+          <a key={category.id} href={`/c/${category.id}`} className="inline-flex h-8 items-center rounded-full bg-surface px-3 text-sm">{category.name}</a>
         ))}
       </div>
       <FilterBar path={`/a/${id}`} query={record} />

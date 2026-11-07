@@ -23,7 +23,7 @@ export default async function ChannelPage({
   const { record, page } = browsePage({ ...search, channel: slug, news: "show", cited: "show" });
   return (
     <div>
-      <PageHeader title={name} description="Videos from this channel" />
+      <PageHeader title={name} description="From this channel" />
       <VideoGrid items={page.items} />
       <Pager path={`/channel/${slug}`} query={record} offset={page.offset} total={page.total} />
     </div>

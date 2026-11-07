@@ -17,8 +17,6 @@ const LINKS = [
   ["/later", "Watch later", ClockIcon],
   ["/history", "History", HistoryIcon],
   ["/settings", "Settings", GearIcon],
-  ["/about", "About", InfoIcon],
-  ["/data", "Data", DataIcon],
 ] as const;
 
 export function Shell({ children }: { children: React.ReactNode }) {
@@ -95,8 +93,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
               placeholder="Search talks"
               className="h-10 w-full rounded-l-[20px] border border-line bg-background px-4 outline-none"
             />
-            <button className="h-10 rounded-r-[20px] border border-l-0 border-line bg-surface px-4" type="submit">
-              Search
+            <button className="grid h-10 w-16 place-items-center rounded-r-[20px] border border-l-0 border-line bg-surface" type="submit" aria-label="Search">
+              <SearchIcon />
             </button>
           </form>
           <ThemeButton />
@@ -113,10 +111,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
-          <div className={`mt-6 ${rail ? "min-[801px]:hidden" : ""}`}>
-            <CatalogSync />
-          </div>
         </aside>
+        <div className="sr-only">
+          <CatalogSync />
+        </div>
         {open ? <button type="button" className="fixed inset-0 z-30 bg-black/50 min-[801px]:hidden" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
         <div id="content" className={`px-4 pb-20 pt-16 min-[801px]:pr-6 ${rail ? "min-[801px]:pl-[88px]" : "min-[801px]:pl-[256px]"}`}>
           {children}
@@ -203,10 +201,4 @@ function HistoryIcon() {
 }
 function GearIcon() {
   return <IconPath d="M12 8a4 4 0 1 0 .01 0zM4 13l2-1.2.3-1.6L5 8.6 7 7l1.5.8h1.8L12 6.5 14 8h1.7L17 7l2 1.6-1.3 1.6.3 1.6L20 13l-2 1.2-.3 1.6L19 17.4 17 19l-1.5-.8h-1.8L12 19.5 10 18H8.3L7 19l-2-1.6 1.3-1.6L6 14.2z" />;
-}
-function InfoIcon() {
-  return <IconPath d="M12 3a9 9 0 1 0 .01 0zM11 10h2v7h-2zm0-4h2v2h-2z" />;
-}
-function DataIcon() {
-  return <IconPath d="M5 5h14v4H5zm0 5h14v4H5zm0 5h14v4H5z" />;
 }
