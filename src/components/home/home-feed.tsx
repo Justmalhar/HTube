@@ -15,18 +15,18 @@ type Personal = {
   later: FeedCard[];
 };
 
-const SEED_KEY = "oht.seed";
-
-function sessionSeed() {
+// A fresh seed on every page load (refresh reshuffles, like YouTube). Infinite scroll reuses this
+// load's seed through the request body, so pages within one visit never repeat.
+const pageSeed = (() => {
   try {
-    const stored = sessionStorage.getItem(SEED_KEY);
-    if (stored) return Number(stored);
-    const seed = crypto.getRandomValues(new Uint32Array(1))[0] ?? 1;
-    sessionStorage.setItem(SEED_KEY, String(seed));
-    return seed;
+    return crypto.getRandomValues(new Uint32Array(1))[0] ?? 1;
   } catch {
     return Math.floor(Math.random() * 2 ** 32);
   }
+})();
+
+function sessionSeed() {
+  return pageSeed;
 }
 
 function Row({ items }: { items: FeedCard[] }) {

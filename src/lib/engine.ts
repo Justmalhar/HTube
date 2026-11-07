@@ -67,11 +67,11 @@ function eligible(card: Card, dislikes: Set<string>): boolean {
   return true;
 }
 
-const WEIGHT = { quality: 1, affinity: 1.6, neighbour: 0.8, fresh: 0.3, noise: 0.3 };
+const WEIGHT = { quality: 1, affinity: 1.6, neighbour: 0.8, fresh: 0.3, noise: 0.6 };
 const WINDOW = 12;
 const MAX_CHANNEL = 2;
 const MAX_CATEGORY = 4;
-const EXPLORE_RATE = 0.2;
+const EXPLORE_RATE = 0.3;
 const HALF_LIFE = 20;
 const SEEN_PENALTY = 5;
 
@@ -333,6 +333,10 @@ function sortCards(rows: Card[], sort: BrowseQuery["sort"]): Card[] {
   }
   if (sort === "recent") {
     copy.sort((a, b) => b.lastYear - a.lastYear || b.recMonths - a.recMonths || b.score - a.score);
+    return copy;
+  }
+  if (sort === "oldest") {
+    copy.sort((a, b) => a.firstYear - b.firstYear || byScore(a, b));
     return copy;
   }
   copy.sort(byScore);

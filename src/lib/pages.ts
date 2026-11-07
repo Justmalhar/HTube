@@ -16,6 +16,8 @@ export function browsePage(search: Record<string, string | string[] | undefined>
 
 /** Anonymous and server-rendered order: one shuffle per day. */
 export const dailySeed = () => Math.floor(Date.now() / 86_400_000);
+/** A new seed per request so every home load (and refresh) gets a different mix. */
+export const freshSeed = () => Math.floor(Math.random() * 2 ** 32);
 
 export type Library = { likes: string[]; dislikes: string[]; seen: string[]; later: string[] };
 

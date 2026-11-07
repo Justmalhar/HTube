@@ -1,5 +1,5 @@
 import { PAGE, browse, buildFeed } from "@/lib/engine";
-import { dailySeed } from "@/lib/pages";
+import { freshSeed } from "@/lib/pages";
 import { getEngine } from "@/lib/server-catalog";
 import { HomeFeed } from "@/components/home/home-feed";
 import { PlaylistTile, Shelf, TopicTile } from "@/components/shelf";
@@ -23,7 +23,7 @@ const CHIPS = [
 
 export default function Home() {
   const engine = getEngine();
-  const feed = buildFeed(engine, { likes: [], dislikes: [], seen: [], seed: dailySeed(), offset: 0, limit: PAGE });
+  const feed = buildFeed(engine, { likes: [], dislikes: [], seen: [], seed: freshSeed(), offset: 0, limit: PAGE });
   const topics = engine.areas.map((area) => ({
     area,
     vid: browse(engine, { area: area.id, offset: 0, limit: 1 }).items[0]?.vid,
