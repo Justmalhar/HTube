@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/page-header";
+import { readingClass } from "@/components/ui";
 import { getManifest } from "@/lib/server-catalog";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,7 @@ export const metadata: Metadata = { title: "About" };
 export default function About() {
   const counts = getManifest().counts;
   return (
-    <article className="max-w-3xl">
+    <article className={readingClass}>
       <PageHeader title="About" />
       <p>HTube collects the YouTube videos Hacker News commenters recommend most.</p>
       <ul className="mt-4 grid grid-cols-2 gap-3 tabular-nums">

@@ -16,6 +16,10 @@ export const gridClass = "grid grid-cols-1 gap-x-4 gap-y-10 min-[720px]:grid-col
 
 /** PageHeader action: full width on phones, one fixed width on desktop so sibling pages do not jump. */
 export const headerActionClass = `${pillClass} w-full min-[801px]:w-36`;
+/** Space under every PageHeader, so the first content offset matches across list pages. */
+export const headerGapClass = "mb-3";
+/** Reading-width cap shared by Settings and About. */
+export const readingClass = "max-w-3xl";
 /** Muted secondary line (descriptions, counts, notes). */
 export const mutedTextClass = "text-sm text-muted";
 /** Counts and ranges: digits that do not jitter. */

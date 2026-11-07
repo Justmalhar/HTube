@@ -36,19 +36,24 @@ export function ShelfScroller({ children }: { children: React.ReactNode }) {
     node.scrollBy({ left: direction * node.clientWidth * 0.8, behavior: still ? "auto" : "smooth" });
   };
   const arrow =
-    "absolute top-[calc(50%-36px)] z-(--z-raised) hidden size-10 place-items-center rounded-full bg-background shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-[opacity,scale] duration-150 ease-out-quart hover:bg-surface active:scale-[0.97] min-[801px]:grid";
+    "pointer-events-auto absolute top-[calc(50%-36px)] z-(--z-raised) hidden size-10 place-items-center rounded-full bg-background shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-[opacity,scale] duration-150 ease-out-quart hover:bg-surface active:scale-[0.97] min-[801px]:grid";
+  const fade = "pointer-events-none absolute inset-y-0 z-(--z-raised) w-16 transition-opacity duration-150 ease-out-quart";
   const hide = "pointer-events-none opacity-0";
   return (
     <div className="relative">
       <ul ref={list} className="no-scrollbar -mx-1 flex snap-x gap-4 overflow-x-auto px-1">
         {children}
       </ul>
-      <button type="button" className={`${arrow} -left-5 ${edges.start ? hide : ""}`} aria-label="Scroll left" tabIndex={edges.start ? -1 : 0} aria-hidden={edges.start} onClick={() => scroll(-1)}>
-        <ChevronLeftIcon />
-      </button>
-      <button type="button" className={`${arrow} -right-5 ${edges.end ? hide : ""}`} aria-label="Scroll right" tabIndex={edges.end ? -1 : 0} aria-hidden={edges.end} onClick={() => scroll(1)}>
-        <ChevronIcon />
-      </button>
+      <div className={`${fade} left-0 ${edges.start ? "opacity-0" : ""}`}>
+        <button type="button" className={`${arrow} left-1 ${edges.start ? hide : ""}`} aria-label="Scroll left" tabIndex={edges.start ? -1 : 0} aria-hidden={edges.start} onClick={() => scroll(-1)}>
+          <ChevronLeftIcon />
+        </button>
+      </div>
+      <div className={`${fade} right-0 ${edges.end ? "opacity-0" : ""}`}>
+        <button type="button" className={`${arrow} right-1 ${edges.end ? hide : ""}`} aria-label="Scroll right" tabIndex={edges.end ? -1 : 0} aria-hidden={edges.end} onClick={() => scroll(1)}>
+          <ChevronIcon />
+        </button>
+      </div>
     </div>
   );
 }

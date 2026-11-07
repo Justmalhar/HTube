@@ -7,6 +7,8 @@ import { chipClass, chipOnClass, pillClass } from "@/components/ui";
 
 const TYPES = ["talk", "lecture", "explainer", "documentary", "interview", "tutorial", "demo", "commentary", "comedy", "music"];
 
+const SORTS = new Set(["hn", "recent", "title"]);
+
 type Chip = { href: string; label: string; on?: boolean };
 
 const stickyClass =
@@ -38,10 +40,17 @@ export function FilterBar({ path, query }: { path: string; query: Record<string,
     const on = params.get(key) === value;
     return { href: withQuery(path, params, { [key]: on ? "" : value }), label, on };
   };
+  // Sort is single-select with "Best" as the default: always one chip on, never toggled off.
+  const sort = params.get("sort") ?? "hn";
+  const sortChip = (value: string, label: string): Chip => ({
+    href: withQuery(path, params, { sort: value === "hn" ? "" : value }),
+    label,
+    on: (SORTS.has(sort) ? sort : "hn") === value,
+  });
   const chips = [
-    chip("sort", "hn", "Best"),
-    chip("sort", "recent", "Recent"),
-    chip("sort", "title", "Title"),
+    sortChip("hn", "Best"),
+    sortChip("recent", "Recent"),
+    sortChip("title", "Title"),
     chip("evergreen", "1", "Evergreen"),
     chip("gems", "insistent", "Hidden gems"),
     chip("news", "show", "Include news"),

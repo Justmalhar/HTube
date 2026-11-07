@@ -29,7 +29,7 @@ export default async function AreaPage({ params, searchParams }: PageProps<"/a/[
   return (
     <div>
       <PageHeader title={area.name} />
-      <nav aria-label="Topics in this area" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 min-[801px]:mx-0 min-[801px]:flex-wrap min-[801px]:px-0">
+      <nav aria-label="Topics in this area" className="no-scrollbar mb-3 -mx-4 flex gap-2 overflow-x-auto px-4 min-[801px]:mx-0 min-[801px]:flex-wrap min-[801px]:px-0">
         {area.categories.map((category) => (
           <a key={category.id} href={`/c/${category.id}`} className={chipClass}>{category.name}</a>
         ))}

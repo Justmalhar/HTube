@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 
 import { FilterBar, Pager } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
-import { chipClass } from "@/components/ui";
 import { VideoGrid } from "@/components/video-card";
 import { areaForCategory } from "@/lib/engine";
 import { browsePage, paramsRecord } from "@/lib/pages";
@@ -29,12 +28,10 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
   const path = `/c/${id}`;
   return (
     <div>
-      <PageHeader title={category.name} />
-      {area ? (
-        <a href={`/a/${area.id}`} className={`${chipClass} mb-2 max-w-full`}>
-          <span className="truncate">Part of {area.name}</span>
-        </a>
-      ) : null}
+      <PageHeader
+        title={category.name}
+        description={area ? <a href={`/a/${area.id}`} className="hover:underline">Part of {area.name}</a> : undefined}
+      />
       <FilterBar path={path} query={record} />
       <VideoGrid items={page.items} />
       <Pager path={path} query={record} offset={page.offset} total={page.total} />
