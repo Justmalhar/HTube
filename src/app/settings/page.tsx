@@ -8,7 +8,7 @@ export default function Settings() {
   return (
     <div>
       <PageHeader title="Settings" description="On this browser" />
-      <label className="flex items-center justify-between gap-4 rounded-[12px] bg-surface px-3 py-3">
+      <label className="flex items-center justify-between gap-4 rounded-[16px] bg-surface px-4 py-3">
         <span>
           <span className="block text-sm font-medium">Middle frames</span>
           <span className="text-sm text-muted">A frame from the middle, not the poster</span>

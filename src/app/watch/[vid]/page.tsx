@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { VideoCard } from "@/components/video-card";
+import { RelatedRow } from "@/components/video-card";
 import { WatchActions } from "@/components/watch-actions";
 import { categoryName } from "@/lib/engine";
 import { getEngine, getMentions } from "@/lib/server-catalog";
@@ -39,7 +39,7 @@ export default async function WatchPage({ params }: { params: Promise<{ vid: str
         <WatchActions vid={vid} title={card.title} />
         <h1 className="mt-3 text-base font-medium leading-5">{card.title}</h1>
         <a href={`/channel/${card.channelSlug}`} className="mt-1 block text-sm text-muted">{card.channel}</a>
-        <div className="mt-4 rounded-[12px] bg-surface p-3">
+        <div className="mt-3 rounded-[16px] bg-surface p-3">
           <p>{card.summary}</p>
           {card.whyHn ? <p className="mt-2 text-sm text-muted">{card.whyHn}</p> : null}
           {card.quote ? <p className="mt-2 text-sm">{card.quote}</p> : null}
@@ -53,7 +53,7 @@ export default async function WatchPage({ params }: { params: Promise<{ vid: str
           <h2 className="text-base font-medium">{mentions.length} Hacker News comments</h2>
           <ul className="mt-3 flex flex-col gap-3">
             {mentions.map((mention) => (
-              <li key={mention.hn_comment_id} className="rounded-[12px] bg-surface p-3">
+              <li key={mention.hn_comment_id} className="rounded-[16px] bg-surface p-3">
                 <p className="text-sm text-muted">@{mention.author} {mention.month.slice(0, 4)} in {mention.story_title}</p>
                 <p className="mt-2 whitespace-pre-wrap">{mention.text}</p>
                 <p className="mt-2 flex flex-wrap gap-3 text-sm">
@@ -65,13 +65,10 @@ export default async function WatchPage({ params }: { params: Promise<{ vid: str
           </ul>
         </section>
       </div>
-      <aside className="w-full shrink-0 xl:w-[360px]">
-        <h2 className="mb-3 text-base font-medium">Related</h2>
-        <div className="flex flex-col gap-4">
-          {related.map((item) => (
-            <VideoCard key={item.vid} item={{ ...item, reason: "HN people also recommend this" }} />
-          ))}
-        </div>
+      <aside className="flex w-full shrink-0 flex-col gap-3 xl:w-[402px]">
+        {related.map((item) => (
+          <RelatedRow key={item.vid} item={item} />
+        ))}
       </aside>
     </div>
   );

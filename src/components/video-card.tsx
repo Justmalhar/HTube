@@ -86,6 +86,29 @@ function LaterButton({ saved, onToggle }: { saved: boolean; onToggle: () => void
   );
 }
 
+export function RelatedRow({ item }: { item: FeedCard }) {
+  const library = useLibrary();
+  const frame = library.frames
+    ? `https://i.ytimg.com/vi/${item.vid}/hq2.jpg`
+    : `https://i.ytimg.com/vi/${item.vid}/hqdefault.jpg`;
+  return (
+    <article className="flex gap-2">
+      <a href={`/watch/${item.vid}`} className="group/thumb relative block w-[168px] shrink-0">
+        <div className="aspect-video overflow-hidden rounded-[12px] bg-surface">
+          <img src={frame} alt="" className="size-full object-cover" />
+        </div>
+        <LaterButton saved={library.later.includes(item.vid)} onToggle={() => library.toggleLater(item.vid)} />
+      </a>
+      <div className="min-w-0">
+        <a href={`/watch/${item.vid}`}>
+          <h2 className="line-clamp-2 text-sm font-medium leading-5">{item.title}</h2>
+        </a>
+        <a href={`/channel/${item.channelSlug}`} className="mt-1 block truncate text-xs text-muted">{item.channel}</a>
+      </div>
+    </article>
+  );
+}
+
 export function VideoGrid({ items }: { items: FeedCard[] }) {
   if (!items.length) {
     return <p className="py-10 text-sm text-muted">Nothing matches these filters.</p>;

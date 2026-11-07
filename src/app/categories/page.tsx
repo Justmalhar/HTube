@@ -19,7 +19,7 @@ export default function Categories() {
           <section key={area.id}>
             <a href={`/a/${area.id}`} className="text-sm font-medium">{area.name}</a>
             <span className="ml-2 text-sm text-muted">{area.video_count}</span>
-            <ul className="mt-2 divide-y divide-line rounded-[12px] bg-surface">
+            <ul className="mt-2 divide-y divide-line overflow-hidden rounded-[16px] bg-surface">
               {area.categories.map((category) => (
                 <li key={category.id}>
                   <a href={`/c/${category.id}`} className="flex items-center justify-between gap-3 px-3 py-2">

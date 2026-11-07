@@ -14,7 +14,7 @@ export function WatchActions({ vid, title }: { vid: string; title: string }) {
   }, [vid]);
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative aspect-video overflow-hidden rounded-[12px] bg-black">
+      <div className="relative aspect-video overflow-hidden rounded-[16px] bg-black">
         <iframe
           className="absolute inset-0 size-full"
           src={`https://www.youtube-nocookie.com/embed/${vid}?rel=0`}

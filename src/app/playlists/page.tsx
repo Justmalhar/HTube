@@ -22,7 +22,7 @@ export default function Playlists() {
             <ul className="grid grid-cols-1 gap-4 min-[700px]:grid-cols-2">
               {items.map((playlist) => (
                 <li key={playlist.slug}>
-                  <a href={`/p/${playlist.slug}`} className="block rounded-[12px] bg-surface p-3">
+                  <a href={`/p/${playlist.slug}`} className="block rounded-[16px] bg-surface p-3">
                     <div className="grid grid-cols-2 gap-0.5 overflow-hidden rounded-[12px]">
                       {playlist.cover.slice(0, 4).map((vid) => (
                         <img key={vid} src={`https://i.ytimg.com/vi/${vid}/hq2.jpg`} alt="" className="aspect-video object-cover" />
