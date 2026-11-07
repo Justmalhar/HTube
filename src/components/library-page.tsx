@@ -2,13 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { PlaylistSidebar } from "@/components/playlist-sidebar";
+import { StatusPanel } from "@/components/status-panel";
+import { useSnackbar } from "@/components/snackbar";
+
 import { CloseIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, VideoRow } from "@/components/video-card";
 import { useHydrated, useLibrary } from "@/components/library";
 import { HistoryPanel, PausedBanner } from "@/components/history/history-panel";
-import { PlaylistHeader } from "@/components/history/playlist-header";
-import { headerActionClass } from "@/components/ui";
+import { headerActionClass, rowListClass, sectionTitleClass } from "@/components/ui";
 import { groupHistory } from "@/lib/history";
 import type { FeedCard } from "@/lib/types";
 
@@ -85,15 +88,11 @@ export function LibraryPage({ kind }: { kind: Kind }) {
 
   const [query, setQuery] = useState("");
   const [now] = useState(Date.now);
-  const [undo, setUndo] = useState<{ message: string; previous: string[] } | null>(null);
-  useEffect(() => {
-    if (!undo) return;
-    const timer = window.setTimeout(() => setUndo(null), 6000);
-    return () => window.clearTimeout(timer);
-  }, [undo]);
+  const snackbar = useSnackbar();
 
   const change = (message: string, next: string[]) => {
-    setUndo({ message, previous: stored });
+    const previous = stored;
+    snackbar.show(message, { label: "Undo", run: () => library.setList(kind, previous) });
     library.setList(kind, next);
   };
 
@@ -115,13 +114,11 @@ export function LibraryPage({ kind }: { kind: Kind }) {
     );
   } else if (failed && !items.length) {
     body = (
-      <div className="grid place-items-center rounded-2xl bg-surface px-6 py-16 text-center">
-        <p className="text-base font-medium">Couldn&apos;t load videos</p>
-        <p className="mt-1 text-sm text-muted">Check your connection</p>
-        <button type="button" className="mt-4 h-9 rounded-full bg-background px-4 text-sm font-medium hover:bg-surface-hover press" onClick={() => { setFailed(false); setAttempt((value) => value + 1); }}>
-          Try again
-        </button>
-      </div>
+      <StatusPanel
+        title="Couldn't load videos"
+        body="Check your connection"
+        action={{ label: "Try again", onClick: () => { setFailed(false); setAttempt((value) => value + 1); } }}
+      />
     );
   } else {
     const row = (item: FeedCard) => (
@@ -152,15 +149,15 @@ export function LibraryPage({ kind }: { kind: Kind }) {
           ) : (
             groupHistory(items.map((item) => item.vid), library.seenAt, now).map(({ group, ids: groupIds }) => (
               <section key={group} aria-label={group}>
-                <h2 className="mb-4 text-lg font-bold leading-7">{group}</h2>
-                <ul className="flex flex-col gap-4">{groupIds.map((id) => row(cards[id]!))}</ul>
+                <h2 className={`mb-4 ${sectionTitleClass}`}>{group}</h2>
+                <ul className={rowListClass}>{groupIds.map((id) => row(cards[id]!))}</ul>
               </section>
             ))
           )}
           {skeleton}
         </div>
       ) : (
-        <ul className="flex min-w-0 max-w-[1100px] flex-1 flex-col gap-4" aria-busy={loading}>
+        <ul className={`${rowListClass} min-w-0 flex-1`} aria-busy={loading}>
           {items.map(row)}
           {skeleton ? <li>{skeleton}</li> : null}
         </ul>
@@ -176,7 +173,7 @@ export function LibraryPage({ kind }: { kind: Kind }) {
           canClear
         />
       ) : (
-        <PlaylistHeader title={copy.title} ids={ids} />
+        <PlaylistSidebar title={copy.title} ids={ids} />
       );
     body = (
       <div className={`flex flex-col gap-6 min-[801px]:flex-row ${kind === "seen" ? "min-[801px]:flex-row-reverse" : ""}`}>
@@ -199,23 +196,7 @@ export function LibraryPage({ kind }: { kind: Kind }) {
         }
       />
       {body}
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-4 bottom-20 z-(--z-header) flex justify-center min-[801px]:bottom-6">
-        {undo ? (
-          <div className="pointer-events-auto flex max-w-full items-center gap-4 rounded-xl bg-chip-on py-2 pl-4 pr-2 text-sm text-chip-on-text shadow-[0_4px_32px_rgba(0,0,0,0.25)] transition-[opacity,translate] duration-200 ease-out-quart starting:translate-y-2 starting:opacity-0 motion-reduce:transition-none">
-            <span className="min-w-0 truncate">{undo.message}</span>
-            <button
-              type="button"
-              className="h-9 shrink-0 rounded-full px-3 font-bold hover:underline press"
-              onClick={() => {
-                library.setList(kind, undo.previous);
-                setUndo(null);
-              }}
-            >
-              Undo
-            </button>
-          </div>
-        ) : null}
-      </div>
+      {snackbar.node}
     </div>
   );
 }

@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { ChipBar } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
 import { TrendingList, type TrendingItem } from "@/components/trending/trending-list";
-import { chipClass, chipOnClass } from "@/components/ui";
 import { getEngine, getTrending } from "@/lib/server-catalog";
 import type { Card } from "@/lib/types";
 
@@ -33,13 +32,10 @@ export default async function Trending({ searchParams }: PageProps<"/trending">)
   return (
     <div>
       <PageHeader title="Trending" />
-      <nav aria-label="Trending" className="no-scrollbar mb-6 flex gap-3 overflow-x-auto">
-        {TABS.map((t) => (
-          <Link key={t.id} href={t.id === "now" ? "/trending" : `/trending?tab=${t.id}`} scroll={false} aria-current={t === tab ? "page" : undefined} className={t === tab ? chipOnClass : chipClass}>
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+      <ChipBar
+        label="Trending"
+        chips={TABS.map((t) => ({ href: t.id === "now" ? "/trending" : `/trending?tab=${t.id}`, label: t.label, on: t === tab }))}
+      />
       <TrendingList items={items} />
     </div>
   );

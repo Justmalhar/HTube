@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PlayIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
-import { countChipClass, videos } from "@/components/shelf";
-import { headerActionClass } from "@/components/ui";
-import { VideoRow } from "@/components/video-card";
+import { PlaylistSidebar } from "@/components/playlist-sidebar";
+import { RankedList } from "@/components/ranked-list";
 import { getEngine } from "@/lib/server-catalog";
 
 export const dynamic = "force-dynamic";
@@ -27,34 +25,22 @@ export default async function PlaylistPage({ params }: PageProps<"/p/[slug]">) {
     const card = engine.byId.get(item.vid);
     return card ? [{ card, note: item.note }] : [];
   });
-  const watch = (vid: string) => `/watch/${vid}?list=${slug}`;
   return (
     <div>
-      <PageHeader
-        title={playlist.title}
-        actions={
-          <>
-            <span className={countChipClass}>{videos(entries.length)}</span>
-            {entries.length ? (
-              <a className={headerActionClass} href={watch(entries[0].card.vid)}>
-                <PlayIcon />
-                Play all
-              </a>
-            ) : null}
-          </>
-        }
-      />
-      {playlist.intro || playlist.pitch ? <p className="mb-6 max-w-3xl text-sm">{playlist.intro || playlist.pitch}</p> : null}
-      <ol className="flex max-w-[1100px] flex-col gap-4">
-        {entries.map(({ card, note }, index) => (
-          <li key={card.vid} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-2 min-[801px]:grid-cols-[2rem_minmax(0,1fr)] min-[801px]:gap-3">
-            <span className="pt-1 text-sm tabular-nums text-muted">{index + 1}</span>
-            <VideoRow item={card} href={watch(card.vid)}>
-              {note ? <p className="mt-2 line-clamp-3 text-sm">{note}</p> : null}
-            </VideoRow>
-          </li>
-        ))}
-      </ol>
+      <PageHeader title={playlist.title} />
+      <div className="flex flex-col gap-6 min-[801px]:flex-row">
+        <PlaylistSidebar title={playlist.title} ids={entries.map((entry) => entry.card.vid)} list={slug} />
+        <div className="min-w-0 flex-1">
+          {playlist.intro || playlist.pitch ? <p className="mb-6 max-w-3xl text-sm">{playlist.intro || playlist.pitch}</p> : null}
+          <RankedList
+            items={entries.map(({ card, note }) => ({
+              card,
+              href: `/watch/${card.vid}?list=${slug}`,
+              extra: note ? <p className="mt-2 line-clamp-3 text-sm">{note}</p> : null,
+            }))}
+          />
+        </div>
+      </div>
     </div>
   );
 }
