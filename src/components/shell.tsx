@@ -96,6 +96,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const rail = useSyncExternalStore(subscribeRail, () => document.documentElement.hasAttribute("data-rail"), () => false);
   // Watch pages follow YouTube: no docked sidebar or rail at any width, the menu always opens the drawer.
   const watch = pathname.startsWith("/watch/");
+  // On watch pages the header is see-through at the top so the ambient glow reads as one surface with it.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    if (!watch) return;
+    const onScroll = () => setScrolled(window.scrollY > 0);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [watch]);
   const docked = wide && !watch;
   const drawerOpen = !docked && openedAt === pathname;
   const menuRef = useRef<HTMLButtonElement>(null);
@@ -182,7 +191,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </a>
         <header
           inert={drawerOpen}
-          className={`fixed inset-x-0 top-0 z-(--z-header) flex h-14 items-center gap-2 bg-background px-2 min-[801px]:gap-4 min-[801px]:px-4 `}
+          className={`fixed inset-x-0 top-0 z-(--z-header) flex h-14 items-center gap-2 px-2 transition-colors duration-200 min-[801px]:gap-4 min-[801px]:px-4 ${watch && !scrolled ? "bg-transparent" : "bg-background"}`}
         >
           <button
             ref={menuRef}
