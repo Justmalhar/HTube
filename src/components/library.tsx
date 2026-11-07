@@ -10,10 +10,12 @@ type Library = {
   dislikes: string[];
   later: string[];
   seen: string[];
+  /** Subscribed channel slugs, oldest first. */
+  subs: string[];
   frames: boolean;
 };
 
-const EMPTY: Library = { likes: [], dislikes: [], seen: [], later: [], frames: true };
+const EMPTY: Library = { likes: [], dislikes: [], seen: [], later: [], subs: [], frames: true };
 const KEY = "oht.library.v1";
 
 export type ListKind = "likes" | "dislikes" | "later" | "seen";
@@ -40,6 +42,7 @@ function current(): Library {
       dislikes: parsed.dislikes ?? [],
       later: parsed.later ?? [],
       seen: parsed.seen ?? [],
+      subs: parsed.subs ?? [],
       frames: parsed.frames !== false,
     };
   } catch {
@@ -90,6 +93,10 @@ const actions = {
   toggleLater(vid: string) {
     const value = current();
     commit({ ...value, later: value.later.includes(vid) ? without(value.later, vid) : value.later.concat(vid) });
+  },
+  toggleSub(slug: string) {
+    const value = current();
+    commit({ ...value, subs: value.subs.includes(slug) ? without(value.subs, slug) : value.subs.concat(slug) });
   },
   markSeen(vid: string) {
     const value = current();

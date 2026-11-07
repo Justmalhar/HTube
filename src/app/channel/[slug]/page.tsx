@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ChipBar, Pager } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
 import { Shelf, countChipClass, videos } from "@/components/shelf";
+import { SubscribeButton } from "@/components/subscribe-button";
 import { headerActionClass } from "@/components/ui";
 import { VideoCard, VideoGrid } from "@/components/video-card";
 import { browse } from "@/lib/engine";
@@ -41,9 +42,12 @@ export default async function ChannelPage({ params, searchParams }: PageProps<"/
       <PageHeader
         title={name}
         actions={
-          <a className={headerActionClass} href={`https://www.youtube.com/results?search_query=${encodeURIComponent(name)}`} target="_blank" rel="noreferrer">
-            Find on YouTube
-          </a>
+          <>
+            <SubscribeButton slug={slug} name={name} />
+            <a className={headerActionClass} href={`https://www.youtube.com/results?search_query=${encodeURIComponent(name)}`} target="_blank" rel="noreferrer">
+              Find on YouTube
+            </a>
+          </>
         }
       />
       <ul aria-label="Channel stats" className="flex flex-wrap gap-2">

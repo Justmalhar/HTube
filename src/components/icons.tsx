@@ -1,6 +1,9 @@
 import {
   Ban,
+  Bell,
+  BellRing,
   ChevronLeft,
+  ChevronDown,
   ChevronRight,
   CircleUserRound,
   Clock,
@@ -20,6 +23,8 @@ import {
   Play,
   Search,
   Settings,
+  SkipBack,
+  SkipForward,
   Sun,
   ThumbsDown,
   ThumbsUp,
@@ -72,7 +77,12 @@ export const ChevronIcon = action(ChevronRight);
 export const ChevronLeftIcon = action(ChevronLeft);
 export const ShareIcon = action(Forward);
 export const CloseIcon = action(X);
+export const BellIcon = action(Bell);
+export const BellRingIcon = action(BellRing);
 export const SortIcon = action(ListFilter);
+export const SkipBackIcon = action(SkipBack);
+export const SkipForwardIcon = action(SkipForward);
+export const ChevronDownIcon = action(ChevronDown);
 
 export const MenuIcon = chrome(Menu);
 export const SearchIcon = chrome(Search);
