@@ -10,12 +10,6 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FJustmalhar%2FHTube&project-name=htube&repository-name=htube)
 
-[![GitHub stars](https://img.shields.io/github/stars/Justmalhar/HTube?style=flat&logo=github&color=ff6600)](https://github.com/Justmalhar/HTube/stargazers)
-[![Last commit](https://img.shields.io/github/last-commit/Justmalhar/HTube?style=flat&color=ff6600)](https://github.com/Justmalhar/HTube/commits/main)
-[![Videos](https://img.shields.io/badge/videos-6%2C454-ff6600?style=flat&logo=youtube&logoColor=white)](#features)
-[![Data: ODC-By](https://img.shields.io/badge/data-ODC--By%201.0-555?style=flat)](https://opendatacommons.org/licenses/by/1-0/)
-[![Privacy: local-first](https://img.shields.io/badge/privacy-local--first-2ea44f?style=flat)](#where-your-data-lives)
-
 [![Next.js](https://img.shields.io/badge/Next.js-16-000?style=flat&logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-20232a?style=flat&logo=react&logoColor=61dafb)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
