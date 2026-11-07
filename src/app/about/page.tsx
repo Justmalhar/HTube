@@ -12,7 +12,7 @@ export default function About() {
   return (
     <article className="max-w-3xl">
       <PageHeader title="About" />
-      <p>OpenHackerTube collects the YouTube videos Hacker News commenters recommend most.</p>
+      <p>HTube collects the YouTube videos Hacker News commenters recommend most.</p>
       <ul className="mt-4 grid grid-cols-2 gap-3 tabular-nums">
         <li className="rounded-xl bg-surface p-3"><b>{counts.videos.toLocaleString("en-US")}</b><span className="mt-1 block text-sm text-muted">videos</span></li>
         <li className="rounded-xl bg-surface p-3"><b>{counts.mentions.toLocaleString("en-US")}</b><span className="mt-1 block text-sm text-muted">HN comments</span></li>

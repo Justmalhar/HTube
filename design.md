@@ -1,5 +1,5 @@
 ---
-name: OpenHackerTube
+name: HTube
 source: YouTube Modern, recolored
 colors:
   primary: "#FF6600"
@@ -50,13 +50,13 @@ layout:
   mobileMax: "800px"
 ---
 
-# OpenHackerTube design system
+# HTube design system
 
 YouTube's density and chrome, with Hacker News orange instead of YouTube red. Dark is the cinematic default. Light uses the same geometry and the light tokens above. Every screen reads `design.md` through the CSS variables in `src/app/globals.css`. Do not invent a second palette in a component.
 
 ## Logo
 
-The mark is an orange (#FF6600, `primary`) rounded square with a 7/32 corner radius, holding a white geometric "HN" monogram drawn as SVG shapes, with a short scrubber bar under the letters (solid white for the played part, 45% white for the rest) as the video cue instead of a play button. It is drawn on a 32 unit grid so it stays crisp at 16px; `src/components/logo.tsx` and `src/app/icon.svg` share that geometry and change together. The wordmark is the 24px mark, a 6px gap, then "Open" regular and "HackerTube" bold at 19px with -0.015em tracking. In the top bar under 400px only the mark shows. The accessible name is "OpenHackerTube, home". favicon.ico (16/32/48) and the 180px apple-icon come from the same SVG; the apple-icon has square corners because iOS masks them. The product is not affiliated with Y Combinator, Hacker News, or YouTube. Scrollbars are thin and use the hover surface color; horizontal rows (chips, shelves) hide theirs.
+The mark is an orange (#FF6600, `primary`) rounded square with a 7/32 corner radius, holding a bold white "H" (two 4 unit pillars joined by an 8 unit crossbar) with a small orange play triangle cut into the crossbar as the video cue. It is drawn on a 32 unit grid with whole-unit edges so it stays crisp at 16px; `src/components/logo.tsx` and `src/app/icon.svg` share that geometry and change together. The wordmark is the 24px mark, a 6px gap, then "H" bold and "Tube" medium at 19px with -0.015em tracking. In the top bar under 400px only the mark shows. The accessible name is "HTube, home". favicon.ico (16/32/48) and the 180px apple-icon come from the same SVG; the apple-icon has square corners because iOS masks them. The product is not affiliated with Y Combinator, Hacker News, or YouTube. Scrollbars are thin and use the hover surface color; horizontal rows (chips, shelves) hide theirs.
 
 ## Chrome
 
