@@ -23,6 +23,7 @@ import {
 import { ThemeButton, ThemeState, useLibrary } from "@/components/library";
 import { Wordmark } from "@/components/logo";
 import { activeHref } from "@/components/nav-active";
+import { SearchBox } from "@/components/search-box";
 import { iconButtonClass, pillOnClass } from "@/components/ui";
 
 type NavLink = { href: string; label: string; Icon: (props: { active?: boolean }) => React.ReactElement; match?: readonly string[] };
@@ -208,41 +209,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <Link href="/search" className={`ml-auto sm:hidden ${iconButtonClass}`} aria-label="Search">
             <SearchIcon />
           </Link>
-          <form
-            action="/search"
-            role="search"
-            className="group/search mx-auto hidden min-w-0 max-w-[640px] flex-1 sm:flex"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const q = String(new FormData(event.currentTarget).get("q") ?? "").trim();
-              router.push(q ? `/search?${new URLSearchParams({ q })}` : "/search");
-            }}
-          >
-            <label className="sr-only" htmlFor="site-search">Search</label>
-            <div className="flex h-10 min-w-0 flex-1 items-center rounded-l-full border border-line bg-background pl-4 focus-within:border-focus focus-within:pl-2">
-              <span className="hidden text-muted group-focus-within/search:block">
-                <SearchIcon />
-              </span>
-              <input
-                id="site-search"
-                name="q"
-                type="search"
-                placeholder="Search"
-                autoComplete="off"
-                enterKeyHint="search"
-                spellCheck={false}
-                className="h-full min-w-0 flex-1 appearance-none bg-transparent px-2 text-base outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
-              />
-              <kbd className="mr-3 hidden rounded border border-line px-1.5 text-xs text-muted min-[1000px]:block group-focus-within/search:hidden">/</kbd>
-            </div>
-            <button
-              className="press grid h-10 w-16 place-items-center rounded-r-full border border-l-0 border-line bg-surface hover:bg-surface-hover"
-              type="submit"
-              aria-label="Search"
-            >
-              <SearchIcon />
-            </button>
-          </form>
+          <SearchBox id="site-search" className="mx-auto hidden min-w-0 max-w-[640px] flex-1 sm:flex" />
           <button type="button" className={`hidden min-[801px]:grid ${iconButtonClass}`} aria-label="Keyboard shortcuts" onClick={() => setHelp(true)}>
             <KeyboardIcon />
           </button>

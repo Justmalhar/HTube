@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { SearchBox } from "@/components/search-box";
 import { FilterBar, Pager } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState, SearchList } from "@/components/video-card";
@@ -22,18 +23,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         title="Search"
       />
       {/* The top bar hides its search field under 640px, so phones search from here. */}
-      <form action="/search" role="search" className="mb-4 flex sm:hidden">
-        <input
-          name="q"
-          type="search"
-          defaultValue={q}
-          aria-label="Search"
-          placeholder="Search"
-          enterKeyHint="search"
-          className="h-10 min-w-0 flex-1 rounded-l-full border border-line bg-background px-4 placeholder:text-muted"
-        />
-        <button className="press h-10 shrink-0 rounded-r-full bg-surface px-4 text-sm font-medium hover:bg-surface-hover" type="submit">Search</button>
-      </form>
+      <SearchBox id="page-search" defaultValue={q} className="mb-4 flex sm:hidden" />
       {q ? <FilterBar path="/search" query={record} /> : null}
       {q ? (
         <SearchList items={page.items} />
