@@ -60,7 +60,7 @@ The mark is an orange (#FF6600, `primary`) rounded square with a 7/32 corner rad
 
 ## Chrome
 
-- Top bar is 56px, fixed, no bottom border. Leading edge: menu, wordmark. Center: one pill search field with a `/` hint, 40px tall, max 640px. Trailing edge: shortcuts and theme icon buttons.
+- Top bar is 56px, fixed, no bottom border. Leading edge: menu, wordmark. Center: one pill search field with a `/` hint, 40px tall, max 640px. Trailing edge: the theme icon button. Keyboard shortcuts live in Settings and open with `?`.
 - Sidebar is 240px with three groups split by thin lines: browse destinations, "You" (History, Watch later, Liked videos), and Settings. Items are 40px with a 10px radius. The "You" heading is plain text, not a link. Exactly one item is current, matched on path and query (`/browse?dur=xlong` is Longs, not Browse); the rail and bottom bar "You" item is current on any library page.
 - At 801 to 1311px the sidebar becomes a 72px mini rail (icon over a 10px label) and the menu opens the full sidebar as a drawer. At 1312px and up the full sidebar is docked and the menu toggles the rail. Watch pages (`/watch/...`) follow YouTube instead: no docked sidebar and no rail at any width, the menu always opens the drawer over a scrim, and content has a 24px left padding from 801px up.
 - The drawer is modal: it slides in from the left over a 50% black scrim and leaves along the same path, focus moves into it and returns to the menu button, the page behind is inert and does not scroll, and Escape, the scrim, any navigation, or crossing 1312px closes it. The rail state is set on `<html>` before first paint (`data-rail`), so it never jumps.

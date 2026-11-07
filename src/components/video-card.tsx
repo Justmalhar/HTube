@@ -338,10 +338,10 @@ export function EmptyState({ title, body, href, action }: { title: string; body:
   );
 }
 
-export function VideoGrid({ items }: { items: FeedCard[] }) {
+export function VideoGrid({ items, className = gridClass }: { items: FeedCard[]; className?: string }) {
   if (!items.length) return <EmptyState title="No videos found" body="Try removing some filters" href="/" action="Go to Home" />;
   return (
-    <ul className={gridClass}>
+    <ul className={className}>
       {items.map((item, index) => (
         <li key={item.vid} className="min-w-0">
           <VideoCard item={item} priority={index < 4} />

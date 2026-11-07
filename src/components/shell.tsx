@@ -13,7 +13,6 @@ import {
   HomeIcon,
   SubscriptionsIcon,
   TrendingIcon,
-  KeyboardIcon,
   LaterIcon,
   LikeIcon,
   ListIcon,
@@ -27,10 +26,11 @@ import { Wordmark } from "@/components/logo";
 import { activeHref } from "@/components/nav-active";
 import { SearchBox } from "@/components/search-box";
 import { iconButtonClass, pillOnClass } from "@/components/ui";
+import { SHORTCUT_GROUPS } from "@/lib/shortcuts";
 
 type NavLink = { href: string; label: string; Icon: (props: { active?: boolean }) => React.ReactElement; match?: readonly string[] };
 
-const YOU_PATHS = ["/later", "/history", "/liked", "/settings"];
+const YOU_PATHS = ["/you", "/later", "/history", "/liked", "/settings"];
 
 const SECTIONS: readonly { title?: string; links: readonly NavLink[] }[] = [
   {
@@ -60,7 +60,7 @@ const RAIL: readonly NavLink[] = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/browse?dur=xlong", label: "Longs", Icon: LongsIcon },
   { href: "/categories", label: "Topics", Icon: GridIcon },
-  { href: "/later", label: "You", Icon: YouIcon, match: YOU_PATHS },
+  { href: "/you", label: "You", Icon: YouIcon, match: YOU_PATHS },
 ];
 
 const MOBILE: readonly NavLink[] = [
@@ -68,7 +68,7 @@ const MOBILE: readonly NavLink[] = [
   { href: "/browse?dur=xlong", label: "Longs", Icon: LongsIcon },
   { href: "/trending", label: "Trending", Icon: TrendingIcon },
   { href: "/subscriptions", label: "Subscriptions", Icon: SubscriptionsIcon },
-  { href: "/later", label: "You", Icon: YouIcon, match: YOU_PATHS },
+  { href: "/you", label: "You", Icon: YouIcon, match: YOU_PATHS },
 ];
 
 const WIDE = "(min-width: 1312px)";
@@ -216,9 +216,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <Suspense fallback={<SearchBox id="site-search" className={SEARCH_CLASS} />}>
             <HeaderSearch />
           </Suspense>
-          <button type="button" className={`hidden min-[801px]:grid ${iconButtonClass}`} aria-label="Keyboard shortcuts" onClick={() => setHelp(true)}>
-            <KeyboardIcon />
-          </button>
           <ThemeButton />
         </header>
 
@@ -336,14 +333,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
         >
           <div className="max-h-[calc(100dvh-32px)] overflow-y-auto p-6">
             <h2 id="help-title" className="text-lg font-medium">Keyboard shortcuts</h2>
-            {[
-              ["General", [["/", "Search"], ["h", "Home"], ["?", "Shortcuts"], ["Esc", "Close"]]],
-              ["Watch", [["k / Space", "Play or pause"], ["j / l", "Back or forward 10s"], ["Left / Right", "Back or forward 5s"], ["0-9", "Jump to 0-90%"], ["m", "Mute"], ["f", "Fullscreen"], ["Shift+N", "Next video"], ["Shift+P", "Previous video"]]],
-            ].map(([group, rows]) => (
-              <section key={group as string} aria-label={group as string} className="mt-4 first:mt-4">
-                <h3 className="text-xs font-medium text-muted">{group as string}</h3>
+            {SHORTCUT_GROUPS.map(({ group, rows }) => (
+              <section key={group} aria-label={group} className="mt-4 first:mt-4">
+                <h3 className="text-xs font-medium text-muted">{group}</h3>
                 <ul className="mt-2 flex flex-col gap-3 text-sm">
-                  {(rows as string[][]).map(([key, label]) => (
+                  {rows.map(([key, label]) => (
                     <li key={key} className="flex items-center justify-between">
                       {label}
                       <kbd className="min-w-8 rounded-md bg-background px-2 py-1 text-center text-xs">{key}</kbd>

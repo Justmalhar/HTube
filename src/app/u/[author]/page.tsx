@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Comment } from "@/components/comments";
 import { isAuthor } from "@/components/profile/author";
 import { ProfileHeader } from "@/components/profile/profile-header";
+import { compactGridClass, readingClass } from "@/components/ui";
 import { VideoGrid } from "@/components/video-card";
 import { sortMentions } from "@/lib/comment-format";
 import { getAuthorMentions, getEngine } from "@/lib/server-catalog";
@@ -43,9 +44,9 @@ export default async function ProfilePage({ params, searchParams }: PageProps<"/
         ))}
       </nav>
       {tab === "videos" ? (
-        <VideoGrid items={videosFor(mentions)} />
+        <VideoGrid items={videosFor(mentions)} className={compactGridClass} />
       ) : (
-        <ul className="flex max-w-3xl flex-col gap-6 pb-2">
+        <ul className={`flex ${readingClass} flex-col gap-6 pb-2`}>
           {sortMentions(mentions, "top").map((m) => (
             <Comment key={m.hn_comment_id} mention={m} />
           ))}

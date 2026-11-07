@@ -13,6 +13,9 @@ export const iconButtonClass =
   "press grid size-10 shrink-0 place-items-center rounded-full hover:bg-surface";
 export const panelClass = "rounded-2xl bg-surface";
 export const gridClass = "grid grid-cols-1 gap-x-4 gap-y-10 min-[720px]:grid-cols-2 min-[1180px]:grid-cols-3";
+/** Dense channel-style grid (YouTube channel Videos tab): auto-fill columns, 14px titles. */
+export const compactGridClass =
+  "grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-x-4 gap-y-8 [&_h2]:text-sm [&_h2]:leading-5";
 
 /** PageHeader action: full width on phones, one fixed width on desktop so sibling pages do not jump. */
 export const headerActionClass = `${pillClass} w-full min-[801px]:w-36`;
