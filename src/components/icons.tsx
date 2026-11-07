@@ -1,80 +1,91 @@
-export function ClockIcon({ filled = false }: { filled?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-      <circle cx="12" cy="12" r="8" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" />
-      <path d="M12 8v5l3 2" fill="none" stroke={filled ? "var(--background)" : "currentColor"} strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
+import {
+  Ban,
+  ChevronLeft,
+  ChevronRight,
+  CircleUserRound,
+  Clock,
+  ClockCheck,
+  Compass,
+  EllipsisVertical,
+  ExternalLink,
+  Forward,
+  History,
+  House,
+  Keyboard,
+  LayoutGrid,
+  ListVideo,
+  Menu,
+  Moon,
+  Play,
+  Search,
+  Settings,
+  Sun,
+  ThumbsDown,
+  ThumbsUp,
+  TvMinimalPlay,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+
+// One icon language (Lucide): 1.75 stroke idle, 2.5 for the current nav item or an "on" toggle.
+// Action icons are 20px (inside 36px pills and menus), chrome icons 24px.
+const IDLE = 1.75;
+const ON = 2.5;
+
+type Props = { active?: boolean };
+type ToggleProps = { filled?: boolean };
+
+function action(Icon: LucideIcon) {
+  return function ActionIcon() {
+    return <Icon size={20} strokeWidth={IDLE} className="shrink-0" />;
+  };
 }
 
-export function ThumbUpIcon({ filled = false }: { filled?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-      <path
-        d="M7 10v10H4V10zm3 .2 3.2-4.5c.4-.5 1.2-.4 1.4.2L14 9h4.2c1.2 0 2.1 1.1 1.8 2.2l-1.2 5.2A2 2 0 0 1 16.9 18H10z"
-        fill={filled ? "currentColor" : "none"}
-        stroke="currentColor"
-        strokeWidth={filled ? 0 : 1.6}
-      />
-    </svg>
-  );
+function chrome(Icon: LucideIcon) {
+  return function ChromeIcon({ active = false }: Props) {
+    return <Icon size={24} strokeWidth={active ? ON : IDLE} className="shrink-0" />;
+  };
 }
 
-export function ThumbDownIcon({ filled = false }: { filled?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-      <path
-        d="M17 14V4h3v10zm-3-.2-3.2 4.5c-.4.5-1.2.4-1.4-.2L10 15H5.8c-1.2 0-2.1-1.1-1.8-2.2l1.2-5.2A2 2 0 0 1 7.1 6H14z"
-        fill={filled ? "currentColor" : "none"}
-        stroke="currentColor"
-        strokeWidth={filled ? 0 : 1.6}
-      />
-    </svg>
-  );
+export function ClockIcon({ filled = false }: ToggleProps) {
+  // A filled Lucide clock hides its hands, so "saved" swaps to a clock with a check.
+  return filled ? <ClockCheck size={20} strokeWidth={ON} className="shrink-0" /> : <Clock size={20} strokeWidth={IDLE} className="shrink-0" />;
 }
 
-export function ExternalIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-      <path d="M14 5h5v5M19 5l-9 9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M11 5H6v13h13v-5" fill="none" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
+export function ThumbUpIcon({ filled = false }: ToggleProps) {
+  return <ThumbsUp size={20} strokeWidth={IDLE} fill={filled ? "currentColor" : "none"} className="shrink-0" />;
+}
+
+export function ThumbDownIcon({ filled = false }: ToggleProps) {
+  return <ThumbsDown size={20} strokeWidth={IDLE} fill={filled ? "currentColor" : "none"} className="shrink-0" />;
 }
 
 export function PlayIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-      <path d="M8 5v14l11-7z" fill="currentColor" />
-    </svg>
-  );
+  return <Play size={20} strokeWidth={IDLE} fill="currentColor" className="shrink-0" />;
 }
 
-export function MoreIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-      <circle cx="12" cy="5" r="1.8" fill="currentColor" />
-      <circle cx="12" cy="12" r="1.8" fill="currentColor" />
-      <circle cx="12" cy="19" r="1.8" fill="currentColor" />
-    </svg>
-  );
-}
+export const ExternalIcon = action(ExternalLink);
+export const MoreIcon = action(EllipsisVertical);
+export const HideIcon = action(Ban);
+export const ChevronIcon = action(ChevronRight);
+export const ChevronLeftIcon = action(ChevronLeft);
+export const ShareIcon = action(Forward);
+export const CloseIcon = action(X);
 
-export function HideIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-      <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path d="M6.5 6.5l11 11" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-}
-
-export function ChevronIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-      <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
+export const MenuIcon = chrome(Menu);
+export const SearchIcon = chrome(Search);
+export const KeyboardIcon = chrome(Keyboard);
+export const SunIcon = chrome(Sun);
+export const MoonIcon = chrome(Moon);
+export const LongsIcon = chrome(TvMinimalPlay);
+export const YouIcon = chrome(CircleUserRound);
+export const HomeIcon = chrome(House);
+export const LaterIcon = chrome(Clock);
+export const GridIcon = chrome(LayoutGrid);
+export const ListIcon = chrome(ListVideo);
+export const CompassIcon = chrome(Compass);
+export const LikeIcon = chrome(ThumbsUp);
+export const HistoryIcon = chrome(History);
+export const GearIcon = chrome(Settings);
 
 export { pillClass } from "@/components/ui";
