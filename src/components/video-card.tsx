@@ -1,11 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import type { FeedCard } from "@/lib/types";
-import { ClockIcon, ExternalIcon, HideIcon, MoreIcon } from "@/components/icons";
+import { ClockIcon, ExternalIcon, HideIcon, MoreIcon, QueueAddIcon } from "@/components/icons";
 import { useLibrary } from "@/components/library";
+import { useSnackbar } from "@/components/snackbar";
 import { gridClass } from "@/components/ui";
+import { addToQueue } from "@/lib/queue-store";
 
 
 const SAVE_LABEL = "Save to Watch later";
@@ -23,12 +26,12 @@ const channelHref = (slug: string) => `/channel/${slug}`;
  * (a button inside an anchor is invalid HTML and swallows clicks on some browsers).
  * The link is skipped by Tab because the title link right below it goes to the same place.
  */
-function Thumb({ item, className = "rounded-xl", priority = false, href = watchHref(item.vid) }: { item: FeedCard; className?: string; priority?: boolean; href?: string }) {
+function Thumb({ item, className = "rounded-xl", priority = false, href = watchHref(item.vid), hideLater = false }: { item: FeedCard; className?: string; priority?: boolean; href?: string; hideLater?: boolean }) {
   const library = useLibrary();
   const saved = library.later.includes(item.vid);
   return (
     <div className={`group/thumb relative aspect-video overflow-hidden bg-surface ${className}`}>
-      <a href={href} tabIndex={-1} aria-hidden className="block size-full">
+      <Link href={href} prefetch={false} tabIndex={-1} aria-hidden className="block size-full">
         {/* eslint-disable-next-line @next/next/no-img-element -- remote ytimg thumbnails, optimizer would add a hop and cost */}
         <img
           src={frameFor(item.vid, library.frames)}
@@ -45,8 +48,8 @@ function Thumb({ item, className = "rounded-xl", priority = false, href = watchH
             else image.style.visibility = "hidden";
           }}
         />
-      </a>
-      <LaterButton saved={saved} onToggle={() => library.toggleLater(item.vid)} />
+      </Link>
+      <LaterButton saved={saved} onToggle={() => library.toggleLater(item.vid)} className={hideLater ? "max-sm:hidden" : ""} />
     </div>
   );
 }
@@ -64,12 +67,12 @@ export function VideoCard({ item, priority = false }: { item: FeedCard; priority
     <article className="group/card relative -m-2 min-w-0 rounded-2xl p-2 pb-3 hover:bg-surface/60">
       <Thumb item={item} priority={priority} />
       <div className="relative mt-3 min-w-0 pr-7">
-        <a href={watchHref(item.vid)} className="block rounded-md">
+        <Link href={watchHref(item.vid)} prefetch={false} className="block rounded-md">
           <h2 className={titleClass}>{item.title}</h2>
-        </a>
-        <a href={channelHref(item.channelSlug)} className={channelClass}>
+        </Link>
+        <Link href={channelHref(item.channelSlug)} prefetch={false} className={channelClass}>
           {item.channel}
-        </a>
+        </Link>
         <CardMenu item={item} onHide={() => setJustHid(true)} className="absolute -right-2 -top-1" />
       </div>
     </article>
@@ -83,7 +86,7 @@ function HiddenCard({ focus, onUndo }: { focus: boolean; onUndo: () => void }) {
     if (focus) undo.current?.focus();
   }, [focus]);
   return (
-    <div className="-m-2 p-2">
+    <div className="-m-2 p-2 pb-3">
       <div role="status" className="grid aspect-video place-items-center rounded-xl bg-surface p-4 text-center">
         <div>
           <p className="text-sm font-medium">Video hidden</p>
@@ -93,6 +96,8 @@ function HiddenCard({ focus, onUndo }: { focus: boolean; onUndo: () => void }) {
           </button>
         </div>
       </div>
+      {/* Same height as a card's title (2 lines) + channel row so the grid row does not jump. */}
+      <div aria-hidden className="mt-3 h-[66px]" />
     </div>
   );
 }
@@ -199,7 +204,9 @@ function CardMenu({ item, className, onHide }: { item: FeedCard; className: stri
   const library = useLibrary();
   const saved = library.later.includes(item.vid);
   const hidden = library.dislikes.includes(item.vid);
+  const snackbar = useSnackbar();
   return (
+    <>
     <ActionMenu
       label={`More actions for ${item.title}`}
       className={className}
@@ -210,6 +217,18 @@ function CardMenu({ item, className, onHide }: { item: FeedCard; className: stri
       <button role="menuitem" type="button" className={menuItemClass} onClick={() => library.toggleLater(item.vid)}>
             <ClockIcon filled={saved} />
             {saved ? UNSAVE_LABEL : SAVE_LABEL}
+          </button>
+          <button
+            role="menuitem"
+            type="button"
+            className={menuItemClass}
+            onClick={() => {
+              addToQueue({ vid: item.vid, title: item.title, channel: item.channel });
+              snackbar.show("Added to queue");
+            }}
+          >
+            <QueueAddIcon />
+            Add to queue
           </button>
           <button
             role="menuitem"
@@ -228,6 +247,8 @@ function CardMenu({ item, className, onHide }: { item: FeedCard; className: stri
             Open on YouTube
           </a>
     </ActionMenu>
+    {snackbar.node}
+    </>
   );
 }
 
@@ -235,22 +256,22 @@ function CardMenu({ item, className, onHide }: { item: FeedCard; className: stri
  * Horizontal row: thumbnail on the left, text on the right. Used by search, playlists, and the
  * library pages. `action` replaces the three-dot menu, `children` renders under the channel.
  */
-export function VideoRow({ item, action, href = watchHref(item.vid), children }: { item: FeedCard; action?: React.ReactNode; href?: string; children?: React.ReactNode }) {
+export function VideoRow({ item, action, href = watchHref(item.vid), stack = false, children }: { item: FeedCard; action?: React.ReactNode; href?: string; /** Full-width card layout below 640px (search). Otherwise a row with a 160px thumbnail. */ stack?: boolean; children?: React.ReactNode }) {
   return (
-    <article className="group/card relative flex min-w-0 gap-3 min-[801px]:gap-4">
-      <div className="w-[40%] max-w-[360px] shrink-0">
-        <Thumb item={item} href={href} />
+    <article className={`group/card relative flex min-w-0 gap-3 min-[801px]:gap-4 ${stack ? "max-sm:flex-col" : ""}`}>
+      <div className={`shrink-0 sm:w-[40%] sm:max-w-[360px] ${stack ? "max-sm:w-full" : "w-40"}`}>
+        <Thumb item={item} href={href} hideLater={!stack} />
       </div>
-      <div className="min-w-0 flex-1 pr-9">
-        <a href={href} className="block rounded-md">
+      <div className="relative min-w-0 flex-1 pr-9">
+        <Link href={href} prefetch={false} className="block rounded-md">
           <h2 className="line-clamp-2 wrap-anywhere text-sm font-medium leading-5 min-[801px]:text-lg min-[801px]:font-normal min-[801px]:leading-[26px]">{item.title}</h2>
-        </a>
-        <a href={channelHref(item.channelSlug)} className="mt-1 block truncate text-xs text-muted hover:text-foreground min-[801px]:mt-2">
+        </Link>
+        <Link href={channelHref(item.channelSlug)} prefetch={false} className="mt-1 block truncate text-xs text-muted hover:text-foreground min-[801px]:mt-2">
           {item.channel}
-        </a>
+        </Link>
         {children}
+        <div className="absolute right-0 top-0">{action ?? <CardMenu item={item} className="relative" />}</div>
       </div>
-      <div className="absolute right-0 top-0">{action ?? <CardMenu item={item} className="relative" />}</div>
     </article>
   );
 }
@@ -261,7 +282,7 @@ export function SearchList({ items }: { items: FeedCard[] }) {
     <ul className="flex max-w-[1100px] flex-col gap-4">
       {items.map((item) => (
         <li key={item.vid}>
-          <VideoRow item={item}>
+          <VideoRow item={item} stack>
             {item.summary ? <p className="mt-2 line-clamp-2 hidden text-xs text-muted min-[720px]:block">{item.summary}</p> : null}
           </VideoRow>
         </li>
@@ -270,11 +291,11 @@ export function SearchList({ items }: { items: FeedCard[] }) {
   );
 }
 
-export function LaterButton({ saved, onToggle }: { saved: boolean; onToggle: () => void }) {
+export function LaterButton({ saved, onToggle, className = "" }: { saved: boolean; onToggle: () => void; className?: string }) {
   return (
     <button
       type="button"
-      className={`absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-black/75 text-white press ${saved ? "" : "min-[801px]:opacity-0 min-[801px]:group-hover/thumb:opacity-100 min-[801px]:focus-visible:opacity-100"}`}
+      className={`absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-black/75 text-white press ${saved ? "" : "min-[801px]:opacity-0 min-[801px]:group-hover/thumb:opacity-100 min-[801px]:focus-visible:opacity-100"} ${className}`}
       aria-label={saved ? UNSAVE_LABEL : SAVE_LABEL}
       title={saved ? UNSAVE_LABEL : SAVE_LABEL}
       aria-pressed={saved}
@@ -292,10 +313,10 @@ export function RelatedRow({ item }: { item: FeedCard }) {
         <Thumb item={item} className="rounded-lg" />
       </div>
       <div className="min-w-0 flex-1 pr-7">
-        <a href={watchHref(item.vid)} className="block rounded-md">
+        <Link href={watchHref(item.vid)} prefetch={false} className="block rounded-md">
           <h2 className="line-clamp-2 wrap-anywhere text-sm font-medium leading-5">{item.title}</h2>
-        </a>
-        <a href={channelHref(item.channelSlug)} className="mt-1 block truncate text-xs text-muted hover:text-foreground">{item.channel}</a>
+        </Link>
+        <Link href={channelHref(item.channelSlug)} prefetch={false} className="mt-1 block truncate text-xs text-muted hover:text-foreground">{item.channel}</Link>
       </div>
       <CardMenu item={item} className="absolute -right-2 top-0" />
     </article>
@@ -309,9 +330,9 @@ export function EmptyState({ title, body, href, action }: { title: string; body:
       <p className="text-base font-medium">{title}</p>
       <p className="mt-1 text-sm text-muted">{body}</p>
       {href && action ? (
-        <a href={href} className="mt-4 inline-flex h-9 items-center rounded-full bg-chip-on px-4 text-sm font-medium text-chip-on-text press">
+        <Link href={href} className="mt-4 inline-flex h-9 items-center rounded-full bg-chip-on px-4 text-sm font-medium text-chip-on-text press">
           {action}
-        </a>
+        </Link>
       ) : null}
     </div>
   );
