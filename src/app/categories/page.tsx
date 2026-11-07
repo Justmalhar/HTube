@@ -7,8 +7,6 @@ import { countChipClass, listRowClass, sectionTitleClass } from "@/components/ui
 import { videos } from "@/lib/format";
 import { getEngine } from "@/lib/server-catalog";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = { title: "Categories" };
 
 export default function Categories() {

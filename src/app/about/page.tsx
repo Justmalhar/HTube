@@ -4,8 +4,6 @@ import { PageHeader } from "@/components/page-header";
 import { listRowClass, readingClass } from "@/components/ui";
 import { getManifest } from "@/lib/server-catalog";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = { title: "About" };
 
 export default function About() {

@@ -6,9 +6,9 @@ import { PlaylistSidebar } from "@/components/playlist-sidebar";
 import { RankedList } from "@/components/ranked-list";
 import { getEngine } from "@/lib/server-catalog";
 
-export const dynamic = "force-dynamic";
-
 const findPlaylist = (slug: string) => getEngine().playlists.find((item) => item.slug === slug);
+
+export const generateStaticParams = () => getEngine().playlists.map(({ slug }) => ({ slug }));
 
 export async function generateMetadata({ params }: PageProps<"/p/[slug]">): Promise<Metadata> {
   const playlist = findPlaylist((await params).slug);
