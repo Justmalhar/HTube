@@ -9,7 +9,7 @@ export function IdentityHeader({ avatar, title, stats, description, actions }: {
   return (
     <header className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 min-[801px]:gap-x-6">
       <div className="min-[801px]:row-span-2">{avatar}</div>
-      <div className="min-w-0">
+      <div className={`min-w-0 ${stats || description || actions ? "" : "self-center"}`}>
         <h1 className="text-2xl leading-8 font-bold tracking-[-0.01em] wrap-anywhere min-[801px]:text-4xl min-[801px]:leading-10">{title}</h1>
         {stats ? <p className="mt-1 flex flex-wrap gap-x-3 text-sm text-muted tabular-nums">{stats}</p> : null}
         {description ? <p className="mt-1 line-clamp-1 text-sm text-muted">{description}</p> : null}

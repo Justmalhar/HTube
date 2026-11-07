@@ -41,7 +41,7 @@ export function ShelfScroller({ children }: { children: React.ReactNode }) {
   const hide = "pointer-events-none opacity-0";
   return (
     <div className="relative">
-      <ul ref={list} className="no-scrollbar -mx-1 flex snap-x gap-4 overflow-x-auto px-1">
+      <ul ref={list} className="no-scrollbar -mx-1 flex scroll-px-1 snap-x gap-4 overflow-x-auto px-1">
         {children}
       </ul>
       <div className={`${fade} left-0 ${edges.start ? "opacity-0" : ""}`}>

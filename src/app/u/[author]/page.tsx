@@ -29,12 +29,13 @@ export default async function ProfilePage({ params, searchParams }: PageProps<"/
     { href: base, label: "Videos", on: tab === "videos" },
     { href: `${base}?tab=comments`, label: "Comments", on: tab === "comments" },
   ];
+  const videos = videosFor(mentions);
   return (
     <div>
-      <ProfileHeader author={author} count={mentions.length} months={mentions.map((m) => m.month)} />
+      <ProfileHeader author={author} videos={videos.length} comments={mentions.length} months={mentions.map((m) => m.month)} />
       <UnderlineTabs label="Profile" tabs={tabs} />
       {tab === "videos" ? (
-        <div className="mt-4"><VideoGrid items={videosFor(mentions)} className={compactGridClass} /></div>
+        <div className="mt-4"><VideoGrid items={videos} className={compactGridClass} /></div>
       ) : (
         <ul className={`mt-6 flex ${readingClass} flex-col gap-6 pb-2`}>
           {sortMentions(mentions, "top").map((m) => (
