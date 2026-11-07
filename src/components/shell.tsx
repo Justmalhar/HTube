@@ -5,19 +5,53 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { CatalogSync } from "@/components/catalog-sync";
+import { ChevronIcon } from "@/components/icons";
 import { ThemeButton, ThemeState, useLibrary } from "@/components/library";
+import { iconButtonClass } from "@/components/ui";
 
-const LINKS = [
+type NavLink = readonly [href: string, label: string, Icon: () => React.ReactElement];
+
+const SECTIONS: readonly { title?: string; links: readonly NavLink[] }[] = [
+  {
+    links: [
+      ["/", "Home", HomeIcon],
+      ["/browse?dur=xlong", "Longs", LongsIcon],
+      ["/categories", "Categories", GridIcon],
+      ["/playlists", "Playlists", ListIcon],
+      ["/browse", "Browse", CompassIcon],
+    ],
+  },
+  {
+    title: "You",
+    links: [
+      ["/history", "History", HistoryIcon],
+      ["/later", "Watch later", ClockIcon],
+      ["/liked", "Liked videos", LikeIcon],
+    ],
+  },
+  { links: [["/settings", "Settings", GearIcon]] },
+];
+
+const RAIL: readonly NavLink[] = [
   ["/", "Home", HomeIcon],
-  ["/browse?dur=xlong", "Longs", ClockIcon],
-  ["/categories", "Categories", GridIcon],
-  ["/playlists", "Playlists", ListIcon],
-  ["/browse", "Browse", CompassIcon],
-  ["/liked", "Liked", LikeIcon],
-  ["/later", "Watch later", ClockIcon],
-  ["/history", "History", HistoryIcon],
-  ["/settings", "Settings", GearIcon],
-] as const;
+  ["/browse?dur=xlong", "Longs", LongsIcon],
+  ["/categories", "Topics", GridIcon],
+  ["/later", "You", YouIcon],
+];
+
+const MOBILE: readonly NavLink[] = [
+  ["/", "Home", HomeIcon],
+  ["/browse?dur=xlong", "Longs", LongsIcon],
+  ["/categories", "Topics", GridIcon],
+  ["/search", "Search", SearchIcon],
+  ["/later", "You", YouIcon],
+];
+
+function isActive(pathname: string, href: string) {
+  const path = href.split("?")[0];
+  if (href.includes("?")) return false;
+  return path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`);
+}
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -63,13 +97,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <a href="#content" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:bg-surface focus:px-3 focus:py-2">
           Skip to content
         </a>
-        <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-background px-3">
+        <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-2 bg-background px-2 min-[801px]:gap-4 min-[801px]:px-4">
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-full"
+            className={iconButtonClass}
             aria-label={rail ? "Expand sidebar" : "Collapse sidebar"}
             onClick={() => {
-              if (window.matchMedia("(max-width: 800px)").matches) {
+              if (window.matchMedia("(max-width: 1311px)").matches) {
                 setOpen(true);
                 return;
               }
@@ -79,71 +113,120 @@ export function Shell({ children }: { children: React.ReactNode }) {
           >
             <MenuIcon />
           </button>
-          <Link href="/" className="text-[18px] font-medium leading-none tracking-[-0.4px]" aria-label="OpenHackerTube, home">
-            Hacker<span className="text-primary">Tube</span>
-          </Link>
-          <Link href="/search" className="ml-auto grid size-10 place-items-center rounded-full sm:hidden" aria-label="Search">
+          <Wordmark />
+          <Link href="/search" className={`ml-auto sm:hidden ${iconButtonClass}`} aria-label="Search">
             <SearchIcon />
           </Link>
-          <form action="/search" className="mx-auto hidden min-w-0 max-w-[640px] flex-1 sm:flex">
+          <form action="/search" className="group/search mx-auto hidden min-w-0 max-w-[640px] flex-1 sm:flex">
             <label className="sr-only" htmlFor="site-search">Search</label>
-            <input
-              id="site-search"
-              name="q"
-              placeholder="Search talks"
-              className="h-10 w-full rounded-l-[20px] border border-line bg-background px-4 outline-none"
-            />
-            <button className="grid h-10 w-16 place-items-center rounded-r-[20px] border border-l-0 border-line bg-surface" type="submit" aria-label="Search">
+            <div className="flex h-10 min-w-0 flex-1 items-center rounded-l-full border border-line bg-background pl-4 focus-within:border-[#1c62b9] focus-within:pl-2">
+              <span className="hidden text-muted group-focus-within/search:block">
+                <SearchIcon />
+              </span>
+              <input
+                id="site-search"
+                name="q"
+                placeholder="Search"
+                className="h-full min-w-0 flex-1 bg-transparent px-2 text-base outline-none placeholder:text-muted"
+              />
+              <kbd className="mr-3 hidden rounded border border-line px-1.5 text-xs text-muted min-[1000px]:block">/</kbd>
+            </div>
+            <button className="grid h-10 w-16 place-items-center rounded-r-full border border-l-0 border-line bg-surface hover:bg-surface-hover" type="submit" aria-label="Search">
               <SearchIcon />
             </button>
           </form>
+          <button type="button" className={`hidden min-[801px]:grid ${iconButtonClass}`} aria-label="Keyboard shortcuts" onClick={() => setHelp(true)}>
+            <KeyboardIcon />
+          </button>
           <ThemeButton />
         </header>
-        <aside className={`${open ? "block" : "hidden"} fixed bottom-0 left-0 top-14 z-40 w-60 overflow-y-auto border-r border-line bg-background p-3 min-[801px]:block ${rail ? "min-[801px]:w-[72px] min-[801px]:px-2" : ""}`}>
-          <nav className="flex flex-col gap-1" aria-label="Sections">
-            {LINKS.map(([href, label, Icon]) => {
-              const active = pathname === href || (href === "/browse" && pathname === "/browse");
-              return (
-                <a key={href} href={href} title={label} className={`flex h-10 items-center gap-3 rounded-[10px] px-3 ${rail ? "min-[801px]:justify-center min-[801px]:px-0" : ""} ${active ? "bg-surface font-medium" : "hover:bg-surface"}`} onClick={() => setOpen(false)}>
-                  <Icon />
-                  <span className={rail ? "min-[801px]:sr-only" : ""}>{label}</span>
-                </a>
-              );
-            })}
+        <aside className={`${open ? "block" : "hidden"} fixed bottom-0 left-0 top-0 z-40 w-60 overflow-y-auto bg-background px-3 pb-6 min-[1312px]:top-14 ${rail ? "min-[1312px]:hidden" : "min-[1312px]:block"}`}>
+          <div className="flex h-14 items-center gap-4 px-1 min-[1312px]:hidden">
+            <button type="button" className={iconButtonClass} aria-label="Close menu" onClick={() => setOpen(false)}>
+              <MenuIcon />
+            </button>
+            <Wordmark />
+          </div>
+          <nav aria-label="Sections">
+            {SECTIONS.map((section, index) => (
+              <div key={section.title ?? index} className={index ? "mt-3 border-t border-line pt-3" : ""}>
+                {section.title ? (
+                  <Link href="/later" className="mb-1 flex h-10 items-center gap-2 rounded-[10px] px-3 text-base font-medium hover:bg-surface" onClick={() => setOpen(false)}>
+                    {section.title}
+                    <ChevronIcon />
+                  </Link>
+                ) : null}
+                {section.links.map(([href, label, Icon]) => {
+                  const active = isActive(pathname, href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex h-10 items-center gap-6 rounded-[10px] px-3 text-sm ${active ? "bg-surface font-medium hover:bg-surface-hover" : "hover:bg-surface"}`}
+                      onClick={() => setOpen(false)}
+                    >
+                      <Icon />
+                      <span className="truncate">{label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
+          <p className="mt-3 border-t border-line px-3 pt-4 text-xs leading-5 text-muted">
+            Picks from Hacker News comments. Data from HackerTube and open-index, ODC-By
+          </p>
         </aside>
+        <nav aria-label="Shortcuts" className={`fixed bottom-0 left-0 top-14 z-20 hidden w-[72px] flex-col gap-1 px-1 min-[801px]:flex ${rail ? "" : "min-[1312px]:hidden"}`}>
+            {RAIL.map(([href, label, Icon]) => (
+              <Link
+                key={href}
+                href={href}
+                aria-current={isActive(pathname, href) ? "page" : undefined}
+                className="flex h-[74px] flex-col items-center justify-center gap-1.5 rounded-[10px] text-[10px] hover:bg-surface"
+              >
+                <Icon />
+                {label}
+              </Link>
+            ))}
+          </nav>
         <div className="sr-only">
           <CatalogSync />
         </div>
-        {open ? <button type="button" className="fixed inset-0 z-30 bg-black/50 min-[801px]:hidden" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
-        <div id="content" className={`px-4 pb-20 pt-16 min-[801px]:pr-6 ${rail ? "min-[801px]:pl-[88px]" : "min-[801px]:pl-[256px]"}`}>
+        {open ? <button type="button" className="fixed inset-0 z-30 bg-black/50 min-[1312px]:hidden" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
+        <div id="content" className={`px-4 pb-20 pt-16 min-[801px]:pr-6 min-[801px]:pl-[88px] ${rail ? "" : "min-[1312px]:pl-[256px]"}`}>
           {children}
         </div>
         <nav className="fixed inset-x-0 bottom-0 z-30 grid h-14 grid-cols-5 border-t border-line bg-background min-[801px]:hidden" aria-label="Mobile">
-          {[
-            ["/", "Home"],
-            ["/browse?dur=xlong", "Longs"],
-            ["/categories", "Topics"],
-            ["/liked", "Library"],
-            ["/search", "Search"],
-          ].map(([href, label]) => (
-            <a key={label} href={href} className="grid place-items-center text-xs">
+          {MOBILE.map(([href, label, Icon]) => (
+            <Link
+              key={label}
+              href={href}
+              aria-current={isActive(pathname, href) ? "page" : undefined}
+              className={`flex flex-col items-center justify-center gap-0.5 text-[10px] ${isActive(pathname, href) ? "font-medium" : "text-muted"}`}
+            >
+              <Icon />
               {label}
-            </a>
+            </Link>
           ))}
         </nav>
         {help ? (
           <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation" onClick={() => setHelp(false)}>
-            <div role="dialog" aria-labelledby="help-title" className="w-full max-w-md rounded-[12px] bg-surface p-4" onClick={(event) => event.stopPropagation()}>
-              <h2 id="help-title" className="text-base font-medium">Keyboard shortcuts</h2>
-              <ul className="mt-3 flex flex-col gap-2 text-sm">
-                <li><kbd>/</kbd> Search</li>
-                <li><kbd>h</kbd> Home</li>
-                <li><kbd>?</kbd> This list</li>
-                <li><kbd>Esc</kbd> Close</li>
+            <div role="dialog" aria-modal="true" aria-labelledby="help-title" className="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+              <h2 id="help-title" className="text-lg font-medium">Keyboard shortcuts</h2>
+              <ul className="mt-4 flex flex-col gap-3 text-sm">
+                {[["/", "Search"], ["h", "Home"], ["?", "Shortcuts"], ["Esc", "Close"]].map(([key, label]) => (
+                  <li key={key} className="flex items-center justify-between">
+                    {label}
+                    <kbd className="min-w-8 rounded-md bg-background px-2 py-1 text-center text-xs">{key}</kbd>
+                  </li>
+                ))}
               </ul>
-              <p className="mt-3 text-sm text-muted">Likes and watch later stay in this browser only.</p>
-              <button type="button" className="mt-4 h-9 rounded-[18px] bg-background px-4" onClick={() => setHelp(false)}>Close</button>
+              <p className="mt-4 text-sm text-muted">Likes and Watch later stay in this browser</p>
+              <div className="mt-6 flex justify-end">
+                <button type="button" className="h-9 rounded-full bg-chip-on px-4 text-sm font-medium text-chip-on-text" onClick={() => setHelp(false)}>Done</button>
+              </div>
             </div>
           </div>
         ) : null}
@@ -151,6 +234,27 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </div>
     </ThemeState>
   );
+}
+
+function Wordmark() {
+  return (
+    <Link href="/" className="flex h-10 items-center gap-1 rounded-lg pr-2" aria-label="OpenHackerTube, home">
+      <span aria-hidden className="grid h-6 w-[30px] place-items-center rounded-[7px] bg-primary text-sm font-bold leading-none text-white">
+        Y
+      </span>
+      <span className="text-[19px] font-bold leading-none tracking-[-0.8px]">HackerTube</span>
+    </Link>
+  );
+}
+
+function KeyboardIcon() {
+  return <IconPath d="M3 6h18a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zm1 2v8h16V8zm1 1h2v2H5zm3 0h2v2H8zm3 0h2v2h-2zm3 0h2v2h-2zm3 0h2v2h-2zM7 13h10v2H7z" />;
+}
+function LongsIcon() {
+  return <IconPath d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v10h14V7zm5 2 5 3-5 3z" />;
+}
+function YouIcon() {
+  return <IconPath d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 8c4 0 8 2 8 5v1H4v-1c0-3 4-5 8-5zm0 2c-2.7 0-5 1-5.7 2h11.4c-.7-1-3-2-5.7-2z" />;
 }
 
 function MenuIcon() {
