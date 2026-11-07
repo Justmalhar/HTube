@@ -73,20 +73,20 @@ async function run() {
     emit({ phase: "index", shardsDone: 0, shardCount: nextManifest.shardCount, detail: "Saving the index on this device" });
     if (cachedVersion !== nextManifest.version) {
       const [indexText, taxonomyText, playlistText] = await Promise.all([
-        fetch("/api/sync/index").then((response) => response.text()),
-        fetch("/api/sync/taxonomy").then((response) => response.text()),
-        fetch("/api/sync/playlists").then((response) => response.text()),
+        fetchText("/api/sync/index"),
+        fetchText("/api/sync/taxonomy"),
+        fetchText("/api/sync/playlists"),
       ]);
-      const tx = db.transaction("kv", "readwrite");
+      // Parse before persisting so a bad body is never stored under the new version.
+      hydrateBase(indexText, taxonomyText, playlistText);
+      // One transaction: the new version and the cleared shards land together or not at all.
+      const tx = db.transaction(["kv", "shards"], "readwrite");
       tx.objectStore("kv").put(indexText, "index");
       tx.objectStore("kv").put(taxonomyText, "taxonomy");
       tx.objectStore("kv").put(playlistText, "playlists");
       tx.objectStore("kv").put(nextManifest.version, "version");
+      tx.objectStore("shards").clear();
       await txDone(tx);
-      const clear = db.transaction("shards", "readwrite");
-      clear.objectStore("shards").clear();
-      await txDone(clear);
-      hydrateBase(indexText, taxonomyText, playlistText);
     } else {
       const [indexText, taxonomyText, playlistText] = await Promise.all([
         getKv<string>(db, "index"),
@@ -102,31 +102,42 @@ async function run() {
       const stored = await getAllShards(db);
       for (const shard of stored) applyShard(shard);
     }
-    emit({
-      phase: "shards",
-      shardsDone: loadedShards.size,
-      shardCount: manifest.shardCount,
-      detail: "Saving talks and comments",
-    });
+    emitShardProgress(nextManifest.shardCount);
     for (const shard of nextManifest.shards) {
       if (loadedShards.has(shard.id)) continue;
-      const response = await fetch(`/api/sync/shard/${shard.id}`);
-      if (!response.ok) throw new Error(shard.id);
-      const file = (await response.json()) as ShardFile;
+      const file = JSON.parse(await fetchText(`/api/sync/shard/${shard.id}`)) as ShardFile;
       const tx = db.transaction("shards", "readwrite");
       tx.objectStore("shards").put(file, shard.id);
       await txDone(tx);
       applyShard(file);
-      emit({
-        phase: loadedShards.size === nextManifest.shardCount ? "ready" : "shards",
-        shardsDone: loadedShards.size,
-        shardCount: nextManifest.shardCount,
-        detail: loadedShards.size === nextManifest.shardCount ? "Catalogue is on this device" : "Saving talks and comments",
-      });
+      emitShardProgress(nextManifest.shardCount);
     }
   } catch {
     emit({ ...status, detail: "Catalogue will stay on the server for this visit" });
   }
+}
+
+// Covers the case where every shard was already in IndexedDB, so the loop never reports "ready".
+function emitShardProgress(shardCount: number) {
+  const done = loadedShards.size >= shardCount;
+  emit({
+    phase: done ? "ready" : "shards",
+    shardsDone: loadedShards.size,
+    shardCount,
+    detail: done ? "Catalogue is on this device" : "Saving talks and comments",
+  });
+}
+
+// Sync routes send max-age=86400 on fixed URLs. The version query keeps a new
+// manifest from pairing with a day-old cached body.
+function versioned(url: string): string {
+  return manifest ? `${url}?v=${encodeURIComponent(manifest.version)}` : url;
+}
+
+async function fetchText(url: string): Promise<string> {
+  const response = await fetch(versioned(url));
+  if (!response.ok) throw new Error(url);
+  return response.text();
 }
 
 export async function ensureShard(id: string): Promise<void> {
@@ -141,7 +152,7 @@ export async function ensureShard(id: string): Promise<void> {
     applyShard(stored);
     return;
   }
-  const response = await fetch(`/api/sync/shard/${id}`);
+  const response = await fetch(versioned(`/api/sync/shard/${id}`));
   if (!response.ok) return;
   const file = (await response.json()) as ShardFile;
   const tx = db.transaction("shards", "readwrite");

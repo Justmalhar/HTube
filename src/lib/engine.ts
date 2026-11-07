@@ -252,7 +252,8 @@ function matches(engine: Engine, card: Card, query: BrowseQuery): boolean {
   if (query.level && card.level !== query.level) return false;
   if (query.shelf && card.shelfLife !== query.shelf) return false;
   if (query.evergreen && card.shelfLife !== "evergreen") return false;
-  if ((query.news ?? "hide") !== "show" && card.shelfLife === "news") return false;
+  // An explicit shelf=news filter implies showing news.
+  if ((query.news ?? "hide") !== "show" && query.shelf !== "news" && card.shelfLife === "news") return false;
   if ((query.cited ?? "hide") !== "show" && card.recommenders <= 0) return false;
   if (query.category && !card.categories.includes(query.category)) return false;
   if (query.area) {
@@ -290,7 +291,8 @@ function sortCards(rows: Card[], sort: BrowseQuery["sort"]): Card[] {
 }
 
 function slice<T>(items: T[], offset: number, limit: number): PageResult<T> {
-  const start = Math.max(0, offset);
+  // Offsets come from the URL: drop fractions, NaN, and Infinity.
+  const start = Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0;
   const size = Math.max(1, Math.min(limit, 60));
   return { items: items.slice(start, start + size), total: items.length, offset: start, limit: size };
 }

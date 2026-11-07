@@ -4,7 +4,7 @@ import { getEngine } from "@/lib/server-catalog";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const engine = getEngine();
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const base = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
   const staticPaths = ["", "/browse", "/categories", "/playlists", "/about", "/data", "/settings"];
   return [
     ...staticPaths.map((path) => ({ url: `${base}${path || "/"}` })),

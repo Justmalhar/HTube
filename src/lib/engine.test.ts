@@ -100,4 +100,15 @@ describe("search and browse", () => {
     const page = browse(engine, { category: "cat-b", sort: "title", offset: 0, limit: 10, news: "hide", cited: "hide" });
     expect(page.items.every((item) => item.categories.includes("cat-b"))).toBe(true);
   });
+
+  test("shelf=news shows news without news=show", () => {
+    const page = browse(engine, { shelf: "news", offset: 0, limit: 10 });
+    expect(page.items.map((item) => item.vid)).toEqual(["news1"]);
+  });
+
+  test("URL offsets are clamped to whole numbers", () => {
+    expect(browse(engine, { offset: 1.5, limit: 2 }).offset).toBe(1);
+    expect(browse(engine, { offset: Number.POSITIVE_INFINITY, limit: 2 }).offset).toBe(0);
+    expect(browse(engine, { offset: Number.NaN, limit: 2 }).items.length).toBe(2);
+  });
 });

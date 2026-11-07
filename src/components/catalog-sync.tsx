@@ -1,18 +1,13 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 
-import { getSyncStatus, startCatalogSync, subscribeCatalog } from "@/lib/client-catalog";
+import { startCatalogSync } from "@/lib/client-catalog";
 
+// Syncs the catalogue to IndexedDB in the background. Renders nothing.
 export function CatalogSync() {
-  const status = useSyncExternalStore(subscribeCatalog, getSyncStatus, getSyncStatus);
   useEffect(() => {
     startCatalogSync();
   }, []);
-  return (
-    <p className="text-sm text-muted" role="status">
-      {status.detail}
-      {status.phase === "shards" ? ` (${status.shardsDone} of ${status.shardCount})` : ""}
-    </p>
-  );
+  return null;
 }
