@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 
 import { MoonIcon, SunIcon } from "@/components/icons";
 import { iconButtonClass } from "@/components/ui";
@@ -163,6 +163,17 @@ export function ThemeButton() {
 }
 
 export function ThemeState({ children }: { children: React.ReactNode }) {
+  // Fallback for pages Next renders without running the head boot script (not-found responses).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (root.dataset.theme) return;
+    try {
+      root.dataset.theme = localStorage.getItem("oht.theme") === "light" ? "light" : "dark";
+      window.dispatchEvent(new Event("oht-theme"));
+    } catch {
+      // Storage blocked: stay on the default dark theme.
+    }
+  }, []);
   const theme = useSyncExternalStore(
     (listener) => {
       window.addEventListener("oht-theme", listener);
