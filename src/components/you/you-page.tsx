@@ -4,31 +4,19 @@ import Link from "next/link";
 
 import { ChevronIcon, GearIcon, LaterIcon, LikeIcon, PlayIcon } from "@/components/icons";
 import { useHydrated, useLibrary } from "@/components/library";
-import { Shelf, videos } from "@/components/shelf";
-import { EmptyState, VideoCard } from "@/components/video-card";
+import { CardShelf, Shelf } from "@/components/shelf";
+import { Section } from "@/components/section";
+import { listRowClass, sectionGapClass, tileWidth } from "@/components/ui";
+import { Avatar } from "@/components/channel/avatar";
+import { AvatarRow } from "@/components/channel/avatar-row";
+import { IdentityHeader } from "@/components/identity-header";
+import { EmptyState } from "@/components/video-card";
 import { useYouData } from "@/components/you/use-you-data";
-import { avatarColor } from "@/lib/comment-format";
-import type { FeedCard } from "@/lib/types";
-
-const tile = "w-[240px] shrink-0 snap-start min-[801px]:w-[280px]";
-
-function CardShelf({ title, href, ids, cards }: { title: string; href: string; ids: string[]; cards: Record<string, FeedCard> }) {
-  const items = ids.flatMap((id) => cards[id] ?? []);
-  if (!items.length) return null;
-  return (
-    <Shelf title={title} href={href}>
-      {items.map((item) => (
-        <li key={item.vid} className={`${tile}`}>
-          <VideoCard item={item} />
-        </li>
-      ))}
-    </Shelf>
-  );
-}
+import { videos } from "@/lib/format";
 
 function ListTile({ href, label, Icon, count }: { href: string; label: string; Icon: typeof LaterIcon; count: number }) {
   return (
-    <li className={tile}>
+    <li className={tileWidth}>
       <Link href={href} prefetch={false} className="press block">
         <span className="relative grid aspect-video place-items-center rounded-xl bg-surface">
           <Icon />
@@ -50,40 +38,28 @@ export function YouPage() {
   const history = [...library.seen].reverse();
   const { cards, channels, SHELF } = useYouData(history.slice(0, 12), library.later.slice(0, 12), library.likes.slice(0, 12), library.subs);
 
+  const pick = (ids: string[]) => ids.slice(0, SHELF).flatMap((id) => cards[id] ?? []);
+
   if (!ready) return null;
   const empty = !history.length && !library.later.length && !library.likes.length && !library.subs.length;
 
   return (
     <div>
-      <header className="flex items-center gap-4 py-2">
-        <span aria-hidden className="grid size-20 shrink-0 place-items-center rounded-full bg-surface-hover text-4xl font-medium min-[801px]:size-28 min-[801px]:text-6xl">
-          Y
-        </span>
-        <h1 className="text-2xl font-bold tracking-[-0.01em] min-[801px]:text-4xl">You</h1>
-      </header>
+      <IdentityHeader avatar={<Avatar name="You" size="xl" />} title="You" />
 
       {empty ? (
-        <div className="mt-6">
+        <div className={sectionGapClass}>
           <EmptyState title="Enjoy your favourite videos" body="Videos you watch, save and like appear here" href="/" action="Go to Home" />
         </div>
       ) : (
         <>
-          <CardShelf title="History" href="/history" ids={history.slice(0, SHELF)} cards={cards} />
-          <CardShelf title="Watch later" href="/later" ids={library.later.slice(0, SHELF)} cards={cards} />
-          <CardShelf title="Liked videos" href="/liked" ids={library.likes.slice(0, SHELF)} cards={cards} />
+          <CardShelf title="History" href="/history" items={pick(history)} />
+          <CardShelf title="Watch later" href="/later" items={pick(library.later)} />
+          <CardShelf title="Liked videos" href="/liked" items={pick(library.likes)} />
           {channels.length ? (
-            <Shelf title="Subscriptions" href="/subscriptions">
-              {channels.map((channel) => (
-                <li key={channel.slug} className="w-20 shrink-0">
-                  <Link href={`/channel/${channel.slug}`} prefetch={false} className="press flex flex-col items-center gap-2 text-center">
-                    <span aria-hidden className="grid size-14 place-items-center rounded-full text-xl font-medium text-white" style={{ backgroundColor: avatarColor(channel.name) }}>
-                      {channel.name.charAt(0).toUpperCase()}
-                    </span>
-                    <span className="line-clamp-2 w-full text-xs wrap-anywhere">{channel.name}</span>
-                  </Link>
-                </li>
-              ))}
-            </Shelf>
+            <Section title="Subscriptions" href="/subscriptions">
+              <AvatarRow label="Subscribed channels" items={channels.map((channel) => ({ href: `/channel/${channel.slug}`, name: channel.name }))} />
+            </Section>
           ) : null}
           {library.later.length || library.likes.length ? (
             <Shelf title="Playlists">
@@ -94,7 +70,7 @@ export function YouPage() {
         </>
       )}
 
-      <Link href="/settings" className="press mt-8 flex h-14 items-center gap-4 rounded-xl px-2 hover:bg-surface">
+      <Link href="/settings" className={`${listRowClass} ${sectionGapClass}`}>
         <GearIcon />
         <span className="flex-1 text-base">Settings</span>
         <ChevronIcon />

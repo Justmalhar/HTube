@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ChannelAbout } from "@/components/channel/channel-about";
-import { ChannelActions, ChannelHeader } from "@/components/channel/channel-header";
+import { ChannelHeader } from "@/components/channel/channel-header";
 import { ChipBar, Pager } from "@/components/filters";
-import { Shelf } from "@/components/shelf";
+import { Section } from "@/components/section";
+import { CardShelf } from "@/components/shelf";
+import { UnderlineTabs } from "@/components/tabs";
 import { ChipRow } from "@/components/topic/chip-row";
-import { VideoCard, VideoGrid } from "@/components/video-card";
+import { compactGridClass, sectionGapClass } from "@/components/ui";
+import { VideoGrid } from "@/components/video-card";
 import { channelDescription, channelStats, curators, similarChannels } from "@/lib/channels";
 import { browse } from "@/lib/engine";
 import { browsePage } from "@/lib/pages";
@@ -41,19 +44,7 @@ export default async function ChannelPage({ params, searchParams }: PageProps<"/
   return (
     <div>
       <ChannelHeader slug={slug} name={name} videos={stats.videos} comments={stats.comments} description={description} />
-      <ChannelActions slug={slug} name={name} />
-      <nav aria-label="Channel" className="no-scrollbar mt-4 flex gap-6 overflow-x-auto border-b border-line">
-        {tabs.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            aria-current={item.on ? "page" : undefined}
-            className={`press h-12 shrink-0 border-b-2 pt-3 text-base font-medium ${item.on ? "border-foreground" : "border-transparent text-muted hover:border-muted hover:text-foreground"}`}
-          >
-            {item.label}
-          </a>
-        ))}
-      </nav>
+      <UnderlineTabs label="Channel" tabs={tabs} />
       {tab === "home" ? <ChannelHome slug={slug} base={base} topics={stats.topics} /> : null}
       {tab === "videos" ? <ChannelVideos slug={slug} base={base} search={search} /> : null}
       {tab === "about" ? (
@@ -80,25 +71,16 @@ function ChannelHome({ slug, base, topics }: { slug: string; base: string; topic
   return (
     <div className="mt-2">
       {single ? (
-        <div className="mt-6">
-          <VideoGrid items={shelves[0].items} />
+        <div className={sectionGapClass}>
+          <VideoGrid items={shelves[0].items} className={compactGridClass} />
         </div>
       ) : (
-        shelves.map((shelf) => (
-          <Shelf key={shelf.title} title={shelf.title} href={shelf.href}>
-            {shelf.items.map((item) => (
-              <li key={item.vid} className="w-[260px] min-w-0 shrink-0 snap-start p-2 min-[801px]:w-[300px]">
-                <VideoCard item={item} />
-              </li>
-            ))}
-          </Shelf>
-        ))
+        shelves.map((shelf) => <CardShelf key={shelf.title} title={shelf.title} href={shelf.href} items={shelf.items} />)
       )}
       {topics.length ? (
-        <section className="mt-8 border-t border-line pt-6">
-          <h2 className="mb-4 text-xl font-bold tracking-[-0.2px]">Topics</h2>
+        <Section title="Topics">
           <ChipRow label="Topics" items={topics} />
-        </section>
+        </Section>
       ) : null}
     </div>
   );
@@ -115,7 +97,7 @@ function ChannelVideos({ slug, base, search }: { slug: string; base: string; sea
   return (
     <div className="mt-4">
       <ChipBar label="Sort" chips={chips} />
-      <VideoGrid items={page.items} />
+      <VideoGrid items={page.items} className={compactGridClass} />
       <Pager path={base} query={{ ...record, tab: "videos" }} offset={page.offset} total={page.total} />
     </div>
   );

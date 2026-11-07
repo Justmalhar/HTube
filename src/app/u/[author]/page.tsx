@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Comment } from "@/components/comments";
 import { isAuthor } from "@/components/profile/author";
 import { ProfileHeader } from "@/components/profile/profile-header";
+import { UnderlineTabs } from "@/components/tabs";
 import { compactGridClass, readingClass } from "@/components/ui";
 import { VideoGrid } from "@/components/video-card";
 import { sortMentions } from "@/lib/comment-format";
@@ -31,22 +32,11 @@ export default async function ProfilePage({ params, searchParams }: PageProps<"/
   return (
     <div>
       <ProfileHeader author={author} count={mentions.length} months={mentions.map((m) => m.month)} />
-      <nav aria-label="Profile" className="no-scrollbar mt-6 mb-6 flex gap-6 overflow-x-auto border-b border-line">
-        {tabs.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            aria-current={item.on ? "page" : undefined}
-            className={`press h-12 shrink-0 border-b-2 pt-3 text-base font-medium ${item.on ? "border-foreground" : "border-transparent text-muted hover:border-muted hover:text-foreground"}`}
-          >
-            {item.label}
-          </a>
-        ))}
-      </nav>
+      <UnderlineTabs label="Profile" tabs={tabs} />
       {tab === "videos" ? (
-        <VideoGrid items={videosFor(mentions)} className={compactGridClass} />
+        <div className="mt-4"><VideoGrid items={videosFor(mentions)} className={compactGridClass} /></div>
       ) : (
-        <ul className={`flex ${readingClass} flex-col gap-6 pb-2`}>
+        <ul className={`mt-6 flex ${readingClass} flex-col gap-6 pb-2`}>
           {sortMentions(mentions, "top").map((m) => (
             <Comment key={m.hn_comment_id} mention={m} />
           ))}

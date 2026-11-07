@@ -6,7 +6,8 @@ import Link from "next/link";
 
 import { ExternalIcon, SortIcon, ThumbUpIcon } from "@/components/icons";
 import { ActionMenu, menuItemClass } from "@/components/video-card";
-import { avatarColor, relativeMonth, sortMentions, tokenize } from "@/lib/comment-format";
+import { Avatar } from "@/components/channel/avatar";
+import { relativeMonth, sortMentions, tokenize } from "@/lib/comment-format";
 import type { Mention } from "@/lib/types";
 
 const STANCE: Record<string, string> = {
@@ -41,13 +42,7 @@ export function Comments({ mentions }: { mentions: Mention[] }) {
       >
         <span className="font-medium tabular-nums">Comments <span className="text-muted">{count}</span></span>
         <span className="flex min-w-0 items-center gap-2">
-          <span
-            aria-hidden
-            className="grid size-6 shrink-0 place-items-center rounded-full text-xs font-medium text-white uppercase"
-            style={{ backgroundColor: avatarColor(list[0].author) }}
-          >
-            {list[0].author.charAt(0)}
-          </span>
+          <Avatar name={list[0].author} size="xs" />
           <span className="line-clamp-1 min-w-0">{list[0].text}</span>
         </span>
       </button>
@@ -122,10 +117,9 @@ export function Comment({ mention }: { mention: Mention }) {
         href={`/u/${mention.author}`}
         tabIndex={-1}
         aria-hidden="true"
-        className="grid size-8 shrink-0 place-items-center rounded-full text-sm font-medium text-white uppercase select-none sm:size-10 sm:text-base"
-        style={{ backgroundColor: avatarColor(mention.author) }}
+        className="flex shrink-0 self-start"
       >
-        {mention.author.charAt(0)}
+        <Avatar name={mention.author} size="comment" />
       </Link>
       <div className="min-w-0 flex-1">
         <p className="flex min-w-0 items-baseline gap-1">
