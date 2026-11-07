@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ChannelAbout } from "@/components/channel/channel-about";
+import { ChannelActions, ChannelHeader } from "@/components/channel/channel-header";
 import { ChipBar, Pager } from "@/components/filters";
-import { PageHeader } from "@/components/page-header";
-import { Shelf, countChipClass, videos } from "@/components/shelf";
-import { SubscribeButton } from "@/components/subscribe-button";
-import { headerActionClass } from "@/components/ui";
+import { Shelf } from "@/components/shelf";
+import { ChipRow } from "@/components/topic/chip-row";
 import { VideoCard, VideoGrid } from "@/components/video-card";
+import { channelDescription, channelStats, curators, similarChannels } from "@/lib/channels";
 import { browse } from "@/lib/engine";
 import { browsePage } from "@/lib/pages";
-import { getEngine } from "@/lib/server-catalog";
+import { getEngine, getMentions } from "@/lib/server-catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -28,33 +29,19 @@ export default async function ChannelPage({ params, searchParams }: PageProps<"/
   if (!name) notFound();
   const engine = getEngine();
   const search = await searchParams;
-  const tab = search.tab === "videos" ? "videos" : "home";
-  const all = browse(engine, { channel: slug, news: "show", cited: "show", offset: 0, limit: 12 });
-  const recent = browse(engine, { channel: slug, news: "show", cited: "show", sort: "recent", offset: 0, limit: 12 });
-  const comments = engine.cards.filter((card) => card.channelSlug === slug).reduce((sum, card) => sum + card.mentions, 0);
+  const tab = search.tab === "videos" || search.tab === "about" ? search.tab : "home";
+  const stats = channelStats(engine, slug);
   const base = `/channel/${slug}`;
   const tabs = [
     { href: base, label: "Home", on: tab === "home" },
     { href: `${base}?tab=videos`, label: "Videos", on: tab === "videos" },
+    { href: `${base}?tab=about`, label: "About", on: tab === "about" },
   ];
+  const description = channelDescription(stats);
   return (
     <div>
-      <PageHeader
-        title={name}
-        actions={
-          <>
-            <SubscribeButton slug={slug} name={name} />
-            <a className={headerActionClass} href={`https://www.youtube.com/results?search_query=${encodeURIComponent(name)}`} target="_blank" rel="noreferrer">
-              Find on YouTube
-            </a>
-          </>
-        }
-      />
-      <ul aria-label="Channel stats" className="flex flex-wrap gap-2">
-        <li className={`${countChipClass} max-w-full`}><span className="truncate">@{slug}</span></li>
-        <li className={countChipClass}>{videos(all.total)}</li>
-        <li className={countChipClass}>{comments.toLocaleString("en-US")} HN comments</li>
-      </ul>
+      <ChannelHeader slug={slug} name={name} videos={stats.videos} comments={stats.comments} description={description} />
+      <ChannelActions slug={slug} name={name} />
       <nav aria-label="Channel" className="no-scrollbar mt-4 flex gap-6 overflow-x-auto border-b border-line">
         {tabs.map((item) => (
           <a
@@ -67,45 +54,63 @@ export default async function ChannelPage({ params, searchParams }: PageProps<"/
           </a>
         ))}
       </nav>
-      {tab === "home" ? <ChannelHome base={base} all={all.items} recent={recent.items} /> : <ChannelVideos slug={slug} base={base} search={search} />}
+      {tab === "home" ? <ChannelHome slug={slug} base={base} topics={stats.topics} /> : null}
+      {tab === "videos" ? <ChannelVideos slug={slug} base={base} search={search} /> : null}
+      {tab === "about" ? (
+        <ChannelAbout
+          first={stats.firstYear}
+          last={stats.lastYear}
+          topics={stats.topics}
+          curators={curators(engine, getMentions, slug)}
+          similar={similarChannels(engine, slug)}
+        />
+      ) : null}
     </div>
   );
 }
 
-function ChannelHome({ base, all, recent }: { base: string; all: ReturnType<typeof browse>["items"]; recent: ReturnType<typeof browse>["items"] }) {
+function ChannelHome({ slug, base, topics }: { slug: string; base: string; topics: { id: string; name: string }[] }) {
+  const engine = getEngine();
+  const q = { channel: slug, news: "show", cited: "show", offset: 0, limit: 12 } as const;
   const shelves = [
-    { title: "Most recommended", items: all },
-    { title: "Recently shared", items: recent },
+    { title: "Popular on HN", items: browse(engine, q).items, href: `${base}?tab=videos&sort=hn` },
+    { title: "Recently shared", items: browse(engine, { ...q, sort: "recent" }).items, href: `${base}?tab=videos` },
   ];
+  const single = shelves[0].items.length <= 1;
   return (
     <div className="mt-2">
-      {shelves.map((shelf) =>
-        shelf.items.length > 1 ? (
-          <Shelf key={shelf.title} title={shelf.title} href={`${base}?tab=videos`}>
+      {single ? (
+        <div className="mt-6">
+          <VideoGrid items={shelves[0].items} />
+        </div>
+      ) : (
+        shelves.map((shelf) => (
+          <Shelf key={shelf.title} title={shelf.title} href={shelf.href}>
             {shelf.items.map((item) => (
               <li key={item.vid} className="w-[260px] min-w-0 shrink-0 snap-start p-2 min-[801px]:w-[300px]">
                 <VideoCard item={item} />
               </li>
             ))}
           </Shelf>
-        ) : null,
+        ))
       )}
-      {all.length <= 1 ? (
-        <div className="mt-6">
-          <VideoGrid items={all} />
-        </div>
+      {topics.length ? (
+        <section className="mt-8 border-t border-line pt-6">
+          <h2 className="mb-4 text-xl font-bold tracking-[-0.2px]">Topics</h2>
+          <ChipRow label="Topics" items={topics} />
+        </section>
       ) : null}
     </div>
   );
 }
 
 function ChannelVideos({ slug, base, search }: { slug: string; base: string; search: Record<string, string | string[] | undefined> }) {
-  const { record, page } = browsePage({ ...search, channel: slug, news: "show", cited: "show" });
-  const sort = record.sort ?? "hn";
+  const { record, page } = browsePage({ ...search, sort: search.sort || "recent", channel: slug, news: "show", cited: "show" });
+  const sort = record.sort ?? "recent";
   const chips = [
-    { href: `${base}?tab=videos`, label: "Most recommended", on: sort === "hn" },
-    { href: `${base}?tab=videos&sort=recent`, label: "Recently shared", on: sort === "recent" },
-    { href: `${base}?tab=videos&sort=title`, label: "A to Z", on: sort === "title" },
+    { href: `${base}?tab=videos`, label: "Latest", on: sort === "recent" },
+    { href: `${base}?tab=videos&sort=hn`, label: "Popular", on: sort === "hn" },
+    { href: `${base}?tab=videos&sort=oldest`, label: "Oldest", on: sort === "oldest" },
   ];
   return (
     <div className="mt-4">

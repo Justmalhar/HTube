@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { FilterBar, Pager } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
 import { chipClass } from "@/components/ui";
+import { TopChannels } from "@/components/topic/top-channels";
 import { VideoGrid } from "@/components/video-card";
+import { topChannelsInArea } from "@/lib/channels";
 import { browsePage, paramsRecord } from "@/lib/pages";
 import { getEngine } from "@/lib/server-catalog";
 
@@ -34,6 +36,7 @@ export default async function AreaPage({ params, searchParams }: PageProps<"/a/[
           <a key={category.id} href={`/c/${category.id}`} className={chipClass}>{category.name}</a>
         ))}
       </nav>
+      <TopChannels channels={topChannelsInArea(getEngine(), id)} />
       <FilterBar path={path} query={record} />
       <VideoGrid items={page.items} />
       <Pager path={path} query={record} offset={page.offset} total={page.total} />

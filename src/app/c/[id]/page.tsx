@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 
 import { FilterBar, Pager } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
+import { TopChannels } from "@/components/topic/top-channels";
+import { ChipRow } from "@/components/topic/chip-row";
 import { VideoGrid } from "@/components/video-card";
+import { relatedCategories, topChannelsInCategory } from "@/lib/channels";
 import { areaForCategory } from "@/lib/engine";
 import { browsePage, paramsRecord } from "@/lib/pages";
 import { getEngine } from "@/lib/server-catalog";
@@ -32,6 +35,8 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
         title={category.name}
         description={area ? <a href={`/a/${area.id}`} className="hover:underline">Part of {area.name}</a> : undefined}
       />
+      <ChipRow label="Related topics" items={relatedCategories(engine, id)} />
+      <TopChannels channels={topChannelsInCategory(engine, id)} />
       <FilterBar path={path} query={record} />
       <VideoGrid items={page.items} />
       <Pager path={path} query={record} offset={page.offset} total={page.total} />

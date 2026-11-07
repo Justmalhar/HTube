@@ -1,7 +1,7 @@
 import type { BrowseQuery, FeedQuery } from "@/lib/types";
 import { PAGE } from "@/lib/engine";
 
-const SORTS = new Set(["hn", "recent", "title"]);
+const SORTS = new Set(["hn", "recent", "title", "oldest"]);
 
 export function first(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";

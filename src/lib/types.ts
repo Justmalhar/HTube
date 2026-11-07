@@ -88,7 +88,7 @@ export type BrowseQuery = {
   shelf?: string;
   evergreen?: boolean;
   gems?: "" | "1" | "insistent";
-  sort?: "hn" | "recent" | "title";
+  sort?: "hn" | "recent" | "title" | "oldest";
   news?: "hide" | "show";
   cited?: "hide" | "show";
   offset: number;
