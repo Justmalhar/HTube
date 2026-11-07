@@ -47,7 +47,7 @@ export default function Home() {
       </Shelf>
       <VideoGrid items={feed.items.slice(15)} />
       <div className="mt-10 flex justify-center">
-        <a href="/browse" className="inline-flex h-10 items-center rounded-full bg-surface px-5 text-sm font-medium hover:bg-surface-hover">
+        <a href="/browse" className="press inline-flex h-10 items-center rounded-full bg-surface px-5 text-sm font-medium hover:bg-surface-hover">
           Browse the full catalogue
         </a>
       </div>

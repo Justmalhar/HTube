@@ -1,37 +1,42 @@
-import { chipClass } from "@/components/ui";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { FilterBar, Pager } from "@/components/filters";
 import { PageHeader } from "@/components/page-header";
+import { chipClass } from "@/components/ui";
 import { VideoGrid } from "@/components/video-card";
-import { browsePage } from "@/lib/pages";
+import { browsePage, paramsRecord } from "@/lib/pages";
 import { getEngine } from "@/lib/server-catalog";
 
 export const dynamic = "force-dynamic";
 
-export default async function AreaPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+const findArea = (id: string) => getEngine().areas.find((item) => item.id === id);
+
+export async function generateMetadata({ params }: PageProps<"/a/[id]">): Promise<Metadata> {
+  const area = findArea((await params).id);
+  return { title: area?.name ?? "Not found" };
+}
+
+export default async function AreaPage({ params, searchParams }: PageProps<"/a/[id]">) {
   const { id } = await params;
-  const area = getEngine().areas.find((item) => item.id === id);
+  const area = findArea(id);
   if (!area) notFound();
   const search = await searchParams;
-  const { record, page } = browsePage({ ...search, area: id });
+  const { page } = browsePage({ ...search, area: id });
+  // Links carry only what the viewer chose; the area lives in the path, not the query.
+  const record = paramsRecord(search);
+  const path = `/a/${id}`;
   return (
     <div>
-      <PageHeader title={area.name} description="In this area" />
-      <div className="mb-4 flex flex-wrap gap-2">
+      <PageHeader title={area.name} />
+      <nav aria-label="Topics in this area" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 min-[801px]:mx-0 min-[801px]:flex-wrap min-[801px]:px-0">
         {area.categories.map((category) => (
           <a key={category.id} href={`/c/${category.id}`} className={chipClass}>{category.name}</a>
         ))}
-      </div>
-      <FilterBar path={`/a/${id}`} query={record} />
+      </nav>
+      <FilterBar path={path} query={record} />
       <VideoGrid items={page.items} />
-      <Pager path={`/a/${id}`} query={record} offset={page.offset} total={page.total} />
+      <Pager path={path} query={record} offset={page.offset} total={page.total} />
     </div>
   );
 }

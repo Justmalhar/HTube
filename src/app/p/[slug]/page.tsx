@@ -1,45 +1,60 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PlayIcon, pillClass } from "@/components/icons";
+import { PlayIcon } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
-import { VideoCard } from "@/components/video-card";
+import { countChipClass, videos } from "@/components/shelf";
+import { headerActionClass } from "@/components/ui";
+import { VideoRow } from "@/components/video-card";
 import { getEngine } from "@/lib/server-catalog";
 
 export const dynamic = "force-dynamic";
 
-export default async function PlaylistPage({ params }: { params: Promise<{ slug: string }> }) {
+const findPlaylist = (slug: string) => getEngine().playlists.find((item) => item.slug === slug);
+
+export async function generateMetadata({ params }: PageProps<"/p/[slug]">): Promise<Metadata> {
+  const playlist = findPlaylist((await params).slug);
+  return playlist ? { title: playlist.title, description: playlist.pitch || undefined } : { title: "Not found" };
+}
+
+export default async function PlaylistPage({ params }: PageProps<"/p/[slug]">) {
   const { slug } = await params;
   const engine = getEngine();
-  const playlist = engine.playlists.find((item) => item.slug === slug);
+  const playlist = findPlaylist(slug);
   if (!playlist) notFound();
-  const ids = playlist.items.map((item) => item.vid).slice(0, 50).join(",");
+  // Drop ids the catalogue no longer has, so numbering stays contiguous and Play matches the list.
+  const entries = playlist.items.flatMap((item) => {
+    const card = engine.byId.get(item.vid);
+    return card ? [{ card, note: item.note }] : [];
+  });
+  // YouTube's anonymous playlist URL accepts up to 50 ids.
+  const ids = entries.slice(0, 50).map(({ card }) => card.vid).join(",");
   return (
     <div>
       <PageHeader
         title={playlist.title}
-        description="In this order"
         actions={
-          <a className={pillClass} href={`https://www.youtube.com/watch_videos?video_ids=${ids}`} target="_blank" rel="noreferrer">
-            <PlayIcon />
-            <span className="pr-1">Play</span>
-          </a>
+          <>
+            <span className={countChipClass}>{videos(entries.length)}</span>
+            {ids ? (
+              <a className={headerActionClass} href={`https://www.youtube.com/watch_videos?video_ids=${ids}`} target="_blank" rel="noreferrer">
+                <PlayIcon />
+                Play all
+              </a>
+            ) : null}
+          </>
         }
       />
-      <p className="mb-4 max-w-3xl text-sm">{playlist.intro || playlist.pitch}</p>
-      <ol className="flex flex-col gap-4">
-        {playlist.items.map((item, index) => {
-          const card = engine.byId.get(item.vid);
-          if (!card) return null;
-          return (
-            <li key={item.vid} className="grid grid-cols-[2rem_1fr] gap-3">
-              <span className="pt-2 text-sm text-muted">{index + 1}</span>
-              <div>
-                <VideoCard item={card} />
-                {item.note ? <p className="mt-2 text-sm">{item.note}</p> : null}
-              </div>
-            </li>
-          );
-        })}
+      {playlist.intro || playlist.pitch ? <p className="mb-6 max-w-3xl text-sm">{playlist.intro || playlist.pitch}</p> : null}
+      <ol className="flex max-w-[1100px] flex-col gap-4">
+        {entries.map(({ card, note }, index) => (
+          <li key={card.vid} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-2 min-[801px]:grid-cols-[2rem_minmax(0,1fr)] min-[801px]:gap-3">
+            <span className="pt-1 text-sm tabular-nums text-muted">{index + 1}</span>
+            <VideoRow item={card}>
+              {note ? <p className="mt-2 line-clamp-3 text-sm">{note}</p> : null}
+            </VideoRow>
+          </li>
+        ))}
       </ol>
     </div>
   );

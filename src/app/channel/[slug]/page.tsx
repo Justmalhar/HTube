@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ChipBar, Pager } from "@/components/filters";
-import { Shelf } from "@/components/shelf";
+import { PageHeader } from "@/components/page-header";
+import { Shelf, countChipClass, videos } from "@/components/shelf";
+import { headerActionClass } from "@/components/ui";
 import { VideoCard, VideoGrid } from "@/components/video-card";
 import { browse } from "@/lib/engine";
 import { browsePage } from "@/lib/pages";
@@ -10,21 +12,16 @@ import { getEngine } from "@/lib/server-catalog";
 
 export const dynamic = "force-dynamic";
 
-type Props = {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-};
-
 function channelName(slug: string) {
   return getEngine().cards.find((card) => card.channelSlug === slug)?.channel;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/channel/[slug]">): Promise<Metadata> {
   const name = channelName((await params).slug);
   return { title: name ?? "Not found" };
 }
 
-export default async function ChannelPage({ params, searchParams }: Props) {
+export default async function ChannelPage({ params, searchParams }: PageProps<"/channel/[slug]">) {
   const { slug } = await params;
   const name = channelName(slug);
   if (!name) notFound();
@@ -40,32 +37,27 @@ export default async function ChannelPage({ params, searchParams }: Props) {
     { href: `${base}?tab=videos`, label: "Videos", on: tab === "videos" },
   ];
   return (
-    <div className="mx-auto max-w-[1284px]">
-      <header className="flex flex-col gap-4 pt-2 min-[640px]:flex-row min-[640px]:items-end">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-[28px] font-bold leading-9 tracking-[-0.4px] min-[801px]:text-4xl min-[801px]:leading-[44px]">{name}</h1>
-          <p className="mt-2 flex flex-wrap gap-x-3 text-sm text-muted">
-            <span className="text-foreground">@{slug}</span>
-            <span>{all.total} videos</span>
-            <span>{comments} HN comments</span>
-          </p>
-        </div>
-        <a
-          className="inline-flex h-9 w-fit items-center rounded-full bg-chip-on px-4 text-sm font-medium text-chip-on-text hover:opacity-90"
-          href={`https://www.youtube.com/results?search_query=${encodeURIComponent(name)}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Find on YouTube
-        </a>
-      </header>
+    <div>
+      <PageHeader
+        title={name}
+        actions={
+          <a className={headerActionClass} href={`https://www.youtube.com/results?search_query=${encodeURIComponent(name)}`} target="_blank" rel="noreferrer">
+            Find on YouTube
+          </a>
+        }
+      />
+      <ul aria-label="Channel stats" className="flex flex-wrap gap-2">
+        <li className={`${countChipClass} max-w-full`}><span className="truncate">@{slug}</span></li>
+        <li className={countChipClass}>{videos(all.total)}</li>
+        <li className={countChipClass}>{comments.toLocaleString("en-US")} HN comments</li>
+      </ul>
       <nav aria-label="Channel" className="no-scrollbar mt-4 flex gap-6 overflow-x-auto border-b border-line">
         {tabs.map((item) => (
           <a
             key={item.label}
             href={item.href}
             aria-current={item.on ? "page" : undefined}
-            className={`h-12 shrink-0 border-b-2 pt-3 text-base font-medium ${item.on ? "border-foreground" : "border-transparent text-muted hover:border-muted hover:text-foreground"}`}
+            className={`press h-12 shrink-0 border-b-2 pt-3 text-base font-medium ${item.on ? "border-foreground" : "border-transparent text-muted hover:border-muted hover:text-foreground"}`}
           >
             {item.label}
           </a>
@@ -87,7 +79,7 @@ function ChannelHome({ base, all, recent }: { base: string; all: ReturnType<type
         shelf.items.length > 1 ? (
           <Shelf key={shelf.title} title={shelf.title} href={`${base}?tab=videos`}>
             {shelf.items.map((item) => (
-              <li key={item.vid} className="w-[260px] shrink-0 snap-start p-2 min-[801px]:w-[300px]">
+              <li key={item.vid} className="w-[260px] min-w-0 shrink-0 snap-start p-2 min-[801px]:w-[300px]">
                 <VideoCard item={item} />
               </li>
             ))}

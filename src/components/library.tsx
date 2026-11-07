@@ -1,6 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
+import { createContext, useContext, useSyncExternalStore } from "react";
+
+import { MoonIcon, SunIcon } from "@/components/icons";
+import { iconButtonClass } from "@/components/ui";
 
 type Library = {
   likes: string[];
@@ -13,18 +16,24 @@ type Library = {
 const EMPTY: Library = { likes: [], dislikes: [], seen: [], later: [], frames: true };
 const KEY = "oht.library.v1";
 
+export type ListKind = "likes" | "dislikes" | "later" | "seen";
+
 let state = EMPTY;
+let loaded = false;
 const listeners = new Set<() => void>();
 
 function emit() {
   listeners.forEach((listener) => listener());
 }
 
-function load() {
-  if (typeof window === "undefined") return;
+// Read storage lazily on the client. Every mutation goes through current(), so a write can never
+// start from the empty server snapshot and wipe what is already stored.
+function current(): Library {
+  if (loaded || typeof window === "undefined") return state;
+  loaded = true;
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return;
+    if (!raw) return state;
     const parsed = JSON.parse(raw) as Partial<Library>;
     state = {
       likes: parsed.likes ?? [],
@@ -36,63 +45,102 @@ function load() {
   } catch {
     state = EMPTY;
   }
+  return state;
 }
 
-function save() {
-  localStorage.setItem(KEY, JSON.stringify(state));
+function commit(next: Library) {
+  state = next;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch {
+    // Private mode or full quota: keep the in-memory state for this tab.
+  }
+  emit();
+}
+
+function onStorage(event: StorageEvent) {
+  if (event.key !== KEY) return;
+  loaded = false;
+  current();
   emit();
 }
 
 function subscribe(listener: () => void) {
+  if (!listeners.size) window.addEventListener("storage", onStorage);
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+    if (!listeners.size) window.removeEventListener("storage", onStorage);
+  };
 }
 
-function getSnapshot() {
-  return state;
-}
+const without = (list: string[], vid: string) => list.filter((id) => id !== vid);
 
-let booted = false;
+const actions = {
+  toggleLike(vid: string) {
+    const value = current();
+    const likes = value.likes.includes(vid) ? without(value.likes, vid) : value.likes.concat(vid);
+    commit({ ...value, likes, dislikes: without(value.dislikes, vid) });
+  },
+  toggleDislike(vid: string) {
+    const value = current();
+    const dislikes = value.dislikes.includes(vid) ? without(value.dislikes, vid) : value.dislikes.concat(vid);
+    commit({ ...value, dislikes, likes: without(value.likes, vid) });
+  },
+  toggleLater(vid: string) {
+    const value = current();
+    commit({ ...value, later: value.later.includes(vid) ? without(value.later, vid) : value.later.concat(vid) });
+  },
+  markSeen(vid: string) {
+    const value = current();
+    if (value.seen.at(-1) === vid) return;
+    // Re-watching moves the id to the end, so History lists it first again.
+    commit({ ...value, seen: without(value.seen, vid).concat(vid).slice(-500) });
+  },
+  clearHistory() {
+    commit({ ...current(), seen: [] });
+  },
+  /** Replace one list wholesale. Used by remove, clear all, and their Undo. */
+  setList(kind: ListKind, ids: string[]) {
+    commit({ ...current(), [kind]: ids });
+  },
+  setFrames(frames: boolean) {
+    commit({ ...current(), frames });
+  },
+};
+
+const noop = () => () => undefined;
+
+/** False during SSR and hydration, true after. Use it to avoid flashing an empty state. */
+export function useHydrated() {
+  return useSyncExternalStore(noop, () => true, () => false);
+}
 
 export function useLibrary() {
-  const value = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
-  useEffect(() => {
-    if (booted) return;
-    booted = true;
-    load();
-    emit();
-  }, []);
-  return {
-    ...value,
-    toggleLike(vid: string) {
-      const likes = value.likes.includes(vid) ? value.likes.filter((id) => id !== vid) : value.likes.concat(vid);
-      state = { ...value, likes, dislikes: value.dislikes.filter((id) => id !== vid) };
-      save();
-    },
-    toggleDislike(vid: string) {
-      const dislikes = value.dislikes.includes(vid) ? value.dislikes.filter((id) => id !== vid) : value.dislikes.concat(vid);
-      state = { ...value, dislikes, likes: value.likes.filter((id) => id !== vid) };
-      save();
-    },
-    toggleLater(vid: string) {
-      const later = value.later.includes(vid) ? value.later.filter((id) => id !== vid) : value.later.concat(vid);
-      state = { ...value, later };
-      save();
-    },
-    markSeen(vid: string) {
-      if (value.seen.includes(vid)) return;
-      state = { ...value, seen: value.seen.concat(vid).slice(-500) };
-      save();
-    },
-    clearHistory() {
-      state = { ...value, seen: [] };
-      save();
-    },
-    setFrames(frames: boolean) {
-      state = { ...value, frames };
-      save();
-    },
-  };
+  const value = useSyncExternalStore(subscribe, current, () => EMPTY);
+  return { ...value, ...actions };
+}
+
+/** Settings row for the middle-frame thumbnails. A client island so the Settings page can stay a server component. */
+export function FramesSetting() {
+  const library = useLibrary();
+  const ready = useHydrated();
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl bg-surface px-4 py-3 hover:bg-surface-hover">
+      <span className="min-w-0">
+        <span className="block text-sm font-medium">Middle frames</span>
+        <span className="block text-sm text-muted">Show a frame from the middle of each video</span>
+      </span>
+      <input
+        type="checkbox"
+        role="switch"
+        className="size-5 shrink-0 accent-primary"
+        checked={library.frames}
+        disabled={!ready}
+        onChange={(event) => library.setFrames(event.target.checked)}
+      />
+    </label>
+  );
 }
 
 const ThemeContext = createContext<{ theme: "dark" | "light"; toggle: () => void }>({
@@ -105,7 +153,7 @@ export function ThemeButton() {
   return (
     <button
       type="button"
-      className="grid size-10 place-items-center rounded-full hover:bg-surface"
+      className={iconButtonClass}
       aria-label={theme === "dark" ? "Switch to light" : "Switch to dark"}
       onClick={toggle}
     >
@@ -129,30 +177,22 @@ export function ThemeState({ children }: { children: React.ReactNode }) {
         theme,
         toggle() {
           const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
-          document.documentElement.dataset.theme = next;
-          localStorage.setItem("oht.theme", next);
-          window.dispatchEvent(new Event("oht-theme"));
+          const apply = () => {
+            document.documentElement.dataset.theme = next;
+            window.dispatchEvent(new Event("oht-theme"));
+          };
+          try {
+            localStorage.setItem("oht.theme", next);
+          } catch {
+            // Storage blocked: the theme still applies for this page view.
+          }
+          // Crossfade where supported (CSS in globals.css); plain swap elsewhere.
+          if (document.startViewTransition) document.startViewTransition(apply);
+          else apply();
         },
       }}
     >
       {children}
     </ThemeContext.Provider>
-  );
-}
-
-function SunIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
-      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
-      <path d="M15 3a8 8 0 1 0 6 13 7 7 0 0 1-6-13z" fill="currentColor" />
-    </svg>
   );
 }
