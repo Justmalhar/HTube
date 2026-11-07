@@ -20,15 +20,19 @@ import {
   ListFilter,
   ListVideo,
   Menu,
+  Pause,
   Moon,
   Play,
   Search,
   Settings,
+  Shuffle,
   SkipBack,
   SkipForward,
   Sun,
   ThumbsDown,
   ThumbsUp,
+  Trash2,
+  TrendingUp,
   TvMinimalPlay,
   X,
   type LucideIcon,
@@ -80,6 +84,9 @@ export const ShareIcon = action(Forward);
 export const CloseIcon = action(X);
 export const BellIcon = action(Bell);
 export const BellRingIcon = action(BellRing);
+export const PauseIcon = action(Pause);
+export const ShuffleIcon = action(Shuffle);
+export const TrashIcon = action(Trash2);
 export const SortIcon = action(ListFilter);
 export const SkipBackIcon = action(SkipBack);
 export const SkipForwardIcon = action(SkipForward);
@@ -100,6 +107,7 @@ export const ListIcon = chrome(ListVideo);
 export const CompassIcon = chrome(Compass);
 export const LikeIcon = chrome(ThumbsUp);
 export const HistoryIcon = chrome(History);
+export const TrendingIcon = chrome(TrendingUp);
 export const GearIcon = chrome(Settings);
 
 export { pillClass } from "@/components/ui";

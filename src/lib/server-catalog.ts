@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { buildEngine, type Engine } from "@/lib/engine";
+import { rankTrending, type Trending } from "@/lib/trending";
 import type { Area, Card, Category, Mention, Playlist, RelatedEdge } from "@/lib/types";
 
 const ROOT = path.join(process.cwd(), "data", "catalog");
@@ -74,6 +75,15 @@ export function getAuthorMentions(author: string): Mention[] {
 /** Top curators by recommendation count (for a future "HN curators" shelf). */
 export function getTopAuthors(limit = 20) {
   return authorIndex().top.slice(0, limit);
+}
+
+let trending: { stamp: number; list: Trending[] } | null = null;
+
+/** Ranked trending videos (all of them with recent activity), memoized per catalog mtime. */
+export function getTrending(): Trending[] {
+  const c = load();
+  if (trending && trending.stamp === c.mtime) return trending.list;
+  return (trending = { stamp: c.mtime, list: rankTrending([...c.mentions.values()].flat()) }).list;
 }
 
 export function getManifest() {
