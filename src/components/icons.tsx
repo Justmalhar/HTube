@@ -20,7 +20,9 @@ import {
   ListFilter,
   ListVideo,
   Menu,
+  ListPlus,
   Pause,
+  Radio,
   Moon,
   Play,
   Search,
@@ -34,6 +36,8 @@ import {
   Trash2,
   TrendingUp,
   TvMinimalPlay,
+  Volume2,
+  VolumeX,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -85,6 +89,10 @@ export const CloseIcon = action(X);
 export const BellIcon = action(Bell);
 export const BellRingIcon = action(BellRing);
 export const PauseIcon = action(Pause);
+export const QueueAddIcon = action(ListPlus);
+export const MixIcon = action(Radio);
+export const VolumeIcon = action(Volume2);
+export const MuteIcon = action(VolumeX);
 export const ShuffleIcon = action(Shuffle);
 export const TrashIcon = action(Trash2);
 export const SortIcon = action(ListFilter);
