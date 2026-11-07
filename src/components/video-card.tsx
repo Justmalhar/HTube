@@ -1,6 +1,7 @@
 "use client";
 
 import type { FeedCard } from "@/lib/types";
+import { ClockIcon } from "@/components/icons";
 import { useLibrary } from "@/components/library";
 
 export function VideoCard({ item }: { item: FeedCard }) {
@@ -12,7 +13,7 @@ export function VideoCard({ item }: { item: FeedCard }) {
   return (
     <article className="min-w-0">
       <a href={`/watch/${item.vid}`} className="block rounded-[12px]">
-        <div className="relative aspect-video overflow-hidden rounded-[12px] bg-surface">
+        <div className="group/thumb relative aspect-video overflow-hidden rounded-[12px] bg-surface">
           <img
             src={frame}
             alt=""
@@ -22,27 +23,11 @@ export function VideoCard({ item }: { item: FeedCard }) {
               if (!image.src.includes("hqdefault")) image.src = `https://i.ytimg.com/vi/${item.vid}/hqdefault.jpg`;
             }}
           />
-          <button
-            type="button"
-            className="absolute right-2 top-2 h-8 rounded-[8px] bg-black/80 px-2 text-xs text-white"
-            aria-label={saved ? "Remove from watch later" : "Save to watch later"}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              library.toggleLater(item.vid);
-            }}
-          >
-            {saved ? "Saved" : "Later"}
-          </button>
+          <LaterButton saved={saved} onToggle={() => library.toggleLater(item.vid)} />
         </div>
         <h2 className="mt-2 line-clamp-2 text-sm font-medium leading-5">{item.title}</h2>
       </a>
       <a href={`/channel/${item.channelSlug}`} className="mt-1 block truncate text-sm text-muted">{item.channel}</a>
-      <p className="mt-1 flex flex-wrap gap-x-3 text-sm text-muted">
-        <span>{item.recommenders} HN recommendations</span>
-        <span>{item.firstYear} to {item.lastYear}</span>
-      </p>
-      {item.reason ? <p className="mt-1 text-xs text-muted">{item.reason}</p> : null}
     </article>
   );
 }
@@ -68,23 +53,36 @@ function SearchRow({ item }: { item: FeedCard }) {
   return (
     <article className="flex min-w-0 gap-3">
       <a href={`/watch/${item.vid}`} className="block w-[42%] max-w-[360px] shrink-0">
-        <div className="relative aspect-video overflow-hidden rounded-[12px] bg-surface">
+        <div className="group/thumb relative aspect-video overflow-hidden rounded-[12px] bg-surface">
           <img src={frame} alt="" className="size-full object-cover" />
+          <LaterButton saved={library.later.includes(item.vid)} onToggle={() => library.toggleLater(item.vid)} />
         </div>
       </a>
       <div className="min-w-0">
         <a href={`/watch/${item.vid}`}>
           <h2 className="line-clamp-2 text-sm font-medium leading-5">{item.title}</h2>
         </a>
-        <a href={`/channel/${item.channelSlug}`} className="mt-2 block truncate text-sm text-muted">{item.channel}</a>
-        <p className="mt-1 flex flex-wrap gap-x-3 text-sm text-muted">
-          <span>{item.recommenders} HN recommendations</span>
-          <span>{item.firstYear} to {item.lastYear}</span>
-        </p>
-        {item.whyHn ? <p className="mt-2 line-clamp-2 hidden text-sm text-muted sm:block">{item.whyHn}</p> : null}
-        {item.reason ? <p className="mt-2 text-xs text-muted">{item.reason}</p> : null}
+        <a href={`/channel/${item.channelSlug}`} className="mt-1 block truncate text-sm text-muted">{item.channel}</a>
       </div>
     </article>
+  );
+}
+
+function LaterButton({ saved, onToggle }: { saved: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      className={`absolute right-2 top-2 grid size-9 place-items-center rounded-full bg-black/80 text-white ${saved ? "opacity-100" : "opacity-0 group-hover/thumb:opacity-100 focus-visible:opacity-100 max-[800px]:opacity-100"}`}
+      aria-label={saved ? "Remove from watch later" : "Save to watch later"}
+      aria-pressed={saved}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onToggle();
+      }}
+    >
+      <ClockIcon filled={saved} />
+    </button>
   );
 }
 

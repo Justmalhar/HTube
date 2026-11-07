@@ -39,11 +39,6 @@ export default async function WatchPage({ params }: { params: Promise<{ vid: str
         <WatchActions vid={vid} title={card.title} />
         <h1 className="mt-3 text-base font-medium leading-5">{card.title}</h1>
         <a href={`/channel/${card.channelSlug}`} className="mt-1 block text-sm text-muted">{card.channel}</a>
-        <p className="mt-2 flex flex-wrap gap-x-3 text-sm text-muted">
-          <span>{card.recommenders} HN recommendations</span>
-          <span>{card.recMonths} months</span>
-          <span>{card.firstYear} to {card.lastYear}</span>
-        </p>
         <div className="mt-4 rounded-[12px] bg-surface p-3">
           <p>{card.summary}</p>
           {card.whyHn ? <p className="mt-2 text-sm text-muted">{card.whyHn}</p> : null}
