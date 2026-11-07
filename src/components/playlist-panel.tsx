@@ -6,10 +6,27 @@ import { ChevronDownIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } from "@/comp
 
 export type PanelItem = { vid: string; title: string; channel: string };
 
-const href = (vid: string, slug: string) => `/watch/${vid}?list=${slug}`;
+const href = (vid: string, query: string) => `/watch/${vid}?${query}`;
 const navClass = "press grid size-8 place-items-center rounded-full hover:bg-surface-hover";
 
-export function PlaylistPanel({ slug, title, items, index }: { slug: string; title: string; items: PanelItem[]; index: number }) {
+/** `query` is the mode kept on every link (default list=<slug>); `titleHref` null renders the title as plain text. */
+export function PlaylistPanel({
+  slug,
+  title,
+  items,
+  index,
+  label = "Playlist",
+  query = `list=${slug}`,
+  titleHref = `/p/${slug}`,
+}: {
+  slug: string;
+  title: string;
+  items: PanelItem[];
+  index: number;
+  label?: string;
+  query?: string;
+  titleHref?: string | null;
+}) {
   const [open, setOpen] = useState(true);
   const list = useRef<HTMLOListElement>(null);
   const prev = items[index - 1];
@@ -21,28 +38,32 @@ export function PlaylistPanel({ slug, title, items, index }: { slug: string; tit
     if (box && row) box.scrollTop = row.offsetTop - box.offsetTop - (box.clientHeight - row.clientHeight) / 2;
   }, [index, open]);
   return (
-    <section aria-label="Playlist" className="overflow-hidden rounded-xl border border-line bg-surface/40">
+    <section aria-label={label} className="overflow-hidden rounded-xl border border-line bg-surface/40">
       {/* Collapsed: one compact row, like YouTube. */}
       <header className="flex items-center gap-1 bg-surface py-2 pl-3 pr-2">
         <div className="min-w-0 flex-1">
           {open || !next ? (
             <>
-              <a href={`/p/${slug}`} className="block truncate text-base font-bold leading-6 hover:text-muted">{title}</a>
+              {titleHref ? (
+                <a href={titleHref} className="block truncate text-base font-bold leading-6 hover:text-muted">{title}</a>
+              ) : (
+                <p className="truncate text-base font-bold leading-6">{title}</p>
+              )}
               <p className="text-xs text-muted tabular-nums">{index + 1} / {items.length}</p>
             </>
           ) : (
-            <a href={href(next.vid, slug)} className="block truncate text-sm leading-5 hover:text-muted">
+            <a href={href(next.vid, query)} className="block truncate text-sm leading-5 hover:text-muted">
               <span className="font-medium">Next:</span> {next.title}
             </a>
           )}
         </div>
-        <a href={prev ? href(prev.vid, slug) : undefined} aria-disabled={!prev} aria-label="Previous video" title="Previous" className={`${navClass} ${prev ? "" : "pointer-events-none opacity-40"}`}>
+        <a href={prev ? href(prev.vid, query) : undefined} aria-disabled={!prev} aria-label="Previous video" title="Previous" className={`${navClass} ${prev ? "" : "pointer-events-none opacity-40"}`}>
           <SkipBackIcon />
         </a>
-        <a href={next ? href(next.vid, slug) : undefined} aria-disabled={!next} aria-label="Next video" title="Next" className={`${navClass} ${next ? "" : "pointer-events-none opacity-40"}`}>
+        <a href={next ? href(next.vid, query) : undefined} aria-disabled={!next} aria-label="Next video" title="Next" className={`${navClass} ${next ? "" : "pointer-events-none opacity-40"}`}>
           <SkipForwardIcon />
         </a>
-        <button type="button" className={navClass} aria-expanded={open} aria-label={open ? "Collapse playlist" : "Expand playlist"} onClick={() => setOpen((value) => !value)}>
+        <button type="button" className={navClass} aria-expanded={open} aria-label={open ? `Collapse ${label.toLowerCase()}` : `Expand ${label.toLowerCase()}`} onClick={() => setOpen((value) => !value)}>
           <span className={`transition-transform motion-reduce:transition-none ${open ? "rotate-180" : ""}`}><ChevronDownIcon /></span>
         </button>
       </header>
@@ -52,7 +73,7 @@ export function PlaylistPanel({ slug, title, items, index }: { slug: string; tit
             const current = position === index;
             return (
               <li key={item.vid} className={current ? "bg-surface-hover" : ""}>
-                <a href={href(item.vid, slug)} aria-current={current ? "true" : undefined} className="flex min-w-0 items-center gap-2 py-2 pl-1 pr-3 hover:bg-surface-hover">
+                <a href={href(item.vid, query)} aria-current={current ? "true" : undefined} className="flex min-w-0 items-center gap-2 py-2 pl-1 pr-3 hover:bg-surface-hover">
                   <span className="grid w-6 shrink-0 place-items-center text-xs tabular-nums text-muted">
                     {current ? <span className="text-foreground [&_svg]:size-3.5"><PlayIcon /></span> : position + 1}
                   </span>

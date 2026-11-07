@@ -1,32 +1,129 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ClockIcon, ExternalIcon, HideIcon, ShareIcon, ThumbDownIcon, ThumbUpIcon } from "@/components/icons";
+import { ClockIcon, ExternalIcon, HideIcon, MixIcon, MuteIcon, PauseIcon, PlayIcon, ShareIcon, ThumbDownIcon, ThumbUpIcon, VolumeIcon } from "@/components/icons";
 import { useLibrary } from "@/components/library";
+import { useSnackbar } from "@/components/snackbar";
 import { UpNextCard, useAutoplay } from "@/components/up-next";
 import { ActionMenu, menuItemClass } from "@/components/video-card";
-import { isPlayerEnded, PLAYER_ORIGIN } from "@/lib/player-message";
+import { isPlayerEnded, parsePlayerInfo, PLAYER_ORIGIN, playerCommand, seekTarget, watchAction, type PlayerInfo, type WatchAction } from "@/lib/player-message";
+import { removeFromQueue, useQueue } from "@/lib/queue-store";
 
-/** `next` is the video autoplay moves to (next playlist item or top related). Key the Player by vid so state resets. */
-export function Player({ vid, title, origin, next }: { vid: string; title: string; origin: string; next?: { href: string; title: string } }) {
+export type NextTarget = { vid: string; href: string; title: string };
+
+/** True when a key press belongs to a text field, a menu or a dialog rather than the player. */
+function ignoresKeys(event: KeyboardEvent): boolean {
+  if (event.ctrlKey || event.metaKey || event.altKey || document.querySelector("dialog[open]")) return true;
+  const target = event.target as HTMLElement | null;
+  if (target?.closest("input, textarea, select, [contenteditable=true], [role=menu], [role=slider]")) return true;
+  // Space and Enter activate focused buttons and links; leave them alone.
+  return event.key === " " && Boolean(target?.closest("button, a, summary"));
+}
+
+const bubbleIcon = (kind: "play" | "pause" | "mute" | "volume") =>
+  ({ play: <PlayIcon />, pause: <PauseIcon />, mute: <MuteIcon />, volume: <VolumeIcon /> })[kind];
+
+/**
+ * `nexts` are the candidates autoplay and Shift+N move to (first one not marked "not for me"); the
+ * queue always goes first. `prev` is the previous playlist item. `keep` is the list/mix query kept on links.
+ * Key the Player by vid so state resets.
+ */
+export function Player({ vid, title, origin, nexts, prev, keep }: { vid: string; title: string; origin: string; nexts: NextTarget[]; prev?: string; keep: string }) {
   const library = useLibrary();
-  const { markSeen } = library;
+  const { markSeen, dislikes } = library;
+  const router = useRouter();
   useEffect(() => {
     // markSeen reads the stored library itself and moves a re-watched id to the top of History.
     markSeen(vid);
+    removeFromQueue(vid);
   }, [markSeen, vid]);
+  const queue = useQueue().filter((item) => item.vid !== vid);
+  const queued = queue[0];
+  const next: { href: string; title: string } | undefined = queued
+    ? { href: `/watch/${queued.vid}${keep ? `?${keep}` : ""}`, title: queued.title }
+    : nexts.find((item) => !dislikes.includes(item.vid));
+  const nextHref = next?.href;
   const [glow, setGlow] = useState(false);
   const [autoplay] = useAutoplay();
   const [ended, setEnded] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const info = useRef<PlayerInfo>({});
+  const [bubble, setBubble] = useState<{ id: number; label: string; kind?: "play" | "pause" | "mute" | "volume"; shown: boolean } | null>(null);
+  const fade = useRef(0);
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      if (event.source === frame.current?.contentWindow && isPlayerEnded(event.origin, event.data)) setEnded(true);
+      if (event.source !== frame.current?.contentWindow) return;
+      if (isPlayerEnded(event.origin, event.data)) setEnded(true);
+      const update = parsePlayerInfo(event.origin, event.data);
+      if (update) info.current = { ...info.current, ...update };
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, []);
+  useEffect(() => () => window.clearTimeout(fade.current), []);
+  const send = useCallback((func: string, args: unknown[] = []) => {
+    frame.current?.contentWindow?.postMessage(playerCommand(func, args), PLAYER_ORIGIN);
+  }, []);
+  const flash = useCallback((label: string, kind?: "play" | "pause" | "mute" | "volume") => {
+    window.clearTimeout(fade.current);
+    setBubble({ id: Date.now(), label, kind, shown: true });
+    // Hold briefly at full opacity, then let the 500ms CSS fade run.
+    fade.current = window.setTimeout(() => setBubble((value) => (value ? { ...value, shown: false } : value)), 120);
+  }, []);
+  const run = useCallback(
+    (action: WatchAction) => {
+      const state = info.current;
+      switch (action.type) {
+        case "toggle": {
+          const playing = state.playerState === 1;
+          send(playing ? "pauseVideo" : "playVideo");
+          info.current = { ...state, playerState: playing ? 2 : 1 };
+          flash(playing ? "Paused" : "Playing", playing ? "pause" : "play");
+          break;
+        }
+        case "seek":
+        case "seekPercent": {
+          const to = seekTarget(state.currentTime ?? 0, state.duration ?? 0, action);
+          send("seekTo", [to, true]);
+          info.current = { ...state, currentTime: to };
+          flash(action.type === "seek" ? `${action.by > 0 ? "+" : "-"}${Math.abs(action.by)}` : `${action.percent}%`);
+          break;
+        }
+        case "mute": {
+          const muted = state.muted === true;
+          send(muted ? "unMute" : "mute");
+          info.current = { ...state, muted: !muted };
+          flash(muted ? "Unmuted" : "Muted", muted ? "volume" : "mute");
+          break;
+        }
+        case "fullscreen":
+          if (document.fullscreenElement) void document.exitFullscreen();
+          else void box.current?.requestFullscreen?.();
+          break;
+        case "next":
+          if (nextHref) router.push(nextHref);
+          break;
+        case "previous":
+          if (prev) router.push(prev);
+          break;
+      }
+    },
+    [flash, nextHref, prev, router, send],
+  );
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (ignoresKeys(event)) return;
+      const action = watchAction(event.key, event.shiftKey);
+      if (!action) return;
+      event.preventDefault();
+      run(action);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [run]);
   const listen = () => {
     const target = frame.current?.contentWindow;
     target?.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), PLAYER_ORIGIN);
@@ -48,7 +145,7 @@ export function Player({ vid, title, origin, next }: { vid: string; title: strin
         onLoad={() => setGlow(true)}
         className={`pointer-events-none absolute inset-0 -z-10 size-full object-cover blur-[80px] saturate-[1.4] transition-opacity duration-700 ease-out-quart motion-reduce:transition-none [@media(prefers-reduced-transparency:reduce)]:hidden ${glow ? "opacity-45 in-data-[theme=light]:opacity-25" : "opacity-0"}`}
       />
-      <div className="relative aspect-video overflow-hidden bg-black min-[801px]:rounded-xl">
+      <div ref={box} className="relative aspect-video overflow-hidden bg-black min-[801px]:rounded-xl">
         <iframe
           ref={frame}
           className="absolute inset-0 size-full"
@@ -59,11 +156,22 @@ export function Player({ vid, title, origin, next }: { vid: string; title: strin
           allowFullScreen
           onLoad={listen}
         />
+      {bubble ? (
+        <div
+          key={bubble.id}
+          aria-hidden
+          className={`pointer-events-none absolute left-1/2 top-1/2 z-10 grid min-w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/60 px-4 py-3 text-white tabular-nums backdrop-blur-sm ${bubble.shown ? "opacity-100" : "opacity-0 transition-opacity duration-500 ease-out motion-reduce:transition-none"}`}
+        >
+          {bubble.kind ? <span className="[&_svg]:size-7">{bubbleIcon(bubble.kind)}</span> : <span className="text-lg font-medium">{bubble.label}</span>}
+        </div>
+      ) : null}
+      <span role="status" className="sr-only">{bubble?.label ?? ""}</span>
       {ended && autoplay && next ? <UpNextCard href={next.href} title={next.title} onCancel={() => setEnded(false)} /> : null}
       </div>
     </div>
   );
 }
+
 
 export function ActionBar({ vid, title }: { vid: string; title: string }) {
   const library = useLibrary();
@@ -90,6 +198,11 @@ export function ActionBar({ vid, title }: { vid: string; title: string }) {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCopied(false), 1600);
   };
+  const snackbar = useSnackbar();
+  const toggleDislike = () => {
+    library.toggleDislike(vid);
+    if (!disliked) snackbar.show("You won't see this as often", { label: "Undo", run: () => library.toggleDislike(vid) });
+  };
   const pill = "press inline-flex h-9 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium";
   const off = "bg-surface hover:bg-surface-hover";
   const half = "press grid h-full w-12 place-items-center hover:bg-surface-hover";
@@ -102,7 +215,7 @@ export function ActionBar({ vid, title }: { vid: string; title: string }) {
           <ThumbUpIcon filled={liked} />
         </button>
         <span className="h-6 w-px bg-line" aria-hidden />
-        <button type="button" className={half} aria-label="Not for me" title="Not for me" aria-pressed={disliked} onClick={() => library.toggleDislike(vid)}>
+        <button type="button" className={half} aria-label="Not for me" title="Not for me" aria-pressed={disliked} onClick={toggleDislike}>
           <ThumbDownIcon filled={disliked} />
         </button>
       </div>
@@ -127,7 +240,11 @@ export function ActionBar({ vid, title }: { vid: string; title: string }) {
         className="relative mr-4 shrink-0 min-[1000px]:mr-0"
         triggerClass={(open) => `press grid size-9 place-items-center rounded-full ${open ? "bg-surface-hover" : off}`}
       >
-            <button role="menuitem" type="button" className={menuItemClass} onClick={() => library.toggleDislike(vid)}>
+            <a role="menuitem" className={menuItemClass} href={`/watch/${vid}?mix=1`}>
+              <MixIcon />
+              Start mix
+            </a>
+            <button role="menuitem" type="button" className={menuItemClass} onClick={toggleDislike}>
               <HideIcon />
               {disliked ? "Undo not interested" : "Not interested"}
             </button>
@@ -137,6 +254,7 @@ export function ActionBar({ vid, title }: { vid: string; title: string }) {
             </a>
       </ActionMenu>
       <span role="status" className="sr-only">{copied ? "Link copied" : ""}</span>
+      {snackbar.node}
     </div>
   );
 }
@@ -162,18 +280,23 @@ export function Description({ meta, chips, children }: { meta: string; chips: Re
   return (
     <div className="mt-3 rounded-xl bg-surface p-3 text-sm leading-5 wrap-break-word">
       <p className="font-medium">{meta}</p>
-      <div ref={body} id="watch-description" className={`mt-1 *:mt-2 first:*:mt-0 ${expanded ? "" : "line-clamp-3"}`}>
+      <div ref={body} id="watch-description" className={`relative mt-1 *:mt-2 first:*:mt-0 ${expanded ? "" : "line-clamp-3"}`}>
         {children}
+        {overflows && !expanded ? (
+          <button
+            type="button"
+            className="press absolute bottom-0 right-0 bg-linear-to-r from-transparent to-surface to-30% pl-8 font-medium"
+            aria-expanded={false}
+            aria-controls="watch-description"
+            onClick={() => setExpanded(true)}
+          >
+            ...more
+          </button>
+        ) : null}
       </div>
-      {overflows ? (
-        <button
-          type="button"
-          className="press mt-1 font-medium"
-          aria-expanded={expanded}
-          aria-controls="watch-description"
-          onClick={() => setExpanded((value) => !value)}
-        >
-          {expanded ? "Show less" : "...more"}
+      {expanded ? (
+        <button type="button" className="press mt-1 font-medium" aria-expanded aria-controls="watch-description" onClick={() => setExpanded(false)}>
+          Show less
         </button>
       ) : null}
       {chips}
