@@ -13,6 +13,7 @@ import {
   House,
   Keyboard,
   LayoutGrid,
+  ListFilter,
   ListVideo,
   Menu,
   Moon,
@@ -71,6 +72,7 @@ export const ChevronIcon = action(ChevronRight);
 export const ChevronLeftIcon = action(ChevronLeft);
 export const ShareIcon = action(Forward);
 export const CloseIcon = action(X);
+export const SortIcon = action(ListFilter);
 
 export const MenuIcon = chrome(Menu);
 export const SearchIcon = chrome(Search);

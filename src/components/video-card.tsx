@@ -106,11 +106,16 @@ export function ActionMenu({
   label,
   className,
   triggerClass,
+  trigger: triggerContent = <MoreIcon />,
+  align = "right",
   children,
 }: {
   label: string;
   className: string;
   triggerClass: (open: boolean) => string;
+  /** Trigger content; defaults to the three-dot icon. */
+  trigger?: React.ReactNode;
+  align?: "left" | "right";
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -164,7 +169,7 @@ export function ActionMenu({
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <MoreIcon />
+        {triggerContent}
       </button>
       {open ? (
         <div
@@ -177,7 +182,7 @@ export function ActionMenu({
             setOpen(false);
             trigger.current?.focus();
           }}
-          className="absolute right-0 top-10 z-(--z-sticky) w-60 origin-top-right overflow-hidden rounded-xl bg-surface py-2 shadow-[0_4px_32px_rgba(0,0,0,0.25)] transition-[opacity,scale] duration-150 ease-out-quart starting:scale-95 starting:opacity-0"
+          className={`absolute ${align === "left" ? "left-0 origin-top-left" : "right-0 origin-top-right"} top-10 z-(--z-sticky) w-60 overflow-hidden rounded-xl bg-surface py-2 shadow-[0_4px_32px_rgba(0,0,0,0.25)] transition-[opacity,scale] duration-150 ease-out-quart starting:scale-95 starting:opacity-0`}
         >
           {children}
         </div>
