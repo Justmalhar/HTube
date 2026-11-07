@@ -7,7 +7,8 @@ import type { FeedCard } from "@/lib/types";
 import { ClockIcon, ExternalIcon, HideIcon, MoreIcon, QueueAddIcon } from "@/components/icons";
 import { useLibrary } from "@/components/library";
 import { useSnackbar } from "@/components/snackbar";
-import { gridClass } from "@/components/ui";
+import { StatusPanel } from "@/components/status-panel";
+import { cardTitleClass, gridClass, pillBgClass, relatedTitleClass, rowListClass, rowTitleClass } from "@/components/ui";
 import { addToQueue } from "@/lib/queue-store";
 
 
@@ -54,7 +55,7 @@ function Thumb({ item, className = "rounded-xl", priority = false, href = watchH
   );
 }
 
-const titleClass = "line-clamp-2 wrap-anywhere text-[15px] font-medium leading-[21px]";
+const titleClass = cardTitleClass;
 const channelClass = "mt-1 block truncate text-sm text-muted hover:text-foreground";
 
 export function VideoCard({ item, priority = false }: { item: FeedCard; priority?: boolean }) {
@@ -91,7 +92,7 @@ function HiddenCard({ focus, onUndo }: { focus: boolean; onUndo: () => void }) {
         <div>
           <p className="text-sm font-medium">Video hidden</p>
           <p className="mt-1 text-xs text-muted">We will show fewer like this</p>
-          <button ref={undo} type="button" className="mt-3 h-9 rounded-full bg-background px-4 text-sm font-medium hover:bg-surface-hover press" onClick={onUndo}>
+          <button ref={undo} type="button" className={`${pillBgClass} mt-3`} onClick={onUndo}>
             Undo
           </button>
         </div>
@@ -256,15 +257,15 @@ function CardMenu({ item, className, onHide }: { item: FeedCard; className: stri
  * Horizontal row: thumbnail on the left, text on the right. Used by search, playlists, and the
  * library pages. `action` replaces the three-dot menu, `children` renders under the channel.
  */
-export function VideoRow({ item, action, href = watchHref(item.vid), stack = false, children }: { item: FeedCard; action?: React.ReactNode; href?: string; /** Full-width card layout below 640px (search). Otherwise a row with a 160px thumbnail. */ stack?: boolean; children?: React.ReactNode }) {
+export function VideoRow({ item, action, href = watchHref(item.vid), stack = false, thumbMax = "sm:max-w-[360px]", children }: { item: FeedCard; action?: React.ReactNode; href?: string; /** Full-width card layout below 640px (search). Otherwise a row with a 160px thumbnail. */ stack?: boolean; /** Tailwind max-width class for the thumbnail from 640px up (default 360px; trending uses a narrower one). */ thumbMax?: string; children?: React.ReactNode }) {
   return (
     <article className={`group/card relative flex min-w-0 gap-3 min-[801px]:gap-4 ${stack ? "max-sm:flex-col" : ""}`}>
-      <div className={`shrink-0 sm:w-[40%] sm:max-w-[360px] ${stack ? "max-sm:w-full" : "w-40"}`}>
+      <div className={`shrink-0 sm:w-[40%] ${thumbMax} ${stack ? "max-sm:w-full" : "w-40"}`}>
         <Thumb item={item} href={href} hideLater={!stack} />
       </div>
       <div className="relative min-w-0 flex-1 pr-9">
         <Link href={href} prefetch={false} className="block rounded-md">
-          <h2 className="line-clamp-2 wrap-anywhere text-sm font-medium leading-5 min-[801px]:text-lg min-[801px]:font-normal min-[801px]:leading-[26px]">{item.title}</h2>
+          <h2 className={rowTitleClass}>{item.title}</h2>
         </Link>
         <Link href={channelHref(item.channelSlug)} prefetch={false} className="mt-1 block truncate text-xs text-muted hover:text-foreground min-[801px]:mt-2">
           {item.channel}
@@ -279,7 +280,7 @@ export function VideoRow({ item, action, href = watchHref(item.vid), stack = fal
 export function SearchList({ items }: { items: FeedCard[] }) {
   if (!items.length) return <EmptyState title="No results found" body="Try different keywords or remove filters" href="/" action="Go to Home" />;
   return (
-    <ul className="flex max-w-[1100px] flex-col gap-4">
+    <ul className={rowListClass}>
       {items.map((item) => (
         <li key={item.vid}>
           <VideoRow item={item} stack>
@@ -314,7 +315,7 @@ export function RelatedRow({ item }: { item: FeedCard }) {
       </div>
       <div className="min-w-0 flex-1 pr-7">
         <Link href={watchHref(item.vid)} prefetch={false} className="block rounded-md">
-          <h2 className="line-clamp-2 wrap-anywhere text-sm font-medium leading-5">{item.title}</h2>
+          <h2 className={relatedTitleClass}>{item.title}</h2>
         </Link>
         <Link href={channelHref(item.channelSlug)} prefetch={false} className="mt-1 block truncate text-xs text-muted hover:text-foreground">{item.channel}</Link>
       </div>
@@ -325,17 +326,7 @@ export function RelatedRow({ item }: { item: FeedCard }) {
 
 /** One empty state for every list: what happened, what to try, and a way out. */
 export function EmptyState({ title, body, href, action }: { title: string; body: string; href?: string; action?: string }) {
-  return (
-    <div className="grid place-items-center rounded-2xl bg-surface px-6 py-16 text-center">
-      <p className="text-base font-medium">{title}</p>
-      <p className="mt-1 text-sm text-muted">{body}</p>
-      {href && action ? (
-        <Link href={href} className="mt-4 inline-flex h-9 items-center rounded-full bg-chip-on px-4 text-sm font-medium text-chip-on-text press">
-          {action}
-        </Link>
-      ) : null}
-    </div>
-  );
+  return <StatusPanel title={title} body={body} action={href && action ? { label: action, href } : undefined} />;
 }
 
 export function VideoGrid({ items, className = gridClass }: { items: FeedCard[]; className?: string }) {

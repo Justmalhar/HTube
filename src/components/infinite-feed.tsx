@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { gridClass, pillClass } from "@/components/ui";
+import { gridClass, pillClass, rowListClass } from "@/components/ui";
 import { SearchList, VideoGrid } from "@/components/video-card";
 import type { FeedCard } from "@/lib/types";
 
@@ -13,7 +13,7 @@ function Skeletons({ kind }: { kind: Kind }) {
   const cards = Array.from({ length: kind === "grid" ? 3 : 2 }, (_, i) => i);
   if (kind === "list")
     return (
-      <ul aria-hidden className="flex max-w-[1100px] flex-col gap-4 motion-safe:animate-pulse">
+      <ul aria-hidden className={`${rowListClass} motion-safe:animate-pulse`}>
         {cards.map((i) => (
           <li key={i} className="flex gap-3 min-[801px]:gap-4">
             <div className="aspect-video w-[40%] max-w-[360px] shrink-0 rounded-xl bg-surface" />

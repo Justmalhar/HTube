@@ -1,31 +1,37 @@
-import type { Playlist } from "@/lib/types";
-import { ChevronIcon, PlayIcon } from "@/components/icons";
+import { PlayIcon } from "@/components/icons";
+import { Section } from "@/components/section";
 import { ShelfScroller } from "@/components/shelf-scroller";
+import { tileWidth } from "@/components/ui";
+import { VideoCard } from "@/components/video-card";
+import { videos } from "@/lib/format";
+import type { FeedCard, Playlist } from "@/lib/types";
 
 const thumb = (vid: string) => `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
 const zoom =
   "size-full object-cover transition-transform duration-300 ease-out-quart motion-reduce:transition-none motion-reduce:group-hover/tile:scale-100";
-const tileWidth = "w-[240px] shrink-0 snap-start min-[801px]:w-[280px]";
-
-/** Static count chip (not a link). Counts go here, never in a page description. */
-export const countChipClass = "inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-surface px-3 text-sm font-medium tabular-nums";
-
-export const videos = (count: number) => `${count.toLocaleString("en-US")} ${count === 1 ? "video" : "videos"}`;
+// Moved to ui.ts and lib/format.ts; re-exported so existing imports keep working.
+export { countChipClass } from "@/components/ui";
+export { videos } from "@/lib/format";
 
 export function Shelf({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
   return (
-    <section className="my-8 border-t border-line pt-6 first:mt-2 first:border-t-0">
-      <div className="mb-4 flex items-center gap-2">
-        <h2 className="min-w-0 truncate text-xl font-bold tracking-[-0.2px]">{title}</h2>
-        {href ? (
-          <a href={href} className="ml-auto inline-flex h-9 shrink-0 items-center gap-1 rounded-full px-3 text-sm font-medium hover:bg-surface press">
-            View all
-            <ChevronIcon />
-          </a>
-        ) : null}
-      </div>
+    <Section title={title} href={href}>
       <ShelfScroller>{children}</ShelfScroller>
-    </section>
+    </Section>
+  );
+}
+
+/** Shelf of video cards, one tile width everywhere. Renders nothing when empty. */
+export function CardShelf({ title, href, items }: { title: string; href?: string; items: FeedCard[] }) {
+  if (!items.length) return null;
+  return (
+    <Shelf title={title} href={href}>
+      {items.map((item) => (
+        <li key={item.vid} className={tileWidth}>
+          <VideoCard item={item} />
+        </li>
+      ))}
+    </Shelf>
   );
 }
 

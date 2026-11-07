@@ -4,7 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type Snack = { id: number; message: string; action?: { label: string; run: () => void } };
 
-/** Bottom snackbar: `show` replaces the current message, hides after 5s. Render `node` once. */
+/**
+ * The single toast: bottom-left (above the mobile bar), `show(message, { label, run }?)` replaces the
+ * current message and hides after 5s. Render `node` once per component that calls `show`.
+ */
 export function useSnackbar() {
   const [snack, setSnack] = useState<Snack | null>(null);
   const timer = useRef(0);

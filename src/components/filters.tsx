@@ -8,17 +8,18 @@ import { chipClass, chipOnClass, pillClass } from "@/components/ui";
 const TYPES = ["talk", "lecture", "explainer", "documentary", "interview", "tutorial", "demo", "commentary", "comedy", "music"];
 
 
-type Chip = { href: string; label: string; on?: boolean };
+export type Chip = { href: string; label: string; on?: boolean };
 
 const stickyClass =
   "sticky top-14 z-(--z-sticky) -mx-4 bg-background px-4 min-[801px]:-mr-6 min-[801px]:pr-6";
 
-export function ChipBar({ label, chips, sticky = false }: { label: string; chips: Chip[]; sticky?: boolean }) {
+/** The one chip row: every page-level filter or tab row uses it, sticky by default. */
+export function ChipBar({ label, chips, sticky = true, wrap = false }: { label: string; chips: Chip[]; sticky?: boolean; wrap?: boolean }) {
   return (
     <nav aria-label={label} className={sticky ? `${stickyClass} mb-6` : "mb-6"}>
-      <div className="no-scrollbar flex gap-3 overflow-x-auto py-3">
+      <div className={`flex gap-3 py-3 ${wrap ? "no-scrollbar overflow-x-auto min-[801px]:flex-wrap min-[801px]:overflow-visible" : "no-scrollbar overflow-x-auto"}`}>
         {chips.map((chip) => (
-          <Link key={chip.href} href={chip.href} scroll={false} aria-current={chip.on ? "page" : undefined} className={chip.on ? chipOnClass : chipClass}>
+          <Link key={chip.href} href={chip.href} prefetch={false} scroll={false} aria-current={chip.on ? "page" : undefined} className={chip.on ? chipOnClass : chipClass}>
             {chip.label}
           </Link>
         ))}
@@ -53,7 +54,7 @@ export function FilterBar({ path, query }: { path: string; query: Record<string,
     chip("shelf", "news", "News"),
     ...TYPES.map((type) => chip("type", type, type.charAt(0).toUpperCase() + type.slice(1))),
   ];
-  return <ChipBar label="Filters" chips={chips} sticky />;
+  return <ChipBar label="Filters" chips={chips} />;
 }
 
 /** Infinite scroll from `offset + PAGE`; the server already rendered the batch at `offset`. */
