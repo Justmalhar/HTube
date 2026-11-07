@@ -1,31 +1,39 @@
-import { unsupportedFilters, withQuery } from "@/lib/query";
+import { PAGE } from "@/lib/engine";
+import Link from "next/link";
+
+import { InfiniteFeed } from "@/components/infinite-feed";
+import { withQuery } from "@/lib/query";
 import { chipClass, chipOnClass, pillClass } from "@/components/ui";
 
 const TYPES = ["talk", "lecture", "explainer", "documentary", "interview", "tutorial", "demo", "commentary", "comedy", "music"];
 
 type Chip = { href: string; label: string; on?: boolean };
 
+const stickyClass =
+  "sticky top-14 z-(--z-sticky) -mx-4 bg-background px-4 min-[801px]:-mr-6 min-[801px]:pr-6";
+
 export function ChipBar({ label, chips, sticky = false }: { label: string; chips: Chip[]; sticky?: boolean }) {
   return (
-    <nav
-      aria-label={label}
-      className={`${sticky ? "sticky top-14 z-20 -mx-4 bg-background px-4 min-[801px]:-mr-6 min-[801px]:pr-6" : ""} no-scrollbar mb-6 flex gap-3 overflow-x-auto py-3`}
-    >
-      {chips.map((chip) => (
-        <a key={chip.href} href={chip.href} aria-current={chip.on ? "page" : undefined} className={chip.on ? chipOnClass : chipClass}>
-          {chip.label}
-        </a>
-      ))}
+    <nav aria-label={label} className={sticky ? `${stickyClass} mb-6` : "mb-6"}>
+      <div className="no-scrollbar flex gap-3 overflow-x-auto py-3">
+        {chips.map((chip) => (
+          <Link key={chip.href} href={chip.href} scroll={false} aria-current={chip.on ? "page" : undefined} className={chip.on ? chipOnClass : chipClass}>
+            {chip.label}
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 }
 
-export function FilterBar({ path, query }: { path: string; query: Record<string, string | undefined> }) {
+function toParams(query: Record<string, string | undefined>) {
   const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value) params.set(key, value);
-  }
-  const notes = unsupportedFilters(params);
+  for (const [key, value] of Object.entries(query)) if (value) params.set(key, value);
+  return params;
+}
+
+export function FilterBar({ path, query }: { path: string; query: Record<string, string | undefined> }) {
+  const params = toParams(query);
   const chip = (key: string, value: string, label: string): Chip => {
     const on = params.get(key) === value;
     return { href: withQuery(path, params, { [key]: on ? "" : value }), label, on };
@@ -39,27 +47,28 @@ export function FilterBar({ path, query }: { path: string; query: Record<string,
     chip("news", "show", "Include news"),
     ...TYPES.map((type) => chip("type", type, type.charAt(0).toUpperCase() + type.slice(1))),
   ];
-  return (
-    <div>
-      <ChipBar label="Filters" chips={chips} sticky />
-      {notes.map((note) => (
-        <p key={note} className="-mt-3 mb-4 text-sm text-muted">{note}</p>
-      ))}
-    </div>
-  );
+  return <ChipBar label="Filters" chips={chips} sticky />;
 }
 
+/** Infinite scroll from `offset + PAGE`; the server already rendered the batch at `offset`. */
 export function Pager({ path, query, offset, total }: { path: string; query: Record<string, string | undefined>; offset: number; total: number }) {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) if (value) params.set(key, value);
-  const limit = 24;
-  const prev = Math.max(0, offset - limit);
-  const next = offset + limit;
+  const next = offset + PAGE;
+  if (next >= total) return null;
+  const params = toParams(query);
+  params.delete("offset");
+  params.delete("tab");
+  params.set("path", path);
+  const src = `/api/feed?${params}`;
+  const more = new URLSearchParams(toParams(query));
+  more.set("offset", String(next));
   return (
-    <div className="mt-10 flex items-center justify-center gap-3 text-sm">
-      {offset > 0 ? <a className={pillClass} href={`${path}?${new URLSearchParams({ ...Object.fromEntries(params), offset: String(prev) })}`}>Previous</a> : null}
-      <span className="text-muted">{Math.min(offset + 1, total)} to {Math.min(offset + limit, total)} of {total}</span>
-      {next < total ? <a className={pillClass} href={`${path}?${new URLSearchParams({ ...Object.fromEntries(params), offset: String(next) })}`}>Next</a> : null}
-    </div>
+    <>
+      <InfiniteFeed key={src} src={src} start={next} total={total} kind={path === "/search" ? "list" : "grid"} />
+      <noscript>
+        <div className="mt-10 flex justify-center">
+          <a className={pillClass} rel="next" href={`${path}?${more}`}>More videos</a>
+        </div>
+      </noscript>
+    </>
   );
 }

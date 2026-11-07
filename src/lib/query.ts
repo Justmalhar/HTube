@@ -27,20 +27,6 @@ export function browseFromParams(params: URLSearchParams): BrowseQuery {
   };
 }
 
-export function unsupportedFilters(params: URLSearchParams): string[] {
-  const notes: string[] = [];
-  if (params.get("dur")) notes.push("Length filters need YouTube durations, which this catalogue does not ship.");
-  if (params.get("date")) notes.push("Upload year stays on YouTube. It is not part of the shared catalogue.");
-  const sort = params.get("sort");
-  if (sort === "views" || sort === "date" || sort === "old" || sort === "liked") {
-    notes.push("That sort uses YouTube stats. This app sorts by HN recommendations, recency on HN, or title.");
-  }
-  if (params.get("gems") === "1") {
-    notes.push("HackerTube's hidden gems are under 100k views. View counts are not included, so this is the stand-in: few mentions, mostly strong recommendations.");
-  }
-  return notes;
-}
-
 export function withQuery(path: string, current: URLSearchParams, patch: Record<string, string>): string {
   const next = new URLSearchParams(current);
   for (const [key, value] of Object.entries(patch)) {
@@ -54,4 +40,15 @@ export function withQuery(path: string, current: URLSearchParams, patch: Record<
 
 export function feedQuery(input: { likes: string[]; dislikes: string[]; seen: string[] }, offset: number): FeedQuery {
   return { ...input, offset, limit: PAGE };
+}
+
+/** Filters a feed path pins on top of the query, or null for paths that have no feed. */
+export function feedBase(path: string): Record<string, string> | null {
+  if (path === "/browse" || path === "/search") return {};
+  const match = /^\/(c|a|channel)\/([\w.-]+)$/.exec(path);
+  if (!match) return null;
+  const [, kind, id] = match;
+  if (kind === "c") return { category: id };
+  if (kind === "a") return { area: id };
+  return { channel: id, news: "show", cited: "show" };
 }
