@@ -10,6 +10,7 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FJustmalhar%2FHTube&project-name=htube&repository-name=htube)
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-ff6600?style=flat)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000?style=flat&logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-20232a?style=flat&logo=react&logoColor=61dafb)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -74,7 +75,7 @@ bun run start      # binds 3000, or $PORT
 Hosting options:
 
 - **Vercel**: click **Deploy with Vercel** at the top of this page. It clones the repo into your GitHub account and deploys it. The defaults work and no environment variables are needed.
-- **Any VPS or Node host**: run the two commands above behind a reverse proxy. Give the process enough memory to read the 16 catalogue shards (about 35 MB of comment text).
+- **Any VPS or Node host**: run the two commands above behind a reverse proxy. Set `NEXT_PUBLIC_SITE_URL` (for example `https://htube.example.com`) so share cards and the sitemap use absolute URLs. Give the process enough memory to read the 16 catalogue shards (about 35 MB of comment text).
 
 If you add a Content-Security-Policy, allow images from `i.ytimg.com` and frames from `www.youtube-nocookie.com`. See [docs/deployment.md](docs/deployment.md) for caching notes and post-deploy checks.
 
@@ -115,6 +116,10 @@ design.md        Visual spec
 ```
 
 Stack: Next.js 16 App Router, React 19, Tailwind CSS 4, lucide-react, Bun.
+
+## License
+
+The code is released under the [MIT License](LICENSE). The catalogue in `data/` is derived from the HackerTube dataset and stays under ODC-By 1.0 (see Credits).
 
 ## Credits
 
