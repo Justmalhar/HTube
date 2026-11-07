@@ -1,105 +1,168 @@
 # Architecture
 
-OpenHackerTube is a Next.js App Router application. bun installs and runs it. Tailwind styles it. Visual decisions come from `design.md` and are exposed as CSS variables in `src/app/globals.css`. Components use those semantic tokens. Hex values stay in the token layer.
+HTube is a Next.js App Router application (Next 16, React 19, Tailwind 4) run with bun. Visual decisions live in `design.md` and surface as CSS variables in `src/app/globals.css`. Components use semantic tokens only.
 
-The layout follows YouTube's information architecture: a fixed top bar, a collapsible sidebar, video cards, and a watch page with a player and a related column. The accent is Hacker News orange `#FF6600`. Dark cinematic surfaces are the default (`#0F0F0F` background, `#272727` surface). A light theme uses the same geometry with the light tokens in `design.md`.
+## High-level design
 
-## Chrome
+```text
+Browser                                   Next.js server
+-------                                   --------------
+localStorage  oht.library.v1  ----POST /api/feed (library in body)--->  ranker (src/lib/engine.ts)
+sessionStorage oht.queue                  data/catalog (index, shards, taxonomy, playlists)
+IndexedDB openhackertube <---GET /api/sync/*--- copied once, shard by shard
+YouTube embed (iframe) <--postMessage--> watch page Player
+```
 
-The top bar is 56px and fixed. The leading edge holds the menu button and the logo. The center holds one search field, 40px tall, pill shaped, at most 640px wide. The trailing edge holds the theme toggle.
+Functional requirements are in `docs/prd.md`. Non-functional goals:
 
-The sidebar is 240px. It collapses to a 72px rail of 24px icons, and the labels hide on the rail. Destinations stay in this order on every page: Home, Longs, Categories, Playlists, Liked, Watch later, History, Settings. Below 800px the sidebar becomes a dialog drawer, and a bottom bar holds Home, Longs, Categories, Library, and Search. Pages must not scroll sideways at 375px.
-
-Main content clears the top bar. On a watch page the related column is 402px and moves below the player when the screen is narrow. Video grids keep each card at least 300px wide and choose columns from the container width, so an open sidebar does not crush the titles.
-
-The logo is a rounded orange square with a white Y, plus the wordmark **Hacker** in the text color and **Tube** in the primary color. The accessible name is OpenHackerTube. The mark is not the Y Combinator logo. The product is not affiliated with Y Combinator, Hacker News, YouTube, or Google.
-
-## Page structure
-
-Every page that has a title uses one `PageHeader`. On desktop the actions sit on the title row, vertically centered on the heading, with one shared action width so sibling pages do not jump. The description is a single short benefit line under the title, about 30 to 45 characters, and it spans the row. On phones the actions stack full width under the description. Counts belong in chips, not in the description.
-
-Settings, playlists, and categories are list rows: icon or swatch, name, one short line, and the control or link. Video results stay cards. A video card is one link to `/watch/[vid]`. The channel is a separate link. Recommendation facts are separate text nodes with a gap. Do not join them with a middle dot, a bullet, or an em dash. Do not use a colored left border on cards, quotes, or callouts.
-
-Buttons and chips are 36px tall with an 18px radius. Icon buttons are circles. Focus is a 2px primary outline, offset 2px. Filters are links, and the URL query string is the filter state.
-
-Hover darkens a surface by one step (`surface-hover`). The sticky chip row does not use a blur band. A short fade of the background color is enough. Animations respect `prefers-reduced-motion`.
-
-Type is Roboto, with Arial and sans-serif as fallbacks, at a 14px base. Card titles are 16px, weight 500, clamped to two lines. The wordmark is 18px. Page titles are 20px. Thumbnail radius is 12px, in a 16:9 frame.
+- No accounts and no server state. The server is stateless apart from in-memory indexes built from `data/catalog` (rebuilt when file mtimes change).
+- Personal data never persists on the server. The library is sent in a POST body, used for ranking, and discarded.
+- First paint is server-rendered. The personalized feed swaps in after hydration with a crossfade.
+- Works at 375px with no horizontal overflow; respects `prefers-reduced-motion` and `prefers-contrast`.
+- Low cost: static-ish pages, cacheable sync files (`max-age=86400`), no database.
 
 ## Routes
 
-| Page | Path | What it shows |
+| Page | Path | Notes |
 | --- | --- | --- |
-| Home | `/` | Reconstructed feed |
-| Browse and search | `/browse` | Catalogue, search, and filters |
-| Longs | `/browse?dur=xlong` | Long videos |
-| Categories | `/categories` | 150 categories as list rows |
-| Category | `/c/[id]` | Videos in one category |
-| Area | `/a/[id]` | Categories in one of 16 areas |
-| Playlists | `/playlists` | 27 playlists as list rows |
-| Playlist | `/p/[slug]` | Ordered videos in that playlist |
-| Watch | `/watch/[vid]` | Embed, summary, mentions, related |
-| Liked | `/liked` | Local likes |
-| Watch later | `/later` | Local watch later list |
-| History | `/history` | Local watch history |
-| Settings | `/settings` | Theme and frame toggle |
-| About | `/about` | What the catalogue is |
+| Home | `/` | Server renders a fresh-seed feed; client replaces it with the personalized feed |
+| Browse | `/browse` | Filters in the query string; `?dur=xlong` is Longs |
+| Search | `/search` | `q` plus filters, list rows |
+| Categories, category, area | `/categories`, `/c/[id]`, `/a/[id]` | |
+| Playlists, playlist | `/playlists`, `/p/[slug]` | Playlist sidebar with Play all and Shuffle |
+| Watch | `/watch/[vid]` | Query: `list=<slug>` playlist mode, `mix=1` mix, `rel=channel` related from the same channel |
+| Channel | `/channel/[slug]` | `tab=videos` or `tab=about`, default Home |
+| Commenter profile | `/u/[author]` | `tab=comments`, default Videos; 404 for invalid or unknown names |
+| Subscriptions | `/subscriptions` | |
+| Trending | `/trending` | `tab=talks`, `lectures`, `documentaries`, `programming`; default Now |
+| You | `/you` | Hub of history, watch later, liked and subscriptions shelves |
+| History, Watch later, Liked | `/history`, `/later`, `/liked` | Client-rendered from the local library |
+| Settings | `/settings` | Theme, frames, keyboard shortcuts |
+| About | `/about` | |
+| Metadata | `/manifest.webmanifest`, `/robots.txt`, `/sitemap.xml` | Manifest is `src/app/manifest.ts` |
 
-Search text and filters are query parameters. See `docs/api.md` for the keys. Library membership is not a query parameter. It lives in the browser.
+API routes are in `docs/api.md`: `GET` and `POST /api/feed`, `GET /api/suggest`, `GET /api/subscriptions`, `GET /api/cards`, and `GET /api/sync/{manifest,index,taxonomy,playlists,shard/[id]}`.
 
 ## Catalogue
 
-The committed catalogue is the official export generated 2026-10-31.
+`bun run import` (`scripts/import_licensed.py`) writes `data/catalog`: `index.json` (slim row per video), `shards/00.json` to `15.json` (videos, mentions, related edges), `taxonomy.json`, `playlists.json`, `channels.json`, `manifest.json`, `import-report.json`. YouTube view, like, duration and publish fields go only to gitignored `data/private/youtube-meta.jsonl`, which no code reads.
 
-`bun run import` runs `scripts/import_licensed.py`. The script reads the delivered combined snapshot at `/tmp/oht-extract/hackertube-complete.json` and writes a small database, not one combined dump:
+`src/lib/server-catalog.ts` loads the files, builds an `Engine` (cards, `byId`, categories, areas, playlists, related edges) and caches it keyed on file mtime. The browser builds the same `Engine` from IndexedDB in `src/lib/client-catalog.ts` (database `openhackertube`, stores `kv` and `shards`, schema version 2). Sync is deferred to idle time and downloads shards one at a time. A watch page needs only its own shard.
 
-- `data/catalog/index.json`: slim row for all 6454 videos (title, channel, scores, category ids, shard id). No comment text and no summary.
-- `data/catalog/shards/00.json` through `15.json`: 16 shards. Each holds the licensed video records, HN comments, and co-recommendation edges for that slice (about 3 MB).
-- `data/catalog/taxonomy.json`: 16 areas and 150 categories.
-- `data/catalog/playlists.json`: 27 playlists, in order, with notes.
-- `data/catalog/channels.json`: channel slug and video count.
-- `data/catalog/manifest.json`: version, shard sizes, and counts.
-- `data/catalog/import-report.json`: the last import check.
+Thumbnails are derived: `https://i.ytimg.com/vi/<vid>/hq2.jpg` (middle frame, default) or `hqdefault.jpg` when frames are off. Embeds use `https://www.youtube-nocookie.com/embed/<vid>`.
 
-The importer refuses to finish unless the snapshot contains 6454 videos, 150 categories, 16 areas, 27 playlists, 39834 HN mentions, and 3778 related records.
+`score` is distinct months with a recommendation plus 0.5 per month with a strong recommendation. `shelfLife` `news` marks single-event videos.
 
-These YouTube fields are removed from the committed videos: `published`, `duration_s`, `views`, `likes`, `thumbnail`, and `minutes`. The same fields are written only to gitignored `data/private/youtube-meta.jsonl`. The app does not read that file into pages or into IndexedDB. View counts, like counts, upload dates, and durations are not shown.
+## Home feed ranker
 
-Thumbnails are not stored. The default image is the derived middle frame `https://i.ytimg.com/vi/<vid>/hq2.jpg`. The frame toggle switches to the derived uploader image `https://i.ytimg.com/vi/<vid>/hqdefault.jpg`. The player uses the privacy-enhanced embed `https://www.youtube-nocookie.com/embed/<vid>` (also stored as `embed_url`). No video files are hosted.
+`buildFeed` in `src/lib/engine.ts`. Deterministic for a given library and seed.
 
-`videos.score` is the source ranking signal: distinct months with a recommendation, plus half a point for each month that includes a strong recommendation. Only mention stances `rec` and `strong_rec` are recommendations. `shelf_life` of `news` marks a video that only matters around one event. The home feed prefers evergreen and dated talks. At most 20 mentions are kept per video, and mention text is cut at 1500 characters.
+Eligible pool: not disliked, not `news` shelf, `recommenders > 0`.
 
-The official zip manifest listed `embeddings.npy` and `embedding_ids.json`. Those arrays were not in the delivered combined JSON. The importer does not write them, and the app does not ship semantic search.
+Profile (a sparse weight map). Each video contributes features: `ch:<channel>` 1, `t:<contentType>` 0.3, `l:<level>` 0.2, `c:<category>` 1 for each category, and `a:<area>` 0.5 for each category's area. Signals scale those features:
 
-The server reads `data/catalog` and renders one page of cards. After the first visit the browser saves `index.json`, the taxonomy, and the playlists in IndexedDB, then downloads shards one at a time. A watch page needs only the shard named on that video. Comment text is not in the index. YouTube image and embed hosts are the only ongoing media requests once the shards are stored. The combined snapshot is not imported into a client component.
+| Signal | Weight |
+| --- | --- |
+| Like | +3 |
+| Watched (last 60 of `seen`, not disliked) | `0.5^(age / 20)`, age counted in positions from the newest |
+| Dislike | -2 |
 
-This project does not recrawl the source site. The captured `data/source/robots.txt` disallows `/api/` and `/download/`. The source sitemap request returned 404, which `data/source/coverage.json` records. Personal likes, history, and watch later were never public records on the source.
+Positive signals also add co-recommendation neighbours: each related edge adds `weight * shared_recommenders` to that neighbour.
 
-## Home feed
+Score per candidate:
 
-The home feed is rebuilt in this app from the public source client contract and the about-page description. The closed `/api/feed` source is not called.
+```text
+rank = 1.0 * quality + 1.6 * affinity + 0.8 * neighbour + 0.3 * fresh + 0.6 * gumbel
+       - 5 if seen
+quality   = card.score / max score in pool
+affinity  = sum(profile[feature] * share) / max |affinity|
+neighbour = neighbour weight / max neighbour weight
+fresh     = 0.5 if evergreen + 0.5 if firstYear >= 2024
+gumbel    = -ln(-ln(u)), u = mulberry32(seed xor fnv1a(vid))
+```
 
-Query inputs are `likes`, `dislikes`, `seen`, and `seed`. Each of `likes`, `dislikes`, and `seen` is a comma-separated list of 11-character video ids. `seed` is an opaque string stored in the browser so a reload keeps the same anonymous order.
+Affinity is 0 when the profile is empty (no likes, history or dislikes).
 
-With an empty library the lanes are, in order: classics, recent favorites, hidden gems (few mentions, mostly strong recommendations), then topics outside that first classic set. After a like, similar videos (shared categories) and co-recommendations come first. Co-recommendations are the `related` edges stored in the same shard as the video (`shared_recommenders`). Disliked ids are dropped. Seen ids move to the end. The public mix uses a fixed order so the server page and the on-device copy match. Hidden gems here are not the source's "under 100k views" cut, because view counts are not in the catalogue.
+Selection is a greedy pass over the ranked list:
 
-## Search
+- Diversity: within the last 11 picks plus the candidate (window 12), at most 2 videos per channel and at most 4 per category. If nothing fits in the next 400 candidates, the top remaining item is taken.
+- Exploration: when personal, each slot draws `rng() < 0.3` from `mulberry32(seed xor 0x9e3779b9)`. On a hit it takes from the "outside" list: videos none of whose categories have a positive profile weight and that are unseen. Otherwise it takes from the exploit list.
+- Paging: only the prefix up to `offset + limit` (limit capped at 60) is built, then sliced. `PAGE` is 24.
 
-Lexical search matches `q` against titles, summaries, tags, and taxonomy descriptions. Category descriptions in the taxonomy are included because they list synonyms. Embeddings are not consulted. Channel names, mention bodies, and private YouTube statistics are not part of the query.
+Seeds: `freshSeed()` (random 32 bit) on the server render, and `crypto.getRandomValues` once per page load on the client (`pageSeed` in `home-feed.tsx`). Requests within one load reuse that seed so infinite scroll never repeats. `dailySeed()` (days since epoch) backs the anonymous `GET /api/feed?path=/` continuation.
 
-## Library
+Reasons shown on cards: co-recommended ("People who recommended your likes also recommend this"), similar (affinity above 0.3), unexplored topic, HN classic (evergreen, 10+ months, 8+ recommenders), recent favorite (first year 2024 or later, 2+ recommenders), else "More from the catalogue".
 
-There are no accounts and no server session. One `localStorage` key, `openhackertube`, holds:
+`personalFeed` in `src/lib/pages.ts` adds, on the first page only, `because` (the last liked video and its `relatedTo` neighbours) and `later` (up to 12 watch-later cards, newest first, minus dislikes). It validates the body with `parseFeedBody` (arrays of strings, 2000 max each).
+
+## Search and suggestions
+
+`search` scores each card: title phrase +50; per term title +8, channel +6, primary topic +6, tag +5, why-HN +3, summary +2, category name +4; category description phrase match +6 (shown as "Topic match"). Results with a top score under 12 are flagged weak.
+
+`suggest` (`src/lib/suggest.ts`): trims, lowercases, caps the query at 80 characters. Matches titles (non-news, recommended), channel names and category names. Rank is prefix (0), word start (1), substring (2); ties by score. The result has at most 2 channels and 2 topics, the rest titles, 10 total, sorted by rank. Title suggestions link to `/search?q=`, channels to `/channel/<slug>`, topics to `/c/<id>`. Recent searches live in `oht.recentSearches`.
+
+## Trending
+
+`rankTrending` in `src/lib/trending.ts`, over all mentions, window of 24 months ending at the newest month in the data:
+
+```text
+sum  = sum over mentions of stanceWeight * 0.5^(ageMonths / 6)
+people = distinct authors with weight >= 1.5 inside the window
+score = sum * (1 + 0.1 * min(people, 10)) / (1 + allTimeMentions)^0.35
+```
+
+Stance weights: `strong_rec` 2, `rec` 1.5, `reference` 0.5, `critical` 0.25, `joke` 0. Videos with `sum <= 0` are dropped. `lastYear` counts mentions in the last 12 months. The page filters by tab and keeps the top 50.
+
+## Author index
+
+`getAuthorMentions` and `getTopAuthors` in `server-catalog.ts` build, once per catalogue mtime, a map from HN author to their kept mentions plus a count-sorted author list. `/u/[author]` validates the name with `isAuthor` (`^[A-Za-z0-9_-]{1,15}$`), 404s when there are no mentions, and derives videos, comment count and active years from them.
+
+## Channels
+
+`src/lib/channels.ts` memoizes per `Engine`: cards by channel, channel stats (videos, comments, years, top topics, main format), a generated description, top channels per category or area, related categories (same-area siblings, then co-occurring), similar channels (co-recommendation weight from the channel's top 10 videos), and top commenters. `subscriptionCards` returns videos from subscribed slugs, sorted by `lastYear` then score.
+
+## Mix
+
+`buildMix` in `src/lib/mix.ts` is a breadth-first walk of `relatedTo` (co-recommended, non-disliked, eligible, 8 neighbours per node) from the seed video, deduplicated, capped at 25. It is deterministic. The watch page builds it for `?mix=1` and the Mix panel shows it.
+
+## Player protocol
+
+The watch iframe is `youtube-nocookie.com/embed/<vid>?rel=0&enablejsapi=1&origin=<site origin>`. `src/lib/player-message.ts` holds the pure parts; `Player` in `watch-actions.tsx` wires them.
+
+- Handshake on iframe load: post `{event:"listening",id:1,channel:"widget"}` then `{event:"command",func:"addEventListener",args:["onStateChange"]}` to the player origin.
+- Incoming messages are accepted only from the iframe window and the origin `https://www.youtube-nocookie.com`.
+- End detection: `{event:"onStateChange",info:0}` or `infoDelivery` with `playerState` 0 sets `ended`. With autoplay on and a next target, the Up next card counts down 5 seconds and navigates; Escape cancels.
+- State tracking: `infoDelivery` supplies `currentTime`, `duration`, `playerState`, `muted`, merged into a ref.
+- Commands: `{event:"command",func,args}` for `playVideo`, `pauseVideo`, `seekTo [seconds,true]`, `mute`, `unMute`.
+- Shortcuts: `watchAction(key, shift)` maps k or Space (toggle), j and l (-10, +10), Left and Right (-5, +5), 0 to 9 (percent of duration), m, f (fullscreen on the player box), Shift+N and Shift+P (next, previous). `seekTarget` clamps to `[0, duration]`. Keys are ignored while typing in a field. A bubble flashes the action.
+- Next target order: queue first, then the playlist's next item, the mix chain, or the top related videos, skipping disliked ones. On mount the video is marked seen and removed from the queue.
+
+## Component layering
+
+1. Tokens: `globals.css` variables and utilities (`press`, `hit`, z-index scale).
+2. `src/components/ui.ts`: shared class strings and the type scale (chips, pills, icon buttons, panels, grids, headings, titles, list rows, tile width).
+3. Primitives: `channel/avatar.tsx` (`Avatar`, sizes `xs`, `sm`, `md`, `row`, `lg`, `xl`, `comment`), `identity-header.tsx`, `tabs.tsx` (`UnderlineTabs`), `section.tsx` (`Section`), `shelf.tsx` (`Shelf`, `CardShelf`, tiles), `filters.tsx` (`ChipBar`, `FilterBar`, `Pager`), `status-panel.tsx` (`StatusPanel`), `snackbar.tsx` (`useSnackbar`), `page-header.tsx`.
+4. Composites: `video-card.tsx`, `library-page.tsx`, `playlist-sidebar.tsx`, `infinite-feed.tsx`, `comments.tsx`, `subscribe-button.tsx`.
+5. Page components in `home/`, `channel/`, `profile/`, `history/`, `trending/`, `you/`, `settings/`, `topic/`.
+6. Pages in `src/app`.
+
+Server pages stay server components; client islands are the library, player, feeds and search box.
+
+## Client storage schema
+
+`oht.library.v1` (localStorage), parsed defensively with defaults:
 
 ```json
 {
-  "likes": [],
-  "dislikes": [],
-  "watchLater": [],
-  "history": [],
-  "theme": "dark",
-  "frames": true
+  "likes": [], "dislikes": [], "later": [], "seen": [],
+  "subs": [], "frames": true, "seenAt": {}, "paused": false
 }
 ```
 
-`likes`, `dislikes`, and `watchLater` are arrays of video ids. `history` is an array of `{ "vid", "at" }` with `at` as an ISO timestamp, newest first. `theme` is `dark` or `light`. `frames` defaults to `true`, which selects the `hq2.jpg` middle frame. Opening a watch page appends history. The feed reads this record when it builds `likes`, `dislikes`, and `seen`.
+`seen` is oldest first and capped at 500; re-watching moves an id to the end. `seenAt` maps id to epoch milliseconds and is pruned to `seen`. A repeat of the newest id within 60 seconds is ignored, and nothing is recorded while `paused`. Liking removes a dislike and the reverse. Cross-tab changes sync through the `storage` event.
+
+Other keys: `oht.theme`, `oht.autoplay`, `oht.recentSearches`, `oht.rail` (localStorage), `oht.queue` and `oht.queue.meta` (sessionStorage), IndexedDB `openhackertube`.
+
+## Dependencies
+
+next, react, react-dom, lucide-react; dev: tailwindcss with `@tailwindcss/turbopack`, typescript, eslint. Roboto loads through `next/font`. Tests use `bun test`.

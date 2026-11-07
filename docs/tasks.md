@@ -32,7 +32,7 @@ Work is done when `bun test`, `bun run typecheck`, `bun run lint`, and `bun run 
 - [ ] `/categories`, `/c/[id]`, `/a/[id]`, `/playlists`, `/p/[slug]` read the committed catalogue.
 - [ ] `/watch/[vid]` embeds `youtube-nocookie`, shows the summary, kept mentions, and related videos in a 402px column.
 - [ ] Default thumbnail `hq2.jpg`. Frame toggle off uses `hqdefault.jpg`. Never render view count, like count, or upload date. Duration only from local private metadata.
-- [ ] `/liked`, `/later`, `/history`, and `/settings` read and write the `openhackertube` localStorage record. No account UI.
+- [ ] `/liked`, `/later`, `/history`, and `/settings` read and write the `oht.library.v1` localStorage record. No account UI.
 
 ## Tests
 

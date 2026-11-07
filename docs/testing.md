@@ -40,7 +40,7 @@ Search and filter state round-trips through the query string. Loading `/browse?q
 
 ## Library
 
-Use a fresh browser context so `localStorage` starts empty. Like, dislike, save to watch later, and open a watch page. Reload. The same ids are still in the `openhackertube` record, history has grown by that watch, and no request created an account.
+Use a fresh browser context so `localStorage` starts empty. Like, dislike, save to watch later, and open a watch page. Reload. The same ids are still in the `oht.library.v1` record, history has grown by that watch, and no request created an account.
 
 Toggle theme and the frame switch. Reload. Dark or light and the thumbnail host path both stick. The watch page still embeds youtube-nocookie.
 

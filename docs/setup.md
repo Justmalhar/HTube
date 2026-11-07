@@ -1,6 +1,6 @@
 # Setup
 
-OpenHackerTube uses bun, Next.js App Router, and Tailwind. The repo pins bun in the `packageManager` field (`bun@1.4.4`). Current app packages are Next.js 16.4.5, React 19.3, and Tailwind 4.
+HTube uses bun, Next.js App Router, and Tailwind. The repo pins bun in the `packageManager` field (`bun@1.4.4`). Current app packages are Next.js 16.4.5, React 19.3, and Tailwind 4.
 
 ## Requirements
 
@@ -56,7 +56,7 @@ bun run build
 
 ## Browser data
 
-Likes, dislikes, watch later, history, theme, and the frame toggle are stored in `localStorage` under `openhackertube`. Clearing site data resets that library. There is no login to restore it.
+Likes, dislikes, watch later, history, theme, and the frame toggle are stored in `localStorage` under `oht.library.v1`. Clearing site data resets that library. There is no login to restore it.
 
 Theme defaults to dark. Frames default to on, which requests the YouTube middle frame `hq2.jpg`.
 

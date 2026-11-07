@@ -40,7 +40,7 @@ Chrome from that file:
 - Buttons and chips are 36px tall. Focus is a 2px primary outline, offset 2px.
 - Hover moves one step to `surface-hover`. No blur band behind a sticky chip row. Respect `prefers-reduced-motion`.
 
-The logo is an orange rounded square and a white Y, with the wordmark Hacker in the text color and Tube in primary. The accessible name is OpenHackerTube. It is not the Y Combinator logo.
+The logo is an orange rounded square with a white H and a play cue; the accessible name is "HTube, home". It is not the Y Combinator logo.
 
 Explicitly rejected from YouTube by `design.md`: a Shorts shelf, subscriptions, a comment composer, and a view-count race.
 

@@ -1,115 +1,106 @@
 # API
 
-OpenHackerTube has no accounts, no write API, and no proxy to the source site. The first page is server-rendered from `data/catalog`. The browser may then copy the index and the shards into IndexedDB. It does not receive the private YouTube metadata file.
+HTube has no accounts and no stored server state. Pages are server-rendered from `data/catalog`. Route handlers live in `src/app/api`. None of them read `data/private`. Card objects below are the `Card` type in `src/lib/types.ts` (camelCase fields: `vid`, `title`, `channel`, `channelSlug`, `contentType`, `level`, `shelfLife`, `primaryTopic`, `tags`, `categories`, `score`, `recommenders`, `recMonths`, `strongRecs`, `mentions`, `firstYear`, `lastYear`, `whyHn`, `summary`, `quote`, `shard`). A feed card adds optional `reason` and `via`. Cards never include views, likes, durations or publish dates.
 
-The closed upstream `/api/feed` route is not implemented and is not called. The source `robots.txt` disallowed `/api/` and `/download/`. This app does not fetch either prefix. The source sitemap returned 404 and is not republished here.
+## Pages and their query keys
 
-## Feed
+Browse, search, category, area and channel lists share these keys:
 
-`GET /`
-
-The feed is reconstructed in this process from the public client contract and the about-page section list.
-
-| Query | Meaning |
+| Key | Meaning |
 | --- | --- |
-| `likes` | Comma-separated video ids the viewer liked |
-| `dislikes` | Comma-separated video ids the viewer disliked |
-| `seen` | Comma-separated video ids the viewer already opened |
-| `seed` | Opaque string that keeps anonymous order stable |
+| `q` | Search text (`/search`) |
+| `type` | Content type such as `talk` or `lecture` |
+| `level` | Level |
+| `area`, `category`, `channel` | Id or slug filters (pinned by `/a/[id]`, `/c/[id]`, `/channel/[slug]`) |
+| `shelf` | `evergreen`, `dated` or `news` |
+| `evergreen` | `1` keeps evergreen only |
+| `gems` | `insistent` (or `1`) for hidden gems |
+| `sort` | `hn` (default), `recent`, `title`, `oldest` |
+| `news`, `cited` | `show` includes news and uncited videos; default hides them |
+| `offset` | Item offset, 24 per batch |
 
-Empty parameters mean an empty list or the default seed. Ids that are not in the catalogue are ignored. Disliked and seen ids are omitted from every section.
+`/browse?dur=xlong` is the Longs link; `dur` is not applied as a filter. Other page keys: `/watch/[vid]` takes `list`, `mix` and `rel=channel`; `/channel/[slug]` and `/u/[author]` take `tab`; `/trending` takes `tab`.
 
-Section order with no likes: classics, recent favorites, hidden gems, unexplored topics. When `likes` is non-empty, similar videos and co-recommendations are mixed in first. Co-recommendations come from the `related` array inside that video's shard.
+## GET /api/feed
 
-The response is the home page, not the full catalogue.
+Continuation for list pages and the anonymous home feed.
 
-## Browse and search
+Query: `path` (required: `/`, `/browse`, `/search`, `/c/<id>`, `/a/<id>` or `/channel/<slug>`), plus the keys above and `seed` for `/`.
 
-`GET /browse`
+Response `200`: `{ "items": FeedCard[], "offset": number, "total": number }`. Unknown `path`: `404 { "error": "Unknown feed" }`.
 
-| Query | Meaning |
-| --- | --- |
-| `q` | Lexical query |
-| `dur` | Length filter. Not applied. Durations are not in the catalogue, so the page explains that instead of inventing a list. |
-| `area` | Area id |
-| `category` | Category id |
-| `shelf` | `shelf_life` value: `evergreen`, `dated`, or `news` |
-| `type` | `content_type` value such as `talk` or `lecture` |
-| `page` | 1-based page index |
+## POST /api/feed
 
-`q` is matched against titles, summaries, tags, and taxonomy descriptions. Matching is case-insensitive. Semantic embeddings are not loaded. Private view counts, like counts, and publish dates are not searchable and are not returned.
+Personalized home feed. The library is request-only and is not stored.
 
-`GET /browse?dur=xlong` is the Longs page linked from the sidebar and the mobile bar.
+Request body:
 
-Category, area, and playlist pages:
+```json
+{ "likes": ["vid"], "dislikes": ["vid"], "seen": ["vid"], "later": ["vid"], "seed": 123, "offset": 0 }
+```
 
-- `GET /categories`
-- `GET /c/[id]`
-- `GET /a/[id]`
-- `GET /playlists`
-- `GET /p/[slug]`
+Each list keeps string entries only, at most 2000. `seed` and `offset` default to 0 when missing or not numeric. An invalid body is treated as empty.
 
-`[id]` and `[slug]` are the ids and slugs stored in `data/catalog`. Unknown ids return a not-found page. These list pages may also take `page`, `q`, `shelf`, and `type`.
+Response `200`:
 
-## Watch
+```json
+{
+  "items": [], "offset": 0, "total": 0,
+  "because": { "title": "Last liked video", "items": [] },
+  "later": []
+}
+```
 
-`GET /watch/[vid]`
+`because` and `later` appear only when `offset` is 0. `because` is null when nothing is liked or no neighbours exist; `later` has up to 12 cards, newest first, without disliked ones. Offsets above 0 return only `items`, `offset` and `total`.
 
-`[vid]` is the 11-character YouTube id, equal to `videos.vid`. The page includes:
+## GET /api/suggest
 
-- title, channel, channel link, summary, `why_hn`, tags, categories, score, and the kept HN quote when one exists
-- embed URL `https://www.youtube-nocookie.com/embed/<vid>`
-- thumbnail URL derived as `hq2.jpg` or `hqdefault.jpg` (see frame toggle below)
-- the kept mentions for that video (at most 20)
-- related videos for that `vid`, ordered by `shared_recommenders`, at most 20
+Query: `q`. Empty or blank returns no items. Response `200`, cached for 5 minutes (`Cache-Control: public, max-age=300`):
 
-The page omits view count, like count, publish time, and duration. Those fields are not read from `data/private`.
+```json
+{ "items": [{ "kind": "query" | "channel" | "topic", "text": "Rust", "href": "/search?q=Rust" }] }
+```
 
-The player is an embed. The response does not contain video bytes.
+At most 10 items; `channel` links to `/channel/<slug>`, `topic` to `/c/<id>`.
 
-## Library pages
+## GET /api/subscriptions
 
-`GET /liked`, `GET /later`, and `GET /history` render the shell. The ids come from the `openhackertube` localStorage record in the browser. The server does not store them and there is no cookie session.
+Query: `slugs` (comma-separated channel slugs, at most 500) and `offset` (default 0).
 
-`GET /settings` renders the theme control and the frame toggle. Those values are also local only.
+Response `200`:
 
-Frame toggle off means the derived thumbnail is `https://i.ytimg.com/vi/<vid>/hqdefault.jpg`. Frame toggle on, the default, means `https://i.ytimg.com/vi/<vid>/hq2.jpg`.
+```json
+{ "items": [], "offset": 0, "total": 0, "channels": [{ "slug": "x", "name": "X" }] }
+```
 
-## Card fields
+`items` are 24 cards from those channels, newest on HN first. `channels` lists the known subscribed channels and is empty when `offset` is above 0.
 
-A card sent to the browser can include:
+## GET /api/cards
 
-- `vid`, `title`, `channel`, `channel_slug`
-- `summary` (the catalogue summary, not a YouTube description)
-- `why_hn`, `score`, `content_type`, `level`, `shelf_life`, `primary_topic`
-- `tags` and category ids and names
-- derived `thumbnail_url` and `embed_url`
-- HN recommendation facts that are already on the video record: recommender count, recommendation months, strong recommendations, first year, last year
-
-A card must not include `views`, `likes`, `published`, or a stored thumbnail URL from the pre-import snapshot. Mention `text` belongs on the watch page for that video, not on every card in a grid.
+Query: `ids` (comma-separated video ids, at most 500). Response `200`: `{ "items": Card[] }` in request order, unknown ids skipped. Used by You, History and the library pages to turn local ids into cards.
 
 ## Sync
 
-These reads copy the catalogue onto the device. They never return `data/private`.
+These copy the catalogue to the device. `index`, `taxonomy`, `playlists` and `shard` send `cache-control: public, max-age=86400`.
 
 | Route | Body |
 | --- | --- |
-| `GET /api/sync/manifest` | Version, 16 shard ids, and counts |
-| `GET /api/sync/index` | Slim index for every video |
+| `GET /api/sync/manifest` | Version, shard list and counts |
+| `GET /api/sync/index` | Slim index, one row per video |
 | `GET /api/sync/taxonomy` | Areas and categories |
 | `GET /api/sync/playlists` | The 27 playlists |
-| `GET /api/sync/shard/:id` | One shard (`00` to `15`): videos, comments, related edges |
+| `GET /api/sync/shard/[id]` | One shard (`00` to `15`): videos, mentions, related edges. Unknown id returns `404 { "error": "Unknown shard" }` |
 
 ## Catalogue files
 
-| File | What it holds |
+| File | Holds |
 | --- | --- |
 | `data/catalog/index.json` | One slim row per video, including `shard` |
-| `data/catalog/shards/00.json` … `15.json` | Licensed videos, mentions, and related edges for that slice |
+| `data/catalog/shards/00.json` to `15.json` | Videos, mentions, related edges |
 | `data/catalog/taxonomy.json` | Areas and categories |
 | `data/catalog/playlists.json` | Playlist order and notes |
 | `data/catalog/channels.json` | Channel slug and video count |
 | `data/catalog/manifest.json` | Shard map |
 | `data/catalog/import-report.json` | Counts from the last import |
 
-`data/private/youtube-meta.jsonl` lines look like `{ "vid", "duration_s", "views", "likes", "published" }`. Do not add a route that returns it.
+`data/private/youtube-meta.jsonl` is gitignored. Do not add a route that returns it.
