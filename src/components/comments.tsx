@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import Link from "next/link";
+
 import { ExternalIcon, SortIcon, ThumbUpIcon } from "@/components/icons";
 import { ActionMenu, menuItemClass } from "@/components/video-card";
 import { avatarColor, relativeMonth, sortMentions, tokenize } from "@/lib/comment-format";
@@ -67,7 +69,7 @@ export function Comments({ mentions }: { mentions: Mention[] }) {
   );
 }
 
-function Comment({ mention }: { mention: Mention }) {
+export function Comment({ mention }: { mention: Mention }) {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const body = useRef<HTMLParagraphElement>(null);
@@ -85,16 +87,20 @@ function Comment({ mention }: { mention: Mention }) {
   const recommends = mention.stance === "rec" || mention.stance === "strong_rec";
   return (
     <li className="group/comment flex min-w-0 gap-3 sm:gap-4">
-      <span
+      <Link
+        href={`/u/${mention.author}`}
+        tabIndex={-1}
         aria-hidden="true"
         className="grid size-8 shrink-0 place-items-center rounded-full text-sm font-medium text-white uppercase select-none sm:size-10 sm:text-base"
         style={{ backgroundColor: avatarColor(mention.author) }}
       >
         {mention.author.charAt(0)}
-      </span>
+      </Link>
       <div className="min-w-0 flex-1">
         <p className="flex min-w-0 items-baseline gap-1">
-          <span className="min-w-0 truncate text-[13px] font-medium">@{mention.author}</span>
+          <Link href={`/u/${mention.author}`} className="min-w-0 truncate text-[13px] font-medium hover:underline">
+            @{mention.author}
+          </Link>
           <time
             dateTime={mention.month}
             title={mention.month}

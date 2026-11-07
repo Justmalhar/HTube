@@ -49,6 +49,33 @@ export function getMentions(vid: string): Mention[] {
   return load().mentions.get(vid) ?? [];
 }
 
+type AuthorIndex = { stamp: number; byAuthor: Map<string, Mention[]>; top: { author: string; count: number }[] };
+let authors: AuthorIndex | null = null;
+
+// ponytail: built on first call (one pass over ~40k mentions), memoized per catalog mtime.
+function authorIndex(): AuthorIndex {
+  const c = load();
+  if (authors && authors.stamp === c.mtime) return authors;
+  const byAuthor = new Map<string, Mention[]>();
+  for (const list of c.mentions.values())
+    for (const m of list) {
+      const a = byAuthor.get(m.author);
+      if (a) a.push(m);
+      else byAuthor.set(m.author, [m]);
+    }
+  const top = [...byAuthor].map(([author, l]) => ({ author, count: l.length })).sort((a, b) => b.count - a.count || a.author.localeCompare(b.author));
+  return (authors = { stamp: c.mtime, byAuthor, top });
+}
+
+export function getAuthorMentions(author: string): Mention[] {
+  return authorIndex().byAuthor.get(author) ?? [];
+}
+
+/** Top curators by recommendation count (for a future "HN curators" shelf). */
+export function getTopAuthors(limit = 20) {
+  return authorIndex().top.slice(0, limit);
+}
+
 export function getManifest() {
   return load().manifest;
 }
