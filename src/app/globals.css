@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Set on <html> by the inline script in layout.tsx so the rail state paints before hydration. */
+@custom-variant rail (&:is([data-rail] *));
+
 :root, [data-theme="dark"] {
   color-scheme: dark;
   --background: #0f0f0f;
@@ -10,6 +13,7 @@
   --line: #303030;
   --primary: #ff6600;
   --on-primary: #ffffff;
+  --focus: #ff6600;
   --chip: #272727;
   --chip-on: #f1f1f1;
   --chip-on-text: #0f0f0f;
@@ -23,9 +27,34 @@
   --text: #0f0f0f;
   --text-muted: #606060;
   --line: #e5e5e5;
+  /* #ff6600 is 2.94:1 on white, under the 3:1 non-text minimum. primary-hover is 3.5:1. */
+  --focus: #e85d00;
   --chip: #f2f2f2;
   --chip-on: #0f0f0f;
   --chip-on-text: #ffffff;
+}
+
+@media (prefers-contrast: more) {
+  :root, [data-theme="dark"] {
+    --text-muted: #d1d1d1;
+    --line: #6b6b6b;
+  }
+  [data-theme="light"] {
+    --text-muted: #404040;
+    --line: #8a8a8a;
+    --focus: #c45000;
+  }
+}
+
+/* Stacking scale. Use z-(--z-name), never a raw number. Native <dialog> sits in the top layer above all of these. */
+:root {
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-rail: 20;
+  --z-header: 30;
+  --z-scrim: 40;
+  --z-drawer: 50;
+  --z-skip: 60;
 }
 
 @theme inline {
@@ -39,7 +68,25 @@
   --color-muted: var(--text-muted);
   --color-line: var(--line);
   --color-primary: var(--primary);
+  --color-focus: var(--focus);
   --font-sans: var(--font-roboto), Roboto, Arial, sans-serif;
+}
+
+@theme {
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-hover) transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* CSS scroll lock for the modal drawer and dialogs, no JS bookkeeping to leak. */
+html:has([data-scroll-lock]),
+html:has(dialog[open]) {
+  overflow: hidden;
 }
 
 body {
@@ -49,19 +96,96 @@ body {
   font-family: var(--font-roboto), Roboto, Arial, sans-serif;
   font-size: 14px;
   line-height: 1.4;
+  letter-spacing: 0;
+  overflow-x: clip;
 }
 
 @layer base {
   a { color: inherit; text-decoration: none; }
+  h1, h2, h3 { text-wrap: balance; }
+  h1 { letter-spacing: -0.01em; }
+  h2, h3 { letter-spacing: -0.005em; }
+  button, a, summary, [role="button"] { -webkit-tap-highlight-color: transparent; }
 }
 
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
-:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-html {
-  scrollbar-width: thin;
-  scrollbar-color: var(--surface-hover) transparent;
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (prefers-contrast: more) {
+  :focus-visible { outline-width: 3px; }
+}
+
+/* Press feedback: scale only, 100ms, ease-out-quart. */
+@utility press {
+  transition: scale 100ms var(--ease-out-quart);
+  &:active { scale: 0.97; }
+}
+
+/* Grows a small control's hit area to 40px without changing its look. */
+@utility hit {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: min(0px, calc((100% - 40px) / 2)) 0;
+  }
+}
+
+/* Modal dialog: fades and settles on open, reverses the same path on close. */
+.modal {
+  opacity: 0;
+  scale: 0.97;
+  transition:
+    opacity 200ms var(--ease-out-quart),
+    scale 200ms var(--ease-out-quart),
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+}
+.modal[open] { opacity: 1; scale: 1; }
+@starting-style {
+  .modal[open] { opacity: 0; scale: 0.97; }
+}
+.modal::backdrop {
+  background: rgb(0 0 0 / 0);
+  transition:
+    background-color 200ms var(--ease-out-quart),
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+}
+.modal[open]::backdrop { background: rgb(0 0 0 / 0.6); }
+@starting-style {
+  .modal[open]::backdrop { background: rgb(0 0 0 / 0); }
+}
+
+/* Thin indeterminate bar for a pending navigation. */
+@keyframes pending-slide {
+  from { translate: -100% 0; }
+  to { translate: 250% 0; }
+}
+.pending-bar {
+  animation: pending-slide 900ms var(--ease-out-quart) infinite;
+}
+
+/* Theme swap crossfade when the toggle runs inside document.startViewTransition. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: var(--ease-out-quart);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after, *::backdrop {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .press:active { scale: none; }
+  .pending-bar { animation: none; translate: none; width: 100%; opacity: 0.6; }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
 }
 
 * {

@@ -24,6 +24,7 @@ colors:
   chip-on-text: "#0F0F0F"
   chip-on-text-light: "#FFFFFF"
   focus: "#FF6600"
+  focus-light: "#E85D00"
 typography:
   fontFamily: "Roboto, Arial, sans-serif"
   baseSize: "14px"
@@ -55,14 +56,16 @@ YouTube's density and chrome, with Hacker News orange instead of YouTube red. Da
 
 ## Logo
 
-The wordmark is an orange rounded "Y" badge followed by **HackerTube** in bold, 19px. It nods to the Hacker News Y without copying the Y Combinator mark, and the product is not affiliated with Y Combinator, Hacker News, or YouTube. The accessible name is OpenHackerTube. Scrollbars are thin and use the hover surface color; horizontal rows (chips, shelves) hide theirs.
+The mark is an orange (#FF6600, `primary`) rounded square with a 7/32 corner radius, holding a white geometric "HN" monogram drawn as SVG shapes, with a short scrubber bar under the letters (solid white for the played part, 45% white for the rest) as the video cue instead of a play button. It is drawn on a 32 unit grid so it stays crisp at 16px; `src/components/logo.tsx` and `src/app/icon.svg` share that geometry and change together. The wordmark is the 24px mark, a 6px gap, then "Open" regular and "HackerTube" bold at 19px with -0.015em tracking. In the top bar under 400px only the mark shows. The accessible name is "OpenHackerTube, home". favicon.ico (16/32/48) and the 180px apple-icon come from the same SVG; the apple-icon has square corners because iOS masks them. The product is not affiliated with Y Combinator, Hacker News, or YouTube. Scrollbars are thin and use the hover surface color; horizontal rows (chips, shelves) hide theirs.
 
 ## Chrome
 
 - Top bar is 56px, fixed, no bottom border. Leading edge: menu, wordmark. Center: one pill search field with a `/` hint, 40px tall, max 640px. Trailing edge: shortcuts and theme icon buttons.
-- Sidebar is 240px with three groups split by thin lines: browse destinations, "You" (History, Watch later, Liked videos), and Settings. Items are 40px with a 10px radius.
-- At 801 to 1311px the sidebar becomes a 72px mini rail (icon over a 10px label) and the menu opens the full sidebar as a drawer. At 1312px and up the full sidebar is docked and the menu toggles the rail.
-- Under 801px the drawer is the only sidebar and a bottom bar holds Home, Longs, Topics, Search, and You as icon over label. No horizontal page overflow at any width.
+- Sidebar is 240px with three groups split by thin lines: browse destinations, "You" (History, Watch later, Liked videos), and Settings. Items are 40px with a 10px radius. The "You" heading is plain text, not a link. Exactly one item is current, matched on path and query (`/browse?dur=xlong` is Longs, not Browse); the rail and bottom bar "You" item is current on any library page.
+- At 801 to 1311px the sidebar becomes a 72px mini rail (icon over a 10px label) and the menu opens the full sidebar as a drawer. At 1312px and up the full sidebar is docked and the menu toggles the rail. Watch pages (`/watch/...`) follow YouTube instead: no docked sidebar and no rail at any width, the menu always opens the drawer over a scrim, and content has a 24px left padding from 801px up.
+- The drawer is modal: it slides in from the left over a 50% black scrim and leaves along the same path, focus moves into it and returns to the menu button, the page behind is inert and does not scroll, and Escape, the scrim, any navigation, or crossing 1312px closes it. The rail state is set on `<html>` before first paint (`data-rail`), so it never jumps.
+- Under 801px the drawer is the only sidebar and a bottom bar holds Home, Longs, Topics, Search, and You as icon over label. The bottom bar pads for the home indicator (`safe-area-inset-bottom`). No horizontal page overflow at any width.
+- Stacking uses the named scale in `globals.css` (`--z-raised`, `--z-sticky`, `--z-rail`, `--z-header`, `--z-scrim`, `--z-drawer`, `--z-skip`), never raw numbers. Dialogs are native `<dialog>` in the top layer.
 - The chip row under the top bar is sticky. The related column on a watch page is 402px and drops below the player under 1280px.
 
 ## Video cards
@@ -75,13 +78,15 @@ The wordmark is an orange rounded "Y" badge followed by **HackerTube** in bold, 
 
 ## Page headers
 
-One `PageHeader` for every page that has a title. On desktop, actions sit on the title row. The description is one short line under the title (about 30 to 45 characters) and spans the row. On phones, actions go full width under the description. Counts belong in chips, not in the description.
+One `PageHeader` for every page that has a title. The title is 20px bold with slightly tight tracking and balanced wrapping. On desktop, actions sit on the title row, vertically centred on it, at one fixed width (`headerActionClass`). The description is one short line under the title (about 30 to 45 characters) and spans the row. On phones, actions go full width under the description. Counts belong in chips, not in the description.
 
 ## Controls
 
 - Chips are 32px tall with an 8px radius; the selected chip inverts (`chip-on`). Pills and icon buttons are 36px and fully round. One trailing action width where a page header has an action, so sibling pages do not jump.
 - Icon buttons are circular.
-- Focus is a 2px `primary` outline, offset 2px. Every clickable card is a real link or button.
+- Focus is a 2px `focus` outline, offset 2px (`#E85D00` in light so it clears 3:1 on white; 3px under `prefers-contrast: more`). Every clickable card is a real link or button.
+- Touch targets are at least 40px. Chips and pills keep their visual size and grow their hit area with the `hit` utility.
+- Counts and ranges use tabular numerals.
 - Filters are links. The URL is the state.
 
 ## Copy
@@ -90,7 +95,7 @@ Short and concrete. "Talks HN keeps recommending", not a paragraph under the log
 
 ## Motion
 
-Hover darkens a surface by one step (`surface-hover`). Do not add blur bands behind the sticky chip row. A short background fade is enough. Respect `prefers-reduced-motion`.
+Hover darkens a surface by one step (`surface-hover`), instantly. Pressed controls scale to 0.97 over 100ms (`press` utility). Animate only transform and opacity, with `ease-out-quart` for small things and `ease-out-expo` for the drawer. No blur bands or gradient fades under the sticky chip row or the top bar; they sit on a solid background. Nav links show a thin orange bar while a navigation is pending, and `app/loading.tsx` shows a card skeleton. Under `prefers-reduced-motion` every transition and animation is effectively instant and press scaling is off. Under `prefers-contrast: more` muted text and lines get stronger.
 
 ## What not to copy from YouTube
 
