@@ -13,7 +13,7 @@ export default function NotFound() {
       <LogoMark size={72} className="opacity-90" />
       <h1 className="mt-6 text-xl font-bold leading-7 tracking-[-0.01em] text-balance">This page isn&apos;t available</h1>
       <p className="mt-2 text-sm text-muted">Sorry about that. Try searching for something else</p>
-      <form action="/search" role="search" className="mt-6 flex w-full">
+      <form action="/search" role="search" className="mt-6 flex w-full sm:hidden">
         <label className="sr-only" htmlFor="not-found-search">Search</label>
         <input
           id="not-found-search"

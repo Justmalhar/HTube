@@ -66,8 +66,8 @@ const RAIL: readonly NavLink[] = [
 const MOBILE: readonly NavLink[] = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/browse?dur=xlong", label: "Longs", Icon: LongsIcon },
+  { href: "/trending", label: "Trending", Icon: TrendingIcon },
   { href: "/subscriptions", label: "Subscriptions", Icon: SubscriptionsIcon },
-  { href: "/search", label: "Search", Icon: SearchIcon },
   { href: "/later", label: "You", Icon: YouIcon, match: YOU_PATHS },
 ];
 
@@ -213,7 +213,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <Link href="/search" className={`ml-auto sm:hidden ${iconButtonClass}`} aria-label="Search">
             <SearchIcon />
           </Link>
-          <SearchBox id="site-search" className="mx-auto hidden min-w-0 max-w-[640px] flex-1 sm:flex" />
+          <Suspense fallback={<SearchBox id="site-search" className={SEARCH_CLASS} />}>
+            <HeaderSearch />
+          </Suspense>
           <button type="button" className={`hidden min-[801px]:grid ${iconButtonClass}`} aria-label="Keyboard shortcuts" onClick={() => setHelp(true)}>
             <KeyboardIcon />
           </button>
@@ -226,9 +228,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
           role={drawerOpen ? "dialog" : undefined}
           aria-modal={drawerOpen || undefined}
           aria-label="Menu"
+          onKeyDown={(event) => {
+            // Keep Tab inside the modal drawer: wrap between its first and last focusable.
+            if (event.key !== "Tab" || !drawerOpen) return;
+            const items = event.currentTarget.querySelectorAll<HTMLElement>("a[href], button");
+            const edge = event.shiftKey ? items[0] : items[items.length - 1];
+            if (document.activeElement === edge) {
+              event.preventDefault();
+              (event.shiftKey ? items[items.length - 1] : items[0]).focus();
+            }
+          }}
           data-scroll-lock={drawerOpen ? "" : undefined}
-          className={`fixed inset-y-0 left-0 z-(--z-drawer) w-60 overflow-y-auto overscroll-contain bg-background px-3 pb-[calc(24px+env(safe-area-inset-bottom))] transition-[translate,visibility] duration-300 ease-out-expo ${
-            drawerOpen ? "visible translate-x-0 shadow-2xl" : "invisible -translate-x-full"
+          className={`fixed inset-y-0 left-0 z-(--z-drawer) w-60 overflow-y-auto overscroll-contain bg-background px-3 pb-[calc(24px+env(safe-area-inset-bottom))] duration-300 ease-out-expo ${
+            // Visibility flips instantly on open (so focus() lands) and after the slide on close.
+            drawerOpen ? "visible translate-x-0 shadow-2xl transition-[translate]" : "invisible -translate-x-full transition-[translate,visibility]"
           } ${watch ? "" : dockedAsideClass}`}
         >
           <div className={`flex h-14 items-center gap-4 px-1 ${watch ? "" : "min-[1312px]:hidden"}`}>
@@ -321,16 +334,24 @@ export function Shell({ children }: { children: React.ReactNode }) {
             if (event.target === event.currentTarget) setHelp(false);
           }}
         >
-          <div className="p-6">
+          <div className="max-h-[calc(100dvh-32px)] overflow-y-auto p-6">
             <h2 id="help-title" className="text-lg font-medium">Keyboard shortcuts</h2>
-            <ul className="mt-4 flex flex-col gap-3 text-sm">
-              {[["/", "Search"], ["h", "Home"], ["?", "Shortcuts"], ["Esc", "Close"]].map(([key, label]) => (
-                <li key={key} className="flex items-center justify-between">
-                  {label}
-                  <kbd className="min-w-8 rounded-md bg-background px-2 py-1 text-center text-xs">{key}</kbd>
-                </li>
-              ))}
-            </ul>
+            {[
+              ["General", [["/", "Search"], ["h", "Home"], ["?", "Shortcuts"], ["Esc", "Close"]]],
+              ["Watch", [["k / Space", "Play or pause"], ["j / l", "Back or forward 10s"], ["Left / Right", "Back or forward 5s"], ["0-9", "Jump to 0-90%"], ["m", "Mute"], ["f", "Fullscreen"], ["Shift+N", "Next video"], ["Shift+P", "Previous video"]]],
+            ].map(([group, rows]) => (
+              <section key={group as string} aria-label={group as string} className="mt-4 first:mt-4">
+                <h3 className="text-xs font-medium text-muted">{group as string}</h3>
+                <ul className="mt-2 flex flex-col gap-3 text-sm">
+                  {(rows as string[][]).map(([key, label]) => (
+                    <li key={key} className="flex items-center justify-between">
+                      {label}
+                      <kbd className="min-w-8 rounded-md bg-background px-2 py-1 text-center text-xs">{key}</kbd>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
             <p className="mt-4 text-sm text-muted">Likes and Watch later stay in this browser</p>
             <div className="mt-6 flex justify-end">
               <button type="button" className={pillOnClass} onClick={() => setHelp(false)}>Done</button>
@@ -340,6 +361,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </div>
     </ThemeState>
   );
+}
+
+const SEARCH_CLASS = "mx-auto hidden min-w-0 max-w-[640px] flex-1 sm:flex";
+
+/** Header field mirrors the query on /search; keyed by q so it resets on navigation. */
+function HeaderSearch() {
+  const params = useSearchParams();
+  const q = usePathname() === "/search" ? (params.get("q") ?? "") : "";
+  return <SearchBox key={q} id="site-search" defaultValue={q} className={SEARCH_CLASS} />;
 }
 
 /**
