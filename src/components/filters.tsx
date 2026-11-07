@@ -1,6 +1,24 @@
 import { unsupportedFilters, withQuery } from "@/lib/query";
+import { chipClass, chipOnClass, pillClass } from "@/components/ui";
 
 const TYPES = ["talk", "lecture", "explainer", "documentary", "interview", "tutorial", "demo", "commentary", "comedy", "music"];
+
+type Chip = { href: string; label: string; on?: boolean };
+
+export function ChipBar({ label, chips, sticky = false }: { label: string; chips: Chip[]; sticky?: boolean }) {
+  return (
+    <nav
+      aria-label={label}
+      className={`${sticky ? "sticky top-14 z-20 -mx-4 bg-background px-4 min-[801px]:-mr-6 min-[801px]:pr-6" : ""} no-scrollbar mb-6 flex gap-3 overflow-x-auto py-3`}
+    >
+      {chips.map((chip) => (
+        <a key={chip.href} href={chip.href} aria-current={chip.on ? "page" : undefined} className={chip.on ? chipOnClass : chipClass}>
+          {chip.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
 
 export function FilterBar({ path, query }: { path: string; query: Record<string, string | undefined> }) {
   const params = new URLSearchParams();
@@ -8,28 +26,24 @@ export function FilterBar({ path, query }: { path: string; query: Record<string,
     if (value) params.set(key, value);
   }
   const notes = unsupportedFilters(params);
-  const chip = (key: string, value: string, label: string) => {
+  const chip = (key: string, value: string, label: string): Chip => {
     const on = params.get(key) === value;
-    const href = withQuery(path, params, { [key]: on ? "" : value });
-    return (
-      <a key={`${key}-${value}`} href={href} className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-sm ${on ? "bg-[var(--chip-on)] text-[var(--chip-on-text)]" : "bg-surface"}`}>
-        {label}
-      </a>
-    );
+    return { href: withQuery(path, params, { [key]: on ? "" : value }), label, on };
   };
+  const chips = [
+    chip("sort", "hn", "Best"),
+    chip("sort", "recent", "Recent"),
+    chip("sort", "title", "Title"),
+    chip("evergreen", "1", "Evergreen"),
+    chip("gems", "insistent", "Hidden gems"),
+    chip("news", "show", "Include news"),
+    ...TYPES.map((type) => chip("type", type, type.charAt(0).toUpperCase() + type.slice(1))),
+  ];
   return (
-    <div className="mb-4 flex flex-col gap-3">
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {chip("sort", "hn", "Best")}
-        {chip("sort", "recent", "Recent")}
-        {chip("sort", "title", "Title")}
-        {chip("evergreen", "1", "Evergreen")}
-        {chip("gems", "insistent", "Gems")}
-        {chip("news", "show", "Include news")}
-        {TYPES.map((type) => chip("type", type, type))}
-      </div>
+    <div>
+      <ChipBar label="Filters" chips={chips} sticky />
       {notes.map((note) => (
-        <p key={note} className="text-sm text-muted">{note}</p>
+        <p key={note} className="-mt-3 mb-4 text-sm text-muted">{note}</p>
       ))}
     </div>
   );
@@ -42,10 +56,10 @@ export function Pager({ path, query, offset, total }: { path: string; query: Rec
   const prev = Math.max(0, offset - limit);
   const next = offset + limit;
   return (
-    <div className="mt-6 flex items-center gap-3 text-sm">
-      {offset > 0 ? <a className="h-9 rounded-[18px] bg-surface px-4 leading-9" href={`${path}?${new URLSearchParams({ ...Object.fromEntries(params), offset: String(prev) })}`}>Previous</a> : null}
+    <div className="mt-10 flex items-center justify-center gap-3 text-sm">
+      {offset > 0 ? <a className={pillClass} href={`${path}?${new URLSearchParams({ ...Object.fromEntries(params), offset: String(prev) })}`}>Previous</a> : null}
       <span className="text-muted">{Math.min(offset + 1, total)} to {Math.min(offset + limit, total)} of {total}</span>
-      {next < total ? <a className="h-9 rounded-[18px] bg-surface px-4 leading-9" href={`${path}?${new URLSearchParams({ ...Object.fromEntries(params), offset: String(next) })}`}>Next</a> : null}
+      {next < total ? <a className={pillClass} href={`${path}?${new URLSearchParams({ ...Object.fromEntries(params), offset: String(next) })}`}>Next</a> : null}
     </div>
   );
 }

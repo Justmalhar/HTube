@@ -12,10 +12,10 @@ export default function About() {
         OpenHackerTube is a catalogue of YouTube videos that Hacker News commenters kept recommending. Playback uses YouTube&apos;s privacy-enhanced embed. Nothing here hosts a video file.
       </p>
       <ul className="mt-4 grid grid-cols-2 gap-3">
-        <li className="rounded-[12px] bg-surface p-3"><b>{counts.videos.toLocaleString("en-US")}</b><span className="mt-1 block text-sm text-muted">videos</span></li>
-        <li className="rounded-[12px] bg-surface p-3"><b>{counts.mentions.toLocaleString("en-US")}</b><span className="mt-1 block text-sm text-muted">HN comments</span></li>
-        <li className="rounded-[12px] bg-surface p-3"><b>{counts.categories}</b><span className="mt-1 block text-sm text-muted">topics in {counts.areas} areas</span></li>
-        <li className="rounded-[12px] bg-surface p-3"><b>{counts.playlists}</b><span className="mt-1 block text-sm text-muted">playlists</span></li>
+        <li className="rounded-xl bg-surface p-3"><b>{counts.videos.toLocaleString("en-US")}</b><span className="mt-1 block text-sm text-muted">videos</span></li>
+        <li className="rounded-xl bg-surface p-3"><b>{counts.mentions.toLocaleString("en-US")}</b><span className="mt-1 block text-sm text-muted">HN comments</span></li>
+        <li className="rounded-xl bg-surface p-3"><b>{counts.categories}</b><span className="mt-1 block text-sm text-muted">topics in {counts.areas} areas</span></li>
+        <li className="rounded-xl bg-surface p-3"><b>{counts.playlists}</b><span className="mt-1 block text-sm text-muted">playlists</span></li>
       </ul>
       <h2 className="mt-6 text-base font-medium">What is included</h2>
       <ul className="mt-2 list-disc pl-5 text-sm">

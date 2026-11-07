@@ -12,8 +12,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     <div>
       <PageHeader title="Search" description="Find a talk" />
       <form action="/search" className="mb-4 flex sm:hidden">
-        <input name="q" defaultValue={q} aria-label="Search" className="h-10 min-w-0 flex-1 rounded-l-[20px] border border-line bg-background px-3" />
-        <button className="h-10 rounded-r-[20px] bg-surface px-3" type="submit">Search</button>
+        <input name="q" defaultValue={q} aria-label="Search" className="h-10 min-w-0 flex-1 rounded-l-full border border-line bg-background px-4" />
+        <button className="h-10 rounded-r-full bg-surface px-4 hover:bg-surface-hover" type="submit">Search</button>
       </form>
       {q ? <FilterBar path="/search" query={record} /> : null}
       {page.weak && page.items.length ? <p className="mb-3 text-sm text-muted">No strong title match. These are the closest talks.</p> : null}

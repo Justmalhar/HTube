@@ -18,7 +18,7 @@ export default function DataPage() {
       <p className="max-w-3xl text-sm">
         Official export generated 2026-10-31. Live check on 7 Nov 2026, 5:56 am IST. Credit HackerTube and open-index/hacker-news. YouTube durations, views, likes, and publish dates are not in these files.
       </p>
-      <ul className="mt-4 divide-y divide-line rounded-[12px] bg-surface">
+      <ul className="mt-4 divide-y divide-line rounded-xl bg-surface">
         {files.map(([href, name]) => (
           <li key={href}>
             <a className="flex items-center justify-between px-3 py-2" href={href}>

@@ -1,3 +1,4 @@
+import { chipClass } from "@/components/ui";
 import { notFound } from "next/navigation";
 
 import { FilterBar, Pager } from "@/components/filters";
@@ -25,7 +26,7 @@ export default async function AreaPage({
       <PageHeader title={area.name} description="In this area" />
       <div className="mb-4 flex flex-wrap gap-2">
         {area.categories.map((category) => (
-          <a key={category.id} href={`/c/${category.id}`} className="inline-flex h-8 items-center rounded-full bg-surface px-3 text-sm">{category.name}</a>
+          <a key={category.id} href={`/c/${category.id}`} className={chipClass}>{category.name}</a>
         ))}
       </div>
       <FilterBar path={`/a/${id}`} query={record} />
