@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { ClockIcon, ExternalIcon, ThumbDownIcon, ThumbUpIcon } from "@/components/icons";
+import { ClockIcon, ThumbDownIcon, ThumbUpIcon } from "@/components/icons";
 import { useLibrary } from "@/components/library";
 
 export function Player({ vid, title }: { vid: string; title: string }) {
@@ -60,12 +60,6 @@ export function ActionBar({ vid, title }: { vid: string; title: string }) {
       <button type="button" className={round} aria-label={saved ? "Remove from Watch later" : "Save to Watch later"} title={saved ? "Saved" : "Save"} aria-pressed={saved} onClick={() => library.toggleLater(vid)}>
         <ClockIcon filled={saved} />
       </button>
-      <a className={round} href={`https://www.youtube.com/watch?v=${vid}`} target="_blank" rel="noreferrer" aria-label="Open on YouTube" title="Open on YouTube">
-        <ExternalIcon />
-      </a>
-      <a className={round} href={`https://hackertube.org/watch/${vid}`} target="_blank" rel="noreferrer" aria-label="Open on HackerTube" title="Open on HackerTube">
-        <span aria-hidden className="grid size-5 place-items-center rounded-[5px] bg-primary text-[11px] font-bold text-white">Y</span>
-      </a>
       {copied ? <span role="status" className="text-xs text-muted">Link copied</span> : null}
     </div>
   );

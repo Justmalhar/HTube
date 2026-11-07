@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { HnComments } from "@/components/hn-comments";
 import { RelatedRow } from "@/components/video-card";
 import { chipClass, chipOnClass } from "@/components/ui";
 import { ActionBar, Player } from "@/components/watch-actions";
@@ -8,14 +9,6 @@ import { categoryName } from "@/lib/engine";
 import { getEngine, getMentions } from "@/lib/server-catalog";
 
 export const dynamic = "force-dynamic";
-
-const STANCE: Record<string, string> = {
-  strong_rec: "Strongly recommends",
-  rec: "Recommends",
-  reference: "Cites",
-  joke: "Joke",
-  critical: "Critical",
-};
 
 export async function generateMetadata({ params }: { params: Promise<{ vid: string }> }): Promise<Metadata> {
   const { vid } = await params;
@@ -70,27 +63,7 @@ export default async function WatchPage({
             ))}
           </div>
         </div>
-        <section className="mt-6">
-          <h2 className="text-xl font-bold">{mentions.length} Hacker News comments</h2>
-          <ul className="mt-6 flex flex-col gap-6">
-            {mentions.map((mention) => (
-              <li key={mention.hn_comment_id} className="min-w-0">
-                <p className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
-                  <span className="font-medium">@{mention.author}</span>
-                  <span className="text-muted">{mention.month}</span>
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-sm leading-5">{mention.text}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="inline-flex h-7 items-center rounded-full bg-surface px-3 font-medium">{STANCE[mention.stance] ?? mention.stance}</span>
-                  <a className="inline-flex h-7 items-center rounded-full px-3 font-medium hover:bg-surface" href={mention.hn_url} target="_blank" rel="noreferrer">
-                    View on HN
-                  </a>
-                  <span className="truncate text-muted">in {mention.story_title}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <HnComments mentions={mentions} />
       </div>
       <aside className="flex w-full shrink-0 flex-col gap-2 xl:w-[402px]">
         <h2 className="sr-only">Related</h2>
