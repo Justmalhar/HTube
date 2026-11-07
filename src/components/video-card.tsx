@@ -23,16 +23,20 @@ const channelHref = (slug: string) => `/channel/${slug}`;
  * (a button inside an anchor is invalid HTML and swallows clicks on some browsers).
  * The link is skipped by Tab because the title link right below it goes to the same place.
  */
-function Thumb({ item, className = "rounded-xl" }: { item: FeedCard; className?: string }) {
+function Thumb({ item, className = "rounded-xl", priority = false }: { item: FeedCard; className?: string; priority?: boolean }) {
   const library = useLibrary();
   const saved = library.later.includes(item.vid);
   return (
     <div className={`group/thumb relative aspect-video overflow-hidden bg-surface ${className}`}>
       <a href={watchHref(item.vid)} tabIndex={-1} aria-hidden className="block size-full">
+        {/* eslint-disable-next-line @next/next/no-img-element -- remote ytimg thumbnails, optimizer would add a hop and cost */}
         <img
           src={frameFor(item.vid, library.frames)}
           alt=""
-          loading="lazy"
+          width={480}
+          height={360}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
           decoding="async"
           className="size-full object-cover transition-transform duration-300 ease-out-quart group-hover/card:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover/card:scale-100"
           onError={(event) => {
@@ -50,7 +54,7 @@ function Thumb({ item, className = "rounded-xl" }: { item: FeedCard; className?:
 const titleClass = "line-clamp-2 wrap-anywhere text-[15px] font-medium leading-[21px]";
 const channelClass = "mt-1 block truncate text-sm text-muted hover:text-foreground";
 
-export function VideoCard({ item }: { item: FeedCard }) {
+export function VideoCard({ item, priority = false }: { item: FeedCard; priority?: boolean }) {
   const library = useLibrary();
   const [justHid, setJustHid] = useState(false);
   if (library.dislikes.includes(item.vid)) {
@@ -58,7 +62,7 @@ export function VideoCard({ item }: { item: FeedCard }) {
   }
   return (
     <article className="group/card relative -m-2 min-w-0 rounded-2xl p-2 pb-3 hover:bg-surface/60">
-      <Thumb item={item} />
+      <Thumb item={item} priority={priority} />
       <div className="relative mt-3 min-w-0 pr-7">
         <a href={watchHref(item.vid)} className="block rounded-md">
           <h2 className={titleClass}>{item.title}</h2>
@@ -317,9 +321,9 @@ export function VideoGrid({ items }: { items: FeedCard[] }) {
   if (!items.length) return <EmptyState title="No videos found" body="Try removing some filters" href="/" action="Go to Home" />;
   return (
     <ul className={gridClass}>
-      {items.map((item) => (
+      {items.map((item, index) => (
         <li key={item.vid} className="min-w-0">
-          <VideoCard item={item} />
+          <VideoCard item={item} priority={index < 4} />
         </li>
       ))}
     </ul>

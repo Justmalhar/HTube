@@ -33,7 +33,8 @@ export function TopicTile({ href, name, count, vid }: { href: string; name: stri
   return (
     <li className={tileWidth}>
       <a href={href} className="group/tile relative block aspect-video overflow-hidden rounded-xl bg-surface press">
-        {vid ? <img src={thumb(vid)} alt="" loading="lazy" className={`${zoom} group-hover/tile:scale-[1.03]`} /> : null}
+        {/* eslint-disable-next-line @next/next/no-img-element -- remote ytimg thumbnails */}
+        {vid ? <img src={thumb(vid)} alt="" width={480} height={360} loading="lazy" decoding="async" className={`${zoom} group-hover/tile:scale-[1.03]`} /> : null}
         <span className="absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-transparent" />
         <span className="absolute inset-x-3 bottom-3 text-white">
           <span className="line-clamp-2 wrap-anywhere text-base font-bold leading-5">{name}</span>
@@ -52,7 +53,8 @@ export function PlaylistTile({ playlist, wide = false }: { playlist: Playlist; w
         <span className="absolute inset-x-4 top-0 h-3 rounded-t-xl bg-surface-hover" />
         <span className="absolute inset-x-2 top-1 h-3 rounded-t-xl bg-line" />
         <div className="relative aspect-video overflow-hidden rounded-xl bg-surface">
-          {cover ? <img src={thumb(cover)} alt="" loading="lazy" className={`${zoom} group-hover/tile:scale-[1.03]`} /> : null}
+          {/* eslint-disable-next-line @next/next/no-img-element -- remote ytimg thumbnails */}
+          {cover ? <img src={thumb(cover)} alt="" width={480} height={360} loading="lazy" decoding="async" className={`${zoom} group-hover/tile:scale-[1.03]`} /> : null}
           <span className="absolute bottom-2 right-2 inline-flex h-6 items-center gap-1 rounded-md bg-black/80 px-1.5 text-xs font-medium text-white">
             <PlayIcon />
             {videos(playlist.items.length)}
