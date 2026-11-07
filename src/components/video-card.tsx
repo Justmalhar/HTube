@@ -23,12 +23,12 @@ const channelHref = (slug: string) => `/channel/${slug}`;
  * (a button inside an anchor is invalid HTML and swallows clicks on some browsers).
  * The link is skipped by Tab because the title link right below it goes to the same place.
  */
-function Thumb({ item, className = "rounded-xl", priority = false }: { item: FeedCard; className?: string; priority?: boolean }) {
+function Thumb({ item, className = "rounded-xl", priority = false, href = watchHref(item.vid) }: { item: FeedCard; className?: string; priority?: boolean; href?: string }) {
   const library = useLibrary();
   const saved = library.later.includes(item.vid);
   return (
     <div className={`group/thumb relative aspect-video overflow-hidden bg-surface ${className}`}>
-      <a href={watchHref(item.vid)} tabIndex={-1} aria-hidden className="block size-full">
+      <a href={href} tabIndex={-1} aria-hidden className="block size-full">
         {/* eslint-disable-next-line @next/next/no-img-element -- remote ytimg thumbnails, optimizer would add a hop and cost */}
         <img
           src={frameFor(item.vid, library.frames)}
@@ -235,14 +235,14 @@ function CardMenu({ item, className, onHide }: { item: FeedCard; className: stri
  * Horizontal row: thumbnail on the left, text on the right. Used by search, playlists, and the
  * library pages. `action` replaces the three-dot menu, `children` renders under the channel.
  */
-export function VideoRow({ item, action, children }: { item: FeedCard; action?: React.ReactNode; children?: React.ReactNode }) {
+export function VideoRow({ item, action, href = watchHref(item.vid), children }: { item: FeedCard; action?: React.ReactNode; href?: string; children?: React.ReactNode }) {
   return (
     <article className="group/card relative flex min-w-0 gap-3 min-[801px]:gap-4">
       <div className="w-[40%] max-w-[360px] shrink-0">
-        <Thumb item={item} />
+        <Thumb item={item} href={href} />
       </div>
       <div className="min-w-0 flex-1 pr-9">
-        <a href={watchHref(item.vid)} className="block rounded-md">
+        <a href={href} className="block rounded-md">
           <h2 className="line-clamp-2 wrap-anywhere text-sm font-medium leading-5 min-[801px]:text-lg min-[801px]:font-normal min-[801px]:leading-[26px]">{item.title}</h2>
         </a>
         <a href={channelHref(item.channelSlug)} className="mt-1 block truncate text-xs text-muted hover:text-foreground min-[801px]:mt-2">

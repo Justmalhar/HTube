@@ -22,10 +22,19 @@ export function PlaylistPanel({ slug, title, items, index }: { slug: string; tit
   }, [index, open]);
   return (
     <section aria-label="Playlist" className="overflow-hidden rounded-xl border border-line bg-surface/40">
+      {/* Collapsed: one compact row, like YouTube. */}
       <header className="flex items-center gap-1 bg-surface py-2 pl-3 pr-2">
         <div className="min-w-0 flex-1">
-          <a href={`/p/${slug}`} className="block truncate text-base font-bold leading-6 hover:text-muted">{title}</a>
-          <p className="text-xs text-muted tabular-nums">{index + 1} / {items.length}</p>
+          {open || !next ? (
+            <>
+              <a href={`/p/${slug}`} className="block truncate text-base font-bold leading-6 hover:text-muted">{title}</a>
+              <p className="text-xs text-muted tabular-nums">{index + 1} / {items.length}</p>
+            </>
+          ) : (
+            <a href={href(next.vid, slug)} className="block truncate text-sm leading-5 hover:text-muted">
+              <span className="font-medium">Next:</span> {next.title}
+            </a>
+          )}
         </div>
         <a href={prev ? href(prev.vid, slug) : undefined} aria-disabled={!prev} aria-label="Previous video" title="Previous" className={`${navClass} ${prev ? "" : "pointer-events-none opacity-40"}`}>
           <SkipBackIcon />

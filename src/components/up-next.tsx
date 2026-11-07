@@ -70,26 +70,34 @@ export function UpNextCard({ href, title, onCancel }: { href: string; title: str
     const timer = window.setTimeout(() => setLeft((value) => value - 1), 1000);
     return () => window.clearTimeout(timer);
   }, [left, href, router]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+  // Sits above YouTube's control bar (bottom-14) so scrubbing and fullscreen stay reachable.
   return (
-    <div
-      role="status"
-      className="absolute bottom-3 right-3 z-10 w-[min(18rem,calc(100%-1.5rem))] rounded-xl bg-black/85 p-3 text-white backdrop-blur-md"
-    >
-      <p className="text-xs text-white/70">
+    <div className="absolute bottom-14 right-2 z-10 w-[min(15rem,calc(100%-1rem))] rounded-xl bg-black/85 p-2.5 text-white backdrop-blur-md min-[801px]:right-3">
+      <p role="status" aria-live="polite" className="sr-only">
+        Up next: {title}. Playing in {SECONDS} seconds. Press Escape to cancel.
+      </p>
+      <p className="text-xs text-white/70" aria-hidden>
         Up next in <span className="tabular-nums">{Math.max(left, 0)}</span>
       </p>
-      <p className="mt-0.5 line-clamp-2 text-sm font-medium leading-5 wrap-anywhere">{title}</p>
-      <div className="mt-2 h-0.5 overflow-hidden rounded-full bg-white/20" aria-hidden>
+      <p className="line-clamp-1 text-sm font-medium leading-5 wrap-anywhere" aria-hidden>{title}</p>
+      <div className="mt-1.5 h-0.5 overflow-hidden rounded-full bg-white/20" aria-hidden>
         <div
           className="h-full bg-primary transition-[width] duration-1000 ease-linear motion-reduce:transition-none"
           style={{ width: `${((SECONDS - left) / SECONDS) * 100}%` }}
         />
       </div>
-      <div className="mt-3 flex gap-2">
-        <button type="button" className="press h-8 flex-1 rounded-full bg-white/15 text-sm font-medium hover:bg-white/25" onClick={onCancel}>
+      <div className="mt-2 flex gap-2">
+        <button type="button" className="press h-7 flex-1 rounded-full bg-white/15 text-xs font-medium hover:bg-white/25" onClick={onCancel}>
           Cancel
         </button>
-        <button type="button" className="press h-8 flex-1 rounded-full bg-white text-sm font-medium text-black" onClick={() => router.push(href)}>
+        <button type="button" className="press h-7 flex-1 rounded-full bg-white text-xs font-medium text-black" onClick={() => router.push(href)}>
           Play now
         </button>
       </div>

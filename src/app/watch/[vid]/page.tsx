@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { Comments } from "@/components/comments";
@@ -29,6 +30,11 @@ export default async function WatchPage({ params, searchParams }: PageProps<"/wa
   const card = engine.byId.get(vid);
   if (!card) notFound();
   const mentions = getMentions(vid);
+  // Server-side origin so the iframe (enablejsapi needs it) is in the initial HTML.
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
+  const proto = requestHeaders.get("x-forwarded-proto")?.split(",")[0].trim() ?? (host.startsWith("localhost") ? "http" : "https");
+  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || `${proto}://${host}`;
   const related = fromChannel
     ? engine.cards.filter((item) => item.channelSlug === card.channelSlug && item.vid !== vid).slice(0, 20)
     : (engine.related.get(vid) ?? [])
@@ -49,7 +55,7 @@ export default async function WatchPage({ params, searchParams }: PageProps<"/wa
   return (
     <div className="mx-auto flex max-w-[1754px] min-w-0 flex-col gap-6 xl:flex-row xl:items-start">
       <div className="min-w-0 flex-1">
-        <Player key={vid} vid={vid} title={card.title} next={next} />
+        <Player key={vid} vid={vid} title={card.title} origin={origin} next={next} />
         <h1 className="mt-3 line-clamp-2 text-xl font-bold leading-7 text-balance wrap-anywhere">{card.title}</h1>
         <div className="mt-3 flex min-w-0 flex-col gap-3 min-[1000px]:flex-row min-[1000px]:items-center min-[1000px]:justify-between">
           <div className="flex min-w-0 items-center gap-3">

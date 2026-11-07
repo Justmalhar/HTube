@@ -17,16 +17,18 @@ export function ProfileHeader({ author, count, months }: { author: string; count
         <p className="mt-1 text-sm text-muted tabular-nums wrap-anywhere">
           {count.toLocaleString("en-US")} {count === 1 ? "recommendation" : "recommendations"}, {activeSpan(months)}
         </p>
-        <a
-          href={`https://news.ycombinator.com/user?id=${encodeURIComponent(author)}`}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="View on Hacker News"
-          title="View on Hacker News"
-          className="press mt-3 -ml-2 grid size-9 place-items-center rounded-full hover:bg-surface"
-        >
-          <ExternalIcon />
-        </a>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a
+            href={`https://news.ycombinator.com/user?id=${encodeURIComponent(author)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="press hit inline-flex h-9 items-center gap-2 rounded-full bg-surface px-4 text-sm font-medium hover:bg-surface-hover"
+          >
+            Hacker News
+            <span className="[&_svg]:size-4"><ExternalIcon /></span>
+            <span className="sr-only">(opens in a new tab)</span>
+          </a>
+        </div>
       </div>
     </header>
   );

@@ -25,12 +25,37 @@ const ORDERS = [
 // ponytail: no "Show more comments" pill; the importer caps mentions at 20 per video. Add one if that cap moves.
 export function Comments({ mentions }: { mentions: Mention[] }) {
   const [order, setOrder] = useState<"top" | "newest">("top");
+  // Below xl the list is a collapsed teaser (YouTube mobile); xl and up always shows it.
+  const [open, setOpen] = useState(false);
   const list = sortMentions(mentions, order);
+  const count = mentions.length.toLocaleString("en-US");
   return (
-    <section className="mt-6" aria-labelledby="comments-title">
+    <>
+    {open || !mentions.length ? null : (
+      <button
+        type="button"
+        aria-expanded={false}
+        aria-controls="comments"
+        onClick={() => setOpen(true)}
+        className="press mt-3 flex w-full min-w-0 flex-col gap-2 rounded-xl bg-surface p-3 text-left text-sm xl:hidden"
+      >
+        <span className="font-medium tabular-nums">Comments <span className="text-muted">{count}</span></span>
+        <span className="flex min-w-0 items-center gap-2">
+          <span
+            aria-hidden
+            className="grid size-6 shrink-0 place-items-center rounded-full text-xs font-medium text-white uppercase"
+            style={{ backgroundColor: avatarColor(list[0].author) }}
+          >
+            {list[0].author.charAt(0)}
+          </span>
+          <span className="line-clamp-1 min-w-0">{list[0].text}</span>
+        </span>
+      </button>
+    )}
+    <section id="comments" className={`mt-6 ${open || !mentions.length ? "" : "max-xl:hidden"}`} aria-labelledby="comments-title">
       <div className="flex items-center gap-6">
         <h2 id="comments-title" className="text-xl font-bold tabular-nums">
-          {mentions.length.toLocaleString("en-US")} {mentions.length === 1 ? "Comment" : "Comments"}
+          {count} {mentions.length === 1 ? "Comment" : "Comments"}
         </h2>
         {mentions.length > 1 ? (
           <ActionMenu
@@ -59,6 +84,11 @@ export function Comments({ mentions }: { mentions: Mention[] }) {
             ))}
           </ActionMenu>
         ) : null}
+        {open ? (
+          <button type="button" className="press ml-auto inline-flex h-9 items-center rounded-full px-3 text-sm font-medium hover:bg-surface xl:hidden" onClick={() => setOpen(false)}>
+            Collapse
+          </button>
+        ) : null}
       </div>
       <ul className="mt-6 flex flex-col gap-6 pb-2">
         {list.map((mention) => (
@@ -66,6 +96,7 @@ export function Comments({ mentions }: { mentions: Mention[] }) {
         ))}
       </ul>
     </section>
+    </>
   );
 }
 

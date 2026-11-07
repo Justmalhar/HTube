@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ClockIcon, ExternalIcon, HideIcon, ShareIcon, ThumbDownIcon, ThumbUpIcon } from "@/components/icons";
 import { useLibrary } from "@/components/library";
@@ -8,10 +8,8 @@ import { UpNextCard, useAutoplay } from "@/components/up-next";
 import { ActionMenu, menuItemClass } from "@/components/video-card";
 import { isPlayerEnded, PLAYER_ORIGIN } from "@/lib/player-message";
 
-const noop = () => () => undefined;
-
 /** `next` is the video autoplay moves to (next playlist item or top related). Key the Player by vid so state resets. */
-export function Player({ vid, title, next }: { vid: string; title: string; next?: { href: string; title: string } }) {
+export function Player({ vid, title, origin, next }: { vid: string; title: string; origin: string; next?: { href: string; title: string } }) {
   const library = useLibrary();
   const { markSeen } = library;
   useEffect(() => {
@@ -22,8 +20,6 @@ export function Player({ vid, title, next }: { vid: string; title: string; next?
   const [autoplay] = useAutoplay();
   const [ended, setEnded] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
-  // The embed needs our origin for the postMessage API; render it only once known (client).
-  const origin = useSyncExternalStore(noop, () => window.location.origin, () => "");
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       if (event.source === frame.current?.contentWindow && isPlayerEnded(event.origin, event.data)) setEnded(true);
@@ -53,7 +49,6 @@ export function Player({ vid, title, next }: { vid: string; title: string; next?
         className={`pointer-events-none absolute inset-0 -z-10 size-full object-cover blur-[80px] saturate-[1.4] transition-opacity duration-700 ease-out-quart motion-reduce:transition-none [@media(prefers-reduced-transparency:reduce)]:hidden ${glow ? "opacity-45 in-data-[theme=light]:opacity-25" : "opacity-0"}`}
       />
       <div className="relative aspect-video overflow-hidden bg-black min-[801px]:rounded-xl">
-      {origin ? (
         <iframe
           ref={frame}
           className="absolute inset-0 size-full"
@@ -64,7 +59,6 @@ export function Player({ vid, title, next }: { vid: string; title: string; next?
           allowFullScreen
           onLoad={listen}
         />
-      ) : null}
       {ended && autoplay && next ? <UpNextCard href={next.href} title={next.title} onCancel={() => setEnded(false)} /> : null}
       </div>
     </div>
