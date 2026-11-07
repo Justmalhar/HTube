@@ -1,8 +1,8 @@
-import { PAGE, browse, buildFeed } from "@/lib/engine";
+import { PAGE, buildFeed } from "@/lib/engine";
 import { freshSeed, exploreTopics } from "@/lib/pages";
 import { getEngine } from "@/lib/server-catalog";
 import { HomeFeed } from "@/components/home/home-feed";
-import { PlaylistTile, Shelf, TopicTile } from "@/components/shelf";
+import { PlaylistTile, Shelf } from "@/components/shelf";
 import { ChipBar } from "@/components/filters";
 
 export const dynamic = "force-dynamic";
@@ -24,10 +24,6 @@ const CHIPS = [
 export default function Home() {
   const engine = getEngine();
   const feed = buildFeed(engine, { likes: [], dislikes: [], seen: [], seed: freshSeed(), offset: 0, limit: PAGE });
-  const topics = engine.areas.map((area) => ({
-    area,
-    vid: browse(engine, { area: area.id, offset: 0, limit: 1 }).items[0]?.vid,
-  }));
   const playlists = engine.playlists.filter((playlist) => (playlist.tier || "deep") === "start").concat(
     engine.playlists.filter((playlist) => (playlist.tier || "deep") !== "start"),
   );
@@ -38,13 +34,6 @@ export default function Home() {
         items={feed.items}
         explore={exploreTopics(freshSeed())}
         total={feed.total}
-        topics={
-          <Shelf title="Explore topics" href="/categories">
-            {topics.map(({ area, vid }) => (
-              <TopicTile key={area.id} href={`/a/${area.id}`} name={area.name} count={area.video_count} vid={vid} />
-            ))}
-          </Shelf>
-        }
         playlists={
           <Shelf title="Playlists" href="/playlists">
             {playlists.slice(0, 12).map((playlist) => (

@@ -53,7 +53,7 @@ export function HomeFeed({
   items: FeedCard[];
   total: number;
   explore: ExploreTopic[];
-  topics: React.ReactNode;
+  topics?: React.ReactNode;
   playlists: React.ReactNode;
 }) {
   const ready = useHydrated();
