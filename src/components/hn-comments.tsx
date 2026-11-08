@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import type { Mention } from "@/lib/types";
-import { ExternalIcon } from "@/components/icons";
 import { chipClass, chipOnClass } from "@/components/ui";
 
 const STANCE: Record<string, { label: string; rank: number }> = {
@@ -78,11 +77,11 @@ function Comment({ mention }: { mention: Mention }) {
   const long = mention.text.length > 420;
   const stance = STANCE[mention.stance]?.label ?? mention.stance;
   return (
-    <article className="flex gap-4">
+    <article className="relative flex gap-4">
       <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-surface text-base font-medium text-muted">
         {mention.author.charAt(0).toUpperCase()}
       </span>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 pr-10">
         <p className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
           <a className="font-medium hover:underline" href={`https://news.ycombinator.com/user?id=${encodeURIComponent(mention.author)}`} target="_blank" rel="noreferrer">
             @{mention.author}
@@ -101,13 +100,19 @@ function Comment({ mention }: { mention: Mention }) {
           <span className={`inline-flex h-7 items-center rounded-full px-3 text-xs font-medium ${mention.stance === "strong_rec" ? "bg-primary/15 text-primary" : "bg-surface"}`}>
             {stance}
           </span>
-          <a className="inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs font-medium hover:bg-surface" href={mention.hn_url} target="_blank" rel="noreferrer">
-            <span className="[&>svg]:size-4"><ExternalIcon /></span>
-            View on HN
-          </a>
         </div>
         {mention.story_title ? <p className="mt-1 truncate text-xs text-muted">In {mention.story_title}</p> : null}
       </div>
+      <a
+        href={mention.hn_url}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="View on Hacker News"
+        title="View on Hacker News"
+        className="absolute right-0 top-0 grid size-8 place-items-center rounded-full hover:bg-surface"
+      >
+        <HnMark />
+      </a>
     </article>
   );
 }
@@ -125,6 +130,15 @@ function CommentText({ text }: { text: string }) {
         );
       })}
     </>
+  );
+}
+
+function HnMark() {
+  return (
+    <svg viewBox="4 4 188 188" className="size-5 overflow-hidden rounded-[4px]" aria-hidden>
+      <path d="m4 4h188v188h-188z" fill="#f60" />
+      <path d="m73.25 45.01 22.75 47.39 22.75-47.39h19.57l-34.32 64.49v41.49h-15.98v-41.49l-34.33-64.49z" fill="#fff" />
+    </svg>
   );
 }
 
