@@ -30,7 +30,7 @@ Assert thumbnail URLs are built as `https://i.ytimg.com/vi/<vid>/hq2.jpg` when f
 
 ## Feed and search
 
-The home feed is local. Tests should call the reconstruction directly and assert it never requests the upstream `/api/feed`.
+Call `buildFeed` or `personalFeed` directly in ranker tests. Do not request the upstream HackerTube `/api/feed`. This app's own `POST /api/feed` is the ranking route. `src/lib/feed-body.test.ts` locks which library fields that body keeps.
 
 With an empty library and a fixed `seed`, the section order is classics, then recent favorites, then hidden gems, then unexplored topics. The same seed and the same inputs return the same ids. A dislike or a seen id removes that video from the shelves. After a like, similar videos and co-recommendations appear. Co-recommendations must come from that video's `related` list, highest `shared_recommenders` first. Similar videos must be explainable from shared categories, tags, or topic text. Tests must not require an embedding file.
 

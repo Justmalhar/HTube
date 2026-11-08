@@ -348,7 +348,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 </ul>
               </section>
             ))}
-            <p className="mt-4 text-sm text-muted">Likes and Watch later stay in this browser</p>
+            <p className="mt-4 text-sm text-muted">Likes and Watch later are saved in this browser. Home sends their ids to this site to rank.</p>
             <div className="mt-6 flex justify-end">
               <button type="button" className={pillOnClass} onClick={() => setHelp(false)}>Done</button>
             </div>

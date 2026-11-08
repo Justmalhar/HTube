@@ -32,6 +32,7 @@ Fixes
 
 Docs
 - README, PRD, architecture, API, design and AGENTS.md rewritten to match the code. Storage keys corrected to `oht.library.v1`.
+- Privacy copy matches the feed route. Preferences stay in browser storage, and the server ranks from a POST. Removed the claims that watch history never leaves the device and that the home feed is ranked on-device.
 
 ## Earlier
 

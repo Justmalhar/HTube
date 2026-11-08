@@ -80,7 +80,7 @@ This app keeps search and filters in the query string (`q`, `dur`, `area`, `cate
 
 The home feed follows the public client inputs `likes`, `dislikes`, `seen`, and `seed`, and the about-page section list: classics, recent favorites, hidden gems, unexplored topics, then similar videos and co-recommendations after likes. That is a reconstruction in this repo. The closed `/api/feed` body was not copied.
 
-`data/source/robots.txt` disallows `/api/` and `/download/` for crawlers. This project does not recrawl those paths. `data/source/coverage.json` records the sitemap request as HTTP 404. Personal likes, history, and watch later on the source were browser state, which is why this app stores them in `localStorage` and not on a server.
+`data/source/robots.txt` disallows `/api/` and `/download/` for crawlers. This project does not recrawl those paths. `data/source/coverage.json` records the sitemap request as HTTP 404. Personal likes, history, and watch later on the source were browser state. This app stores them in `localStorage`. Home also POSTs those video ids to this app's `/api/feed` so the server can rank, and that handler does not save the body.
 
 ## Data notes for media
 

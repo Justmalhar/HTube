@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - Read `design.md` before touching UI and `docs/architecture.md` before touching the ranker, sync, or the player.
 - Shared class strings and the type scale live in `src/components/ui.ts`. Reuse `Avatar`, `IdentityHeader`, `UnderlineTabs`, `Section`, `CardShelf`, `ChipBar`, `StatusPanel` and `useSnackbar` instead of writing new ones.
-- Personal data is client-only (`oht.library.v1` in localStorage). The home feed sends it in a POST body to `/api/feed` and the server never stores it.
+- Preferences stay in browser storage (`oht.library.v1`). The home feed POSTs `likes`, `dislikes`, `seen` and `later` ids to `/api/feed` so the server can rank. That route does not persist the body. Do not describe ranking as on-device, or the library as data that never leaves the device. A host can receive the POST.
 - Never show YouTube view counts, like counts, durations or upload dates. `data/private` is gitignored and must not be read.
 - Writing rules for code, copy and docs: no em dashes, no middle dots or bullets as separators, no colored left borders.
 - Verify UI changes headlessly at 375px and desktop widths, and run `bun test`, `bun run lint`, `bun run typecheck`.

@@ -37,11 +37,11 @@ In November 2026 Andrej Karpathy shipped HackerTube as a weekend hack:
 >
 > [@karpathy on X](https://x.com/karpathy/status/2116957135661945283)
 
-HTube is that "own version". It takes the published HackerTube dataset and wraps it in an open-source Next.js app you can read, fork and host yourself. It adds a personal ranker, subscriptions, playlists, a mix and queue, trending and keyboard shortcuts. The choice of algorithm sits in code you control, and your watch history never leaves your device.
+HTube is that "own version". It takes the published HackerTube dataset and wraps it in an open-source Next.js app you can read, fork and host yourself. It adds a personal ranker, subscriptions, playlists, a mix and queue, trending and keyboard shortcuts. The choice of algorithm sits in code you control. Preferences stay in browser storage; your server processes them to rank the feed.
 
 ## Features
 
-- **Home feed** ranked on-device from your likes, dislikes and watch history. It reshuffles on every load, and about 30% of picks explore topics you have not touched yet.
+- **Home feed** ranked on the server from likes, dislikes and watch history the browser sends. It reshuffles on every load, and about 30% of picks explore topics you have not touched yet.
 - **Search** with typeahead for videos, channels and topics, plus recent searches.
 - **Subscriptions** to channels, with a feed of their videos.
 - **Trending**, ranked by recent HN activity, with Now, Talks, Lectures, Documentaries and Programming tabs.
@@ -93,16 +93,20 @@ bun run typecheck
 
 ## Where your data lives
 
-The server only reads `data/catalog`. Personal state is client-side only:
+Preferences stay in browser storage. This app has no accounts and no per-viewer database. Ranking is not done in the browser.
 
-| Store | Key | Holds |
-| --- | --- | --- |
-| localStorage | `oht.library.v1` | Likes, dislikes, watch later, the last 500 watched ids, subscriptions, watch times, history pause |
-| localStorage | `oht.theme`, `oht.autoplay`, `oht.rail`, `oht.recentSearches` | Theme, autoplay, collapsed sidebar, recent searches |
-| sessionStorage | `oht.queue`, `oht.queue.meta` | The current tab's queue |
-| IndexedDB | `openhackertube` | Offline copy of the catalogue for on-device reads |
+After the home page loads, it POSTs video ids to `/api/feed` on the host serving the site. That process ranks and returns the order. The route handler does not write the body to disk, a database, or a response cache. The operator of that host still receives the POST, and this app does not control whether the host logs or retains requests. If you self-host, that operator is you. If you use someone else's deployment, those ids go to them.
 
-The home feed sends your likes and history in a POST body to `/api/feed` so the server can rank. Nothing is stored. Clearing site data resets everything.
+| Store | Key | What stays in the browser | What is sent |
+| --- | --- | --- | --- |
+| localStorage | `oht.library.v1` | Likes, dislikes, watch later, the last 500 watched ids, subscriptions, watch times (`seenAt`), history pause | `POST /api/feed` sends `likes`, `dislikes`, `seen` and `later` (string ids, at most 2000 each), plus a per-visit `seed` and an `offset`. Watch times and the pause flag are not in that body. The ranker uses likes, dislikes and the newest watched ids. Watch-later ids fill a shelf and are not a ranking signal. |
+| localStorage | `oht.library.v1` `subs` | Channel subscription slugs | `GET /api/subscriptions?slugs=` when you open Subscriptions or You |
+| localStorage | library id lists | The stored ids | `GET /api/cards?ids=` when a library page looks up titles |
+| localStorage | `oht.theme`, `oht.autoplay`, `oht.rail`, `oht.recentSearches` | Theme, autoplay, collapsed sidebar, recent searches | Not sent as a library. Searching sends the current query to `/api/suggest` and `/search`. |
+| sessionStorage | `oht.queue`, `oht.queue.meta` | This tab's queue | Not sent |
+| IndexedDB | `openhackertube` | A local copy of the public catalogue | The browser downloads that catalogue from `/api/sync`. It is not personal data. |
+
+The catalogue files under `data/catalog` are public data the server reads for everyone. Clearing site data deletes the library stored in the browser. There is no login that can restore it.
 
 ## Project layout
 

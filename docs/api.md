@@ -1,6 +1,6 @@
 # API
 
-HTube has no accounts and no stored server state. Pages are server-rendered from `data/catalog`. Route handlers live in `src/app/api`. None of them read `data/private`. Card objects below are the `Card` type in `src/lib/types.ts` (camelCase fields: `vid`, `title`, `channel`, `channelSlug`, `contentType`, `level`, `shelfLife`, `primaryTopic`, `tags`, `categories`, `score`, `recommenders`, `recMonths`, `strongRecs`, `mentions`, `firstYear`, `lastYear`, `whyHn`, `summary`, `quote`, `shard`). A feed card adds optional `reason` and `via`. Cards never include views, likes, durations or publish dates.
+HTube has no accounts and no per-viewer database. Pages are server-rendered from `data/catalog`. Route handlers live in `src/app/api`. None of them read `data/private`. Personal id lists are stored in the browser and sent to these routes when a page needs the server to rank or look up cards. The handlers do not save those lists. A deployed host can still receive the requests; this app does not control that host's logs. Card objects below are the `Card` type in `src/lib/types.ts` (camelCase fields: `vid`, `title`, `channel`, `channelSlug`, `contentType`, `level`, `shelfLife`, `primaryTopic`, `tags`, `categories`, `score`, `recommenders`, `recMonths`, `strongRecs`, `mentions`, `firstYear`, `lastYear`, `whyHn`, `summary`, `quote`, `shard`). A feed card adds optional `reason` and `via`. Cards never include views, likes, durations or publish dates.
 
 ## Pages and their query keys
 
@@ -31,7 +31,7 @@ Response `200`: `{ "items": FeedCard[], "offset": number, "total": number }`. Un
 
 ## POST /api/feed
 
-Personalized home feed. The library is request-only and is not stored.
+Personalized home feed. The browser stores the library and POSTs a copy so this process can rank. `parseFeedBody` (`src/lib/feed-body.ts`) keeps `likes`, `dislikes`, `seen` and `later` only. `subs`, `seenAt`, `frames` and `paused` are ignored if a client sends them. The handler does not write the body. The host that receives the POST can see it.
 
 Request body:
 
