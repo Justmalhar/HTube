@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { CatalogSync } from "@/components/catalog-sync";
-import { ChevronIcon } from "@/components/icons";
 import { ThemeButton, ThemeState, useLibrary } from "@/components/library";
 import { iconButtonClass } from "@/components/ui";
 
@@ -47,13 +46,40 @@ const MOBILE: readonly NavLink[] = [
   ["/later", "You", YouIcon],
 ];
 
-function isActive(pathname: string, href: string) {
-  const path = href.split("?")[0];
-  if (href.includes("?")) return false;
-  return path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`);
+function isActive(pathname: string, search: string, href: string) {
+  const queryAt = href.indexOf("?");
+  const path = queryAt === -1 ? href : href.slice(0, queryAt);
+  const expected = new URLSearchParams(queryAt === -1 ? "" : href.slice(queryAt + 1));
+  const current = new URLSearchParams(search);
+  if (path === "/") return pathname === "/";
+  if (path === "/browse") {
+    const longs = current.get("dur") === "xlong";
+    return pathname === "/browse" && (expected.get("dur") === "xlong" ? longs : !longs);
+  }
+  if (path === "/categories") return pathname === "/categories" || pathname.startsWith("/c/") || pathname.startsWith("/a/");
+  if (path === "/playlists") return pathname === "/playlists" || pathname.startsWith("/p/");
+  return pathname === path;
+}
+
+function itemActive(pathname: string, search: string, href: string, label: string) {
+  if (label === "You") return pathname === "/history" || pathname === "/later" || pathname === "/liked";
+  return isActive(pathname, search, href);
 }
 
 export function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<ShellFrame search="">{children}</ShellFrame>}>
+      <ShellSearch>{children}</ShellSearch>
+    </Suspense>
+  );
+}
+
+function ShellSearch({ children }: { children: React.ReactNode }) {
+  const search = useSearchParams().toString();
+  return <ShellFrame search={search}>{children}</ShellFrame>;
+}
+
+function ShellFrame({ children, search }: { children: React.ReactNode; search: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -140,7 +166,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </button>
           <ThemeButton />
         </header>
-        <aside className={`${open ? "block" : "hidden"} fixed bottom-0 left-0 top-0 z-40 w-60 overflow-y-auto bg-background px-3 pb-6 min-[1312px]:top-14 ${rail ? "min-[1312px]:hidden" : "min-[1312px]:block"}`}>
+        <aside className={`${open ? "block" : "hidden"} fixed bottom-0 left-0 top-0 z-50 w-60 overflow-y-auto bg-background px-3 pb-6 min-[1312px]:top-14 ${rail ? "min-[1312px]:hidden" : "min-[1312px]:block"}`}>
           <div className="flex h-14 items-center gap-4 px-1 min-[1312px]:hidden">
             <button type="button" className={iconButtonClass} aria-label="Close menu" onClick={() => setOpen(false)}>
               <MenuIcon />
@@ -151,20 +177,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
             {SECTIONS.map((section, index) => (
               <div key={section.title ?? index} className={index ? "mt-3 border-t border-line pt-3" : ""}>
                 {section.title ? (
-                  <Link href="/later" className="mb-1 flex h-10 items-center gap-2 rounded-[10px] px-3 text-base font-medium hover:bg-surface" onClick={() => setOpen(false)}>
-                    {section.title}
-                    <ChevronIcon />
-                  </Link>
+                  <p className="flex h-8 items-center px-3 text-base font-medium">{section.title}</p>
                 ) : null}
                 {section.links.map(([href, label, Icon]) => {
-                  const active = isActive(pathname, href);
+                  const active = isActive(pathname, search, href);
                   return (
                     <Link
                       key={href}
                       href={href}
+                      scroll
                       aria-current={active ? "page" : undefined}
-                      className={`flex h-10 items-center gap-6 rounded-[10px] px-3 text-sm ${active ? "bg-surface font-medium hover:bg-surface-hover" : "hover:bg-surface"}`}
-                      onClick={() => setOpen(false)}
+                      className={`flex h-10 items-center gap-6 rounded-[10px] px-3 text-sm ${active ? "bg-surface font-medium text-foreground" : "text-muted hover:bg-surface hover:text-foreground"}`}
+                      onClick={() => window.setTimeout(() => setOpen(false), 0)}
                     >
                       <Icon />
                       <span className="truncate">{label}</span>
@@ -179,37 +203,45 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </p>
         </aside>
         <nav aria-label="Shortcuts" className={`fixed bottom-0 left-0 top-14 z-20 hidden w-[72px] flex-col gap-1 px-1 min-[801px]:flex ${rail ? "" : "min-[1312px]:hidden"}`}>
-            {RAIL.map(([href, label, Icon]) => (
+            {RAIL.map(([href, label, Icon]) => {
+              const active = itemActive(pathname, search, href, label);
+              return (
               <Link
                 key={href}
                 href={href}
-                aria-current={isActive(pathname, href) ? "page" : undefined}
-                className="flex h-[74px] flex-col items-center justify-center gap-1.5 rounded-[10px] text-[10px] hover:bg-surface"
+                scroll
+                aria-current={active ? "page" : undefined}
+                className={`flex h-[74px] flex-col items-center justify-center gap-1.5 rounded-[10px] text-[10px] hover:bg-surface ${active ? "font-medium text-foreground" : "text-muted"}`}
               >
                 <Icon />
                 {label}
               </Link>
-            ))}
+              );
+            })}
           </nav>
         <div className="sr-only">
           <CatalogSync />
         </div>
-        {open ? <button type="button" className="fixed inset-0 z-30 bg-black/50 min-[1312px]:hidden" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
+        {open ? <button type="button" className="fixed bottom-0 left-60 right-0 top-0 z-30 bg-black/50 min-[1312px]:hidden" aria-label="Close menu" onClick={() => setOpen(false)} /> : null}
         <div id="content" className={`px-4 pb-20 pt-16 min-[801px]:pr-6 min-[801px]:pl-[88px] ${rail ? "" : "min-[1312px]:pl-[256px]"}`}>
           {children}
         </div>
         <nav className="fixed inset-x-0 bottom-0 z-30 grid h-14 grid-cols-5 border-t border-line bg-background min-[801px]:hidden" aria-label="Mobile">
-          {MOBILE.map(([href, label, Icon]) => (
+          {MOBILE.map(([href, label, Icon]) => {
+            const active = itemActive(pathname, search, href, label);
+            return (
             <Link
               key={label}
               href={href}
-              aria-current={isActive(pathname, href) ? "page" : undefined}
-              className={`flex flex-col items-center justify-center gap-0.5 text-[10px] ${isActive(pathname, href) ? "font-medium" : "text-muted"}`}
+              scroll
+              aria-current={active ? "page" : undefined}
+              className={`flex flex-col items-center justify-center gap-0.5 text-[10px] ${active ? "font-medium text-foreground" : "text-muted"}`}
             >
               <Icon />
               {label}
             </Link>
-          ))}
+            );
+          })}
         </nav>
         {help ? (
           <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="presentation" onClick={() => setHelp(false)}>
