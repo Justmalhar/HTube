@@ -1,7 +1,11 @@
 import { PAGE, browse, buildFeed, relatedTo, search as searchCatalog } from "@/lib/engine";
 import { pickExplore, type ExploreTopic } from "@/lib/explore";
+import { parseFeedBody, type FeedLibrary } from "@/lib/feed-body";
 import { browseFromParams, feedBase, first } from "@/lib/query";
 import { getEngine } from "@/lib/server-catalog";
+
+export { parseFeedBody };
+export type Library = FeedLibrary;
 
 export function paramsRecord(search: Record<string, string | string[] | undefined>) {
   const record: Record<string, string | undefined> = {};
@@ -19,17 +23,6 @@ export function browsePage(search: Record<string, string | string[] | undefined>
 export const dailySeed = () => Math.floor(Date.now() / 86_400_000);
 /** A new seed per request so every home load (and refresh) gets a different mix. */
 export const freshSeed = () => Math.floor(Math.random() * 2 ** 32);
-
-export type Library = { likes: string[]; dislikes: string[]; seen: string[]; later: string[] };
-
-const ids = (value: unknown) => (Array.isArray(value) ? value.filter((id): id is string => typeof id === "string").slice(0, 2000) : []);
-
-/** Validates a client-sent library and seed; the body is untrusted. */
-export function parseFeedBody(body: unknown) {
-  const raw = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
-  const library: Library = { likes: ids(raw.likes), dislikes: ids(raw.dislikes), seen: ids(raw.seen), later: ids(raw.later) };
-  return { library, seed: Number(raw.seed) || 0, offset: Number(raw.offset) || 0 };
-}
 
 /** Explore picks for the home shelf: categories outside the viewer's likes and watch history. */
 export function exploreTopics(seed: number, library?: Library): ExploreTopic[] {

@@ -56,7 +56,7 @@ bun run build
 
 ## Browser data
 
-Likes, dislikes, watch later, history, theme, and the frame toggle are stored in `localStorage` under `oht.library.v1`. Clearing site data resets that library. There is no login to restore it.
+Likes, dislikes, watch later, history, subscriptions, watch times, the history pause flag, theme, and the frame toggle are stored in the browser (`oht.library.v1` holds the library). Clearing site data resets that library. There is no login to restore it. Opening Home also POSTs likes, dislikes, watched ids and watch-later ids to this server's `/api/feed` so it can rank. Watch times stay in the browser. See the README section "Where your data lives".
 
 Theme defaults to dark. Frames default to on, which requests the YouTube middle frame `hq2.jpg`.
 

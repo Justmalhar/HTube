@@ -1,6 +1,6 @@
 # Product requirements
 
-HTube (formerly OpenHackerTube) is a browser for talks and videos that Hacker News recommended. The shell follows YouTube's information architecture, recolored with Hacker News orange `#FF6600`. People search, watch through a YouTube embed, and keep a library on this browser only. There are no accounts.
+HTube (formerly OpenHackerTube) is a browser for talks and videos that Hacker News recommended. The shell follows YouTube's information architecture, recolored with Hacker News orange `#FF6600`. People search, watch through a YouTube embed, and keep a library in this browser. There are no accounts. The home feed sends that library's video ids to the server hosting the app so it can rank.
 
 ## Who it is for
 

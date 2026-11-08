@@ -26,7 +26,7 @@ Work is done when `bun test`, `bun run typecheck`, `bun run lint`, and `bun run 
 
 ## Pages
 
-- [ ] `/` reconstructs the feed from `likes`, `dislikes`, `seen`, and `seed`. Sections: classics, recent favorites, hidden gems, unexplored topics, then similar and co-recommendations after a like. Do not call `/api/feed`.
+- [x] `/` renders an anonymous feed first, then POSTs `likes`, `dislikes`, `seen`, and `later` to this app's `/api/feed` so the server can rank.
 - [ ] `/browse` applies `q`, `dur`, `area`, `category`, `shelf`, `type`, and `page`. Longs is `dur=xlong`.
 - [ ] Lexical search covers titles, summaries, tags, and taxonomy descriptions only.
 - [ ] `/categories`, `/c/[id]`, `/a/[id]`, `/playlists`, `/p/[slug]` read the committed catalogue.

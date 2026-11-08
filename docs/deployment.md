@@ -43,7 +43,7 @@ Do not ship `embeddings.npy`. Those vectors were listed on the official zip mani
 
 Give the Node process enough memory to read the 16 shards on the server. Comment text is still about 35 MB in total, just split. Do not import those shard files into a client bundle. The browser fetches them through `/api/sync/shard/:id` and stores them in IndexedDB.
 
-Search and filters are query parameters, so a CDN can cache public HTML for a given URL. Vary that cache on the feed query (`likes`, `dislikes`, `seen`, `seed`) if the home page is rendered on the server from those parameters. Library pages can be cached as shells because the ids are filled in from `localStorage`.
+Search and filters are query parameters, so a CDN can cache public HTML for a given URL. The personalized home feed is a `POST /api/feed` after the page loads, not those ids on the HTML URL. Do not cache that POST. `GET /api/feed` and the first anonymous paint do not include the library. Library pages can be cached as shells because the ids are filled in from `localStorage`, then sent to `/api/cards` to resolve titles.
 
 No environment variable is required for the public catalogue. Do not set a YouTube Data API key on the public server. Refreshing private metadata is a local task and the key stays in a developer shell.
 

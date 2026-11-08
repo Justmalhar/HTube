@@ -9,7 +9,7 @@ export function GET(request: Request) {
   return Response.json({ items: page.items, offset: page.offset, total: page.total });
 }
 
-/** Personalized home feed: the body carries the viewer's local library, which never leaves the request. */
+/** Personalized home feed. The body is ranked for this response and is not written by this handler. */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const { library, seed, offset } = parseFeedBody(body);

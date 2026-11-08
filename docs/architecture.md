@@ -15,8 +15,8 @@ YouTube embed (iframe) <--postMessage--> watch page Player
 
 Functional requirements are in `docs/prd.md`. Non-functional goals:
 
-- No accounts and no server state. The server is stateless apart from in-memory indexes built from `data/catalog` (rebuilt when file mtimes change).
-- Personal data never persists on the server. The library is sent in a POST body, used for ranking, and discarded.
+- No accounts and no per-viewer database. The server keeps an in-memory catalogue index, rebuilt when `data/catalog` file mtimes change.
+- Preferences stay in browser storage. The home feed POSTs likes, dislikes, watched ids and watch-later ids to `/api/feed`. The handler uses them to rank and does not save them. The operator of the host serving the app can receive those requests. Self-hosting means you are that operator. This repo does not claim the host logs nothing.
 - First paint is server-rendered. The personalized feed swaps in after hydration with a crossfade.
 - Works at 375px with no horizontal overflow; respects `prefers-reduced-motion` and `prefers-contrast`.
 - Low cost: static-ish pages, cacheable sync files (`max-age=86400`), no database.
