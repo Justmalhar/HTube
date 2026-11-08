@@ -255,7 +255,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     {section.title ? <h2 className="flex h-10 items-center px-3 text-base font-medium">{section.title}</h2> : null}
                     <div className="flex flex-col gap-1">
                     {section.links.map(({ href, label, Icon }) => (
-                      <Link key={href} href={href} aria-current={href === current ? "page" : undefined} className={drawerItemClass} onClick={closeDrawer}>
+                      <Link
+                        key={href}
+                        href={href}
+                        aria-current={href === current ? "page" : undefined}
+                        className={drawerItemClass}
+                        onClick={() => window.setTimeout(closeDrawer, 0)}
+                      >
                         <Icon active={href === current} />
                         <span className="truncate">{label}</span>
                         <Pending />
@@ -292,7 +298,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div
           aria-hidden
           onClick={closeDrawer}
-          className={`fixed inset-0 z-(--z-scrim) bg-black/50 transition-opacity duration-300 ease-out-quart ${watch ? "" : "min-[1312px]:hidden"} ${
+          className={`fixed inset-y-0 right-0 left-60 z-(--z-scrim) bg-black/50 transition-opacity duration-300 ease-out-quart ${watch ? "" : "min-[1312px]:hidden"} ${
             drawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         />

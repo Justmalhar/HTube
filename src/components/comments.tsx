@@ -4,11 +4,20 @@ import { useEffect, useRef, useState } from "react";
 
 import Link from "next/link";
 
-import { ExternalIcon, SortIcon, ThumbUpIcon } from "@/components/icons";
+import { SortIcon, ThumbUpIcon } from "@/components/icons";
 import { ActionMenu, menuItemClass } from "@/components/video-card";
 import { Avatar } from "@/components/channel/avatar";
 import { relativeMonth, sortMentions, tokenize } from "@/lib/comment-format";
 import type { Mention } from "@/lib/types";
+
+function HnMark() {
+  return (
+    <svg viewBox="4 4 188 188" className="size-5 overflow-hidden rounded-[4px]" aria-hidden>
+      <path d="m4 4h188v188h-188z" fill="#f60" />
+      <path d="m73.25 45.01 22.75 47.39 22.75-47.39h19.57l-34.32 64.49v41.49h-15.98v-41.49l-34.33-64.49z" fill="#fff" />
+    </svg>
+  );
+}
 
 const STANCE: Record<string, string> = {
   strong_rec: "Strongly recommends",
@@ -112,7 +121,7 @@ export function Comment({ mention }: { mention: Mention }) {
   const bodyId = `comment-${mention.hn_comment_id}`;
   const recommends = mention.stance === "rec" || mention.stance === "strong_rec";
   return (
-    <li className="group/comment flex min-w-0 gap-3 sm:gap-4">
+    <li className="group/comment relative flex min-w-0 gap-3 sm:gap-4">
       <Link
         href={`/u/${mention.author}`}
         tabIndex={-1}
@@ -121,7 +130,7 @@ export function Comment({ mention }: { mention: Mention }) {
       >
         <Avatar name={mention.author} size="comment" />
       </Link>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 pr-8">
         <p className="flex min-w-0 items-baseline gap-1">
           <Link href={`/u/${mention.author}`} className="min-w-0 truncate text-[13px] font-medium hover:underline">
             @{mention.author}
@@ -171,9 +180,9 @@ export function Comment({ mention }: { mention: Mention }) {
         rel="noreferrer"
         aria-label="View on Hacker News"
         title="View on Hacker News"
-        className="press -mt-2 grid size-9 shrink-0 place-items-center rounded-full transition-opacity hover:bg-surface [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/comment:opacity-100 [@media(hover:hover)]:group-focus-within/comment:opacity-100"
+        className="press absolute top-0 right-0 grid size-8 place-items-center rounded-full hover:bg-surface"
       >
-        <ExternalIcon />
+        <HnMark />
       </a>
     </li>
   );
